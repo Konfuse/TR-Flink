@@ -59,13 +59,13 @@ pgRouting可以应用于Linux与Windows两种开发环境，本文重点介绍�
 
  PostgreSQL安装文件下载地址是[PostgreSQL官网下载链接](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads) ，这里选取最新的版本12。下载完成后点击运行，中间需要记得设置超级用户postgres的密码。
 
- ![img](https://github.com/Konfuse/TR-Flink/tree/master/doc/pic/postgreSQL_install.png) 
+ ![postgreSQL_install.png](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/postgreSQL_install.png?raw=true) 
 
 ### 2.2 安装PostGIS
 
 PostgreSQL安装完成后，到[PostGIS官网](http://download.osgeo.org/postgis/windows/)下载PostGIS安装包进行安装，注意选取对应的pg12目录下的安装包，这里对应PostgreSQL12的版本。下载完成点击运行，在设置安装组件时，需要勾选 **Create spatial database**选项，以便在创建数据库时可以以此作为模板。
 
-![postGis_template](https://github.com/Konfuse/TR-Flink/tree/master/doc/pic/postGis_template.png)
+![postGis_template](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/postGis_template.png?raw=true)
 
 在安装过程中注意，PostGIS的安装目录默认和 PostgreSQL同一目录，在设置PostGIS安装目录时需要和PostgreSQL设置为相同。
 
@@ -116,7 +116,7 @@ ArcGIS Editor for OSM就是基于ArcGIS Desktop的一个扩展工具，下载版
 
 打开`ArcMap`软件，在软件内找到`Catalog`选项卡，选中`Folder Connections`，在其中新建后缀为.gdb的地理数据库
 
-<img src="https://github.com/Konfuse/TR-Flink/tree/master/doc/pic/arcMap_folderconnection.png" style="zoom:50%;" />
+<img src="https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/arcMap_folderconnection.png?raw=true" style="zoom:50%;" />
 
 然后依次点击`Catalog` 中的`Toolboxes->System Toolboxes->OpenStreetMap Toolbox.tbx->Load OSM File`导入osm文件到新创建的数据库中。
 

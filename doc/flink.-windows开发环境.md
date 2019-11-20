@@ -20,7 +20,7 @@ Flink支持自定义的数据源，并基于此设计了很多和详细中间件
 
 1. 首先，从[Zookeeper官网]( http://zookeeper.apache.org/releases.html#download )下载Zookeeper的安装包，注意
 
-   ![](https://github.com/Konfuse/TR-Flink/tree/master/doc/pic/Zookeeper.png)
+   ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/Zookeeper.png?raw=true)
 
    选择上边红圈内的作为安装包
 
