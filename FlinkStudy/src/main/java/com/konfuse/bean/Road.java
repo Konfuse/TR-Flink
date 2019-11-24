@@ -41,7 +41,7 @@ public class Road {
 
     @Override
     public String toString() {
-        return "RoadMap{" +
+        return "Road{" +
                 "osm_id=" + osm_id +
                 ", source=" + source +
                 ", target=" + target +
