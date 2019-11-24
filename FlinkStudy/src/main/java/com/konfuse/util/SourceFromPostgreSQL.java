@@ -1,6 +1,7 @@
 package com.konfuse.util;
 
-import com.konfuse.bean.RoadMap;
+import com.konfuse.bean.Point;
+import com.konfuse.bean.Road;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 
@@ -12,7 +13,7 @@ import java.sql.ResultSet;
  * @Auther todd
  * @Date 2019/11/24
  */
-public class SourceFromPostgreSQL extends RichSourceFunction<RoadMap> {
+public class SourceFromPostgreSQL extends RichSourceFunction<Road> {
     PreparedStatement ps;
     private Connection connection;
 
@@ -26,7 +27,7 @@ public class SourceFromPostgreSQL extends RichSourceFunction<RoadMap> {
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
         connection = getConnection();
-        String sql = "select osmid, geom from ds_tz01_osm_pt;";
+        String sql = "select osm_id, x1, y1, x2, y2 from ways;";
         ps = this.connection.prepareStatement(sql);
     }
 
@@ -53,12 +54,13 @@ public class SourceFromPostgreSQL extends RichSourceFunction<RoadMap> {
      * @throws Exception
      */
     @Override
-    public void run(SourceContext<RoadMap> ctx) throws Exception {
+    public void run(SourceContext<Road> ctx) throws Exception {
         ResultSet resultSet = ps.executeQuery();
         while (resultSet.next()) {
-            RoadMap roadmappoint = new RoadMap(
-                    resultSet.getLong("osmid"),
-                    resultSet.getString("geom").trim());
+            Road roadmappoint = new Road(
+                    resultSet.getLong("osm_id"),
+                    new Point(resultSet.getDouble("x1"), resultSet.getDouble("y1")),
+                    new Point(resultSet.getDouble("x2"), resultSet.getDouble("y2")));
             ctx.collect(roadmappoint);
         }
     }
@@ -71,7 +73,7 @@ public class SourceFromPostgreSQL extends RichSourceFunction<RoadMap> {
         Connection con = null;
         try {
             Class.forName("org.postgresql.Driver");
-            con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/taiwan?useUnicode=true&characterEncoding=UTF-8", "postgres","1234");
+            con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/roma?useUnicode=true&characterEncoding=UTF-8", "postgres","1234");
         } catch (Exception e) {
             System.out.println("postgresql get connection has exception , msg = " + e.getMessage());
         }
