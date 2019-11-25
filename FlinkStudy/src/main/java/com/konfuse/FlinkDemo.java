@@ -16,7 +16,7 @@ import java.util.Properties;
  */
 public class FlinkDemo {
     public static void main(String[] args) throws Exception {
-        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        final StreamExecutionEnvironment streamExecutionEnvironment = StreamExecutionEnvironment.getExecutionEnvironment();
 
         Properties props = new Properties();
         props.put("bootstrap.servers", "localhost:9092");
@@ -25,11 +25,11 @@ public class FlinkDemo {
         props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.put("auto.offset.reset", "latest");
 
-        DataStream<String> dataStream = env.addSource(new FlinkKafkaConsumer011<>("point", new SimpleStringSchema(), props))
+        DataStream<String> dataStream = streamExecutionEnvironment.addSource(new FlinkKafkaConsumer011<>("point", new SimpleStringSchema(), props))
                 .setParallelism(1);
         SingleOutputStreamOperator<Point> singleOutputStreamOperator = dataStream.map(string -> JSON.parseObject(string, Point.class));
         singleOutputStreamOperator.print();
 
-        env.execute("Execute Query...");
+        streamExecutionEnvironment.execute("Execute Query...");
     }
 }

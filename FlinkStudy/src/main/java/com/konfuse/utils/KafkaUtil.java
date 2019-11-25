@@ -1,7 +1,7 @@
-package com.konfuse.util;
+package com.konfuse.utils;
 
 import com.alibaba.fastjson.JSON;
-import com.konfuse.bean.Bound;
+import com.konfuse.bean.MBR;
 import com.konfuse.bean.Point;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -29,10 +29,10 @@ public class KafkaUtil {
         String topic = "bound";
 
         for (int i = 0; i < 5; i++) {
-            Bound bound = new Bound(-122.42 - i * 0.01, 37.7 - i * 0.01, -122.41 + i * 0.01, 37.71 + i * 0.01);
-            ProducerRecord record = new ProducerRecord<String, String>(topic, null, null, JSON.toJSONString(bound));
+            MBR MBR = new MBR(-122.42 - i * 0.01, 37.7 - i * 0.01, -122.41 + i * 0.01, 37.71 + i * 0.01);
+            ProducerRecord record = new ProducerRecord<String, String>(topic, null, null, JSON.toJSONString(MBR));
             producer.send(record);
-            System.out.println("发送数据: " + JSON.toJSONString(bound));
+            System.out.println("发送数据: " + JSON.toJSONString(MBR));
             producer.flush();
         }
     }

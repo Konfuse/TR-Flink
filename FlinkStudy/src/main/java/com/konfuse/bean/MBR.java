@@ -4,16 +4,16 @@ package com.konfuse.bean;
  * @Author: Konfuse
  * @Date: 19-3-17 下午5:26
  */
-public class Bound {
+public class MBR {
     private double x1;
     private double y1;
     private double x2;
     private double y2;
 
-    public Bound() {
+    public MBR() {
     }
 
-    public Bound(double x1, double y1, double x2, double y2) {
+    public MBR(double x1, double y1, double x2, double y2) {
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;

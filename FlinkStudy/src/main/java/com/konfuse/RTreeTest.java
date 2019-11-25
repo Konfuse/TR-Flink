@@ -6,7 +6,7 @@ import com.github.davidmoten.rtree.RTree;
 import com.github.davidmoten.rtree.geometry.Point;
 import com.github.davidmoten.rtree.geometry.Rectangle;
 import com.github.davidmoten.rtree.internal.LeafDefault;
-import com.konfuse.bean.Bound;
+import com.konfuse.bean.MBR;
 
 import static com.github.davidmoten.rtree.geometry.Geometries.pointGeographic;
 
@@ -31,8 +31,8 @@ public class RTreeTest {
 
     public static void main(String[] args) {
         for (int i = 0; i < 8; i++) {
-            Bound bound = new Bound(-122.42 - i * 0.01, 37.7 - i * 0.01, -122.41 + i * 0.01, 37.71 + i * 0.01);
-            System.out.println("区域数据: " + JSON.toJSONString(bound));
+            MBR MBR = new MBR(-122.42 - i * 0.01, 37.7 - i * 0.01, -122.41 + i * 0.01, 37.71 + i * 0.01);
+            System.out.println("区域数据: " + JSON.toJSONString(MBR));
         }
         //创建RTree
 //        RTree<String, Point> tree = RTree.maxChildren(5).create();

@@ -1,4 +1,4 @@
-package com.konfuse;
+package com.konfuse.template;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;

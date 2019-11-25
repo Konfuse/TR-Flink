@@ -1,4 +1,4 @@
-package com.konfuse.util;
+package com.konfuse.dbutils;
 
 import org.geotools.data.DataStoreFinder;
 import org.geotools.data.simple.SimpleFeatureCollection;

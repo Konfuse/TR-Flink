@@ -1,4 +1,5 @@
-package com.konfuse.util;
+package com.konfuse.dbutils;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -8,7 +9,7 @@ import java.sql.Statement;
  * @Author: Konfuse
  * @Date: 2019/11/20 19:51
  */
-public class JDBCUtil {
+public class JDBCConnectionTest {
     public static void main(String[] args) {
         Connection conn = null;
         Statement stmt = null;

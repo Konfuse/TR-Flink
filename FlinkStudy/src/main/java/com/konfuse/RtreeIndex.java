@@ -1,4 +1,4 @@
-package com.traj;
+package com.konfuse;
 
 import com.github.davidmoten.rtree.*;
 import com.github.davidmoten.rtree.geometry.Geometries;

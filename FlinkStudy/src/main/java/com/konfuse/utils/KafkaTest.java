@@ -1,4 +1,4 @@
-package com.konfuse.util;
+package com.konfuse.utils;
 
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.datastream.DataStream;
