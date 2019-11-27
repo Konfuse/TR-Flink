@@ -11,6 +11,10 @@ public class NonLeafNode extends Entry implements Serializable {
     private ArrayList<Entry> entries;
     private int height = 1;
 
+    public NonLeafNode() {
+        super(new MBR());
+    }
+
     public NonLeafNode(MBR mbr) {
         super(mbr);
     }

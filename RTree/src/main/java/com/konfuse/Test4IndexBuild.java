@@ -1,8 +1,12 @@
 package com.konfuse;
 
+import com.alibaba.fastjson.JSON;
+import com.konfuse.bean.Entry;
 import com.konfuse.bean.LeafNode;
 import com.konfuse.bean.Line;
+import com.konfuse.bean.MBR;
 import com.konfuse.tools.Visualization;
+import sun.reflect.generics.tree.Tree;
 
 import javax.swing.*;
 import java.sql.*;
@@ -39,7 +43,8 @@ public class Test4IndexBuild {
         RTree tree = new IndexBuilder().STRPacking(leafNodes);
         System.out.println("the root height is: " + tree.getRoot().getHeight());
         System.out.println("the root's mbr is: " + tree.getRoot().getMBR());
-        int level = tree.getRoot().getHeight();
+
+        //test for visualization
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 Visualization.createAndShowGui(tree);

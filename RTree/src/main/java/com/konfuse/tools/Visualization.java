@@ -5,9 +5,7 @@ import com.konfuse.bean.MBR;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.Stack;
 
 /**
@@ -16,24 +14,40 @@ import java.util.Stack;
  */
 public class Visualization extends JComponent {
     private static final int RECT_X = 400;
-    private static final int RECT_Y = RECT_X;
+    private static final int RECT_Y = 400;
     private static final int RECT_WIDTH = 400;
-    private static final int RECT_HEIGHT = RECT_WIDTH;
+    private static final int RECT_HEIGHT = 400;
+    private static Stack<ArrayList<MBR>> stack = new Stack<ArrayList<MBR>>();
     
     private RTree tree;
 
     public Visualization(RTree tree) {
         this.tree = tree;
+        int level = tree.getRoot().getHeight();
+        for(int i = 0 ; i <= level ; i++ ){
+            stack.add(tree.getMBRs(i));
+        }
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        for (int i = 0; i <= tree.getRoot().getHeight(); i++) {
+        int height = tree.getRoot().getHeight();
+        for (int i = 0; i <= height; i++) {
             ArrayList<MBR> mbrList = tree.getMBRs(i);
             g.setColor(iterateColor(i));
             for (MBR mbr : mbrList) {
-                g.drawRect((int) mbr.getX1() * 20, (int) mbr.getY1() * 20, (int) (mbr.getX2() * 20 - mbr.getX1() * 20), (int) (mbr.getY2() * 20 - mbr.getY1() * 20));
+                System.out.println("x1 of bound is: " +
+                        (int) (mbr.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000) +
+                        "; y1 of bound is: " +
+                        (int) (mbr.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000) +
+                        "; width of x is: " +
+                        (int) (mbr.getX2() * 10000 - mbr.getX1() * 10000) +
+                        "; length of x is: " +
+                        (int) (mbr.getY2() * 10000 - mbr.getY1() * 10000)
+                );
+                g.drawRect((int) (mbr.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000), (int) (mbr.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000),
+                        (int) (mbr.getX2() * 10000 - mbr.getX1() * 10000), (int) (mbr.getY2() * 10000 - mbr.getY1() * 10000));
             }
         }
     }

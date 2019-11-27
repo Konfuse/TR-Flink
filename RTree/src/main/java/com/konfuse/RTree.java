@@ -19,6 +19,9 @@ public class RTree implements Serializable {
     private NonLeafNode root;
     private int height;
 
+    public RTree() {
+    }
+
     public RTree(NonLeafNode root) {
         this.root = root;
         this.height = root.getHeight();
@@ -30,6 +33,10 @@ public class RTree implements Serializable {
 
     public int getHeight() {
         return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 
     public void setRoot(NonLeafNode root) {
