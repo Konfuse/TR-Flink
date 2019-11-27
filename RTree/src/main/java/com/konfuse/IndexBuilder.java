@@ -22,6 +22,9 @@ public class IndexBuilder implements Serializable {
     private NonLeafNode root;
 
     public IndexBuilder() {
+        this.entryCount = 0;
+        this.height = 1;
+
     }
 
     public IndexBuilder(int M, int m) {
@@ -29,8 +32,8 @@ public class IndexBuilder implements Serializable {
         this.m = m;
         this.entryCount = 0;
         this.height = 1;
-        this.root = new NonLeafNode(M, 1);
     }
+
 
     /*
     * r is the total count of records, i.e. entries.size()
@@ -39,7 +42,7 @@ public class IndexBuilder implements Serializable {
     * s is the due slice count of each dimension, i.e. s = Math.sqrt(r / M)
     * ctr is records traveling count
     * */
-    public RTree STRPacking(LeafNode... leafNodes){
+    public RTree STRPacking(LeafNode... leafNodes) {
         ArrayList<Entry> entries = new ArrayList<Entry>(Arrays.stream(leafNodes).collect(Collectors.toList()));
         this.entryCount = entries.size();
 

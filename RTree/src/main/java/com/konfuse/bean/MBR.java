@@ -34,6 +34,22 @@ public class MBR implements Serializable {
         this.y2 = y2;
     }
 
+    public double getX1() {
+        return x1;
+    }
+
+    public double getY1() {
+        return y1;
+    }
+
+    public double getX2() {
+        return x2;
+    }
+
+    public double getY2() {
+        return y2;
+    }
+
     public static class MBRComparator implements Comparator<Entry> {
         private int dimension;
         private boolean low;

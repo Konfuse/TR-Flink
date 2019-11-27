@@ -7,6 +7,7 @@ import com.konfuse.bean.LeafNode;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -16,13 +17,19 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public class RTree implements Serializable {
     private NonLeafNode root;
+    private int height;
 
     public RTree(NonLeafNode root) {
         this.root = root;
+        this.height = root.getHeight();
     }
 
     public NonLeafNode getRoot() {
         return root;
+    }
+
+    public int getHeight() {
+        return height;
     }
 
     public void setRoot(NonLeafNode root) {
@@ -53,10 +60,43 @@ public class RTree implements Serializable {
         return result;
     }
 
+    public ArrayList<MBR> getMBRs(int level) {
+        NonLeafNode node = this.root;
+        Queue<Entry> queue = new LinkedList<>();
+        ArrayList<MBR> result = new ArrayList<MBR>();
+
+        // If root level, then return the MBR of the whole tree.
+        if (node.getHeight() == level) {
+            result.add(node.getMBR());
+            return result;
+        } else if (node.getHeight() - 1 == level) {
+            for(Entry e : node.getEntries()) {
+                result.add(e.getMBR());
+            }
+            return result;
+        }
+
+        queue.add(node);
+        while (!queue.isEmpty()) {
+            node = (NonLeafNode) queue.poll();
+            for (Entry child : node.getEntries()) {
+                if (((NonLeafNode)child).getHeight() == level + 1) {
+                    for (Entry e : ((NonLeafNode) child).getEntries()) {
+                        result.add(e.getMBR());
+                    }
+                } else if (level + 1 < ((NonLeafNode) child).getHeight()) {
+                    queue.add(child);
+                }
+            }
+        }
+        return result;
+    }
+
     @Override
     public String toString() {
         return "RTree{" +
                 "root=" + root +
+                ", height=" + height +
                 '}';
     }
 }

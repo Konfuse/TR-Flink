@@ -12,8 +12,8 @@ public class LeafNode extends Entry implements Serializable {
         super(mbr);
     }
 
-    public LeafNode(String describe, double x1, double y1, double x2, double y2) {
-        super(new MBR(x1, y1, x2, y2));
+    public LeafNode(String describe, MBR mbr) {
+        super(mbr);
         this.describe = describe;
     }
 
@@ -27,8 +27,9 @@ public class LeafNode extends Entry implements Serializable {
 
     @Override
     public String toString() {
-        return "Record{" +
+        return "LeafNode{" +
                 "describe='" + describe + '\'' +
+                ", mbr=" + mbr +
                 '}';
     }
 }
