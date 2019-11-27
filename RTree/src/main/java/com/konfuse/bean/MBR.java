@@ -44,7 +44,7 @@ public class MBR implements Serializable {
         }
 
         public int compare(Entry e1, Entry e2) {
-            if (dimension == 0) {
+            if (dimension == 1) {
                 if (low) {
                     return Double.compare(e1.mbr.x1, e2.mbr.x1);
                 } else {

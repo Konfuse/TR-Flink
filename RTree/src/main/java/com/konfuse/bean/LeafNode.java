@@ -17,6 +17,14 @@ public class LeafNode extends Entry implements Serializable {
         this.describe = describe;
     }
 
+    public String getDescribe() {
+        return describe;
+    }
+
+    public void setDescribe(String describe) {
+        this.describe = describe;
+    }
+
     @Override
     public String toString() {
         return "Record{" +

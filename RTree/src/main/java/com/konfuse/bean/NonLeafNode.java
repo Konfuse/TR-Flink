@@ -8,8 +8,8 @@ import java.util.ArrayList;
  * @Date: 2019/11/26 11:10
  */
 public class NonLeafNode extends Entry implements Serializable {
-    public ArrayList<Entry> entries;
-    public int height = 1;
+    private ArrayList<Entry> entries;
+    private int height = 1;
 
     public NonLeafNode(int M, int height) {
         super(new MBR());

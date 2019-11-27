@@ -7,7 +7,7 @@ import java.io.Serializable;
  * @Date: 2019/11/26 10:49
  */
 public abstract class Entry implements Serializable {
-    public MBR mbr;
+    MBR mbr;
     Entry(MBR mbr) {
         this.mbr = mbr;
     }
