@@ -1,14 +1,13 @@
 package com.konfuse;
 
-import com.alibaba.fastjson.JSON;
 import com.konfuse.bean.Entry;
 import com.konfuse.bean.LeafNode;
 import com.konfuse.bean.Line;
 import com.konfuse.bean.MBR;
 import com.konfuse.tools.Visualization;
-import sun.reflect.generics.tree.Tree;
 
 import javax.swing.*;
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 
@@ -21,7 +20,7 @@ public class Test4IndexBuild {
     public static PreparedStatement ps;
     private static Connection connection;
 
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) throws SQLException, IOException, ClassNotFoundException {
         open();
         ResultSet resultSet = ps.executeQuery();
         ArrayList<LeafNode> lines = new ArrayList<>();
@@ -44,10 +43,17 @@ public class Test4IndexBuild {
         System.out.println("the root height is: " + tree.getRoot().getHeight());
         System.out.println("the root's mbr is: " + tree.getRoot().getMBR());
 
+        System.out.println("**************after serializable**************");
+        tree.save("tree.model");
+        tree = RTree.loadRTree("tree.model");
+        System.out.println("the root height is: " + tree.getRoot().getHeight());
+        System.out.println("the root's mbr is: " + tree.getRoot().getMBR());
+
         //test for visualization
+        RTree finalTree = tree;
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                Visualization.createAndShowGui(tree);
+                Visualization.createAndShowGui(finalTree);
             }
         });
     }

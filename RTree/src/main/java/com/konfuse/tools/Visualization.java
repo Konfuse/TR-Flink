@@ -37,15 +37,15 @@ public class Visualization extends JComponent {
             ArrayList<MBR> mbrList = tree.getMBRs(i);
             g.setColor(iterateColor(i));
             for (MBR mbr : mbrList) {
-                System.out.println("x1 of bound is: " +
-                        (int) (mbr.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000) +
-                        "; y1 of bound is: " +
-                        (int) (mbr.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000) +
-                        "; width of x is: " +
-                        (int) (mbr.getX2() * 10000 - mbr.getX1() * 10000) +
-                        "; length of x is: " +
-                        (int) (mbr.getY2() * 10000 - mbr.getY1() * 10000)
-                );
+//                System.out.println("x1 of bound is: " +
+//                        (int) (mbr.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000) +
+//                        "; y1 of bound is: " +
+//                        (int) (mbr.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000) +
+//                        "; width of x is: " +
+//                        (int) (mbr.getX2() * 10000 - mbr.getX1() * 10000) +
+//                        "; length of x is: " +
+//                        (int) (mbr.getY2() * 10000 - mbr.getY1() * 10000)
+//                );
                 g.drawRect((int) (mbr.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000), (int) (mbr.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000),
                         (int) (mbr.getX2() * 10000 - mbr.getX1() * 10000), (int) (mbr.getY2() * 10000 - mbr.getY1() * 10000));
             }

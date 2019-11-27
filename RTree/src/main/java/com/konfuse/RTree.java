@@ -5,7 +5,7 @@ import com.konfuse.bean.MBR;
 import com.konfuse.bean.NonLeafNode;
 import com.konfuse.bean.LeafNode;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -97,6 +97,19 @@ public class RTree implements Serializable {
             }
         }
         return result;
+    }
+
+    public void save(String file) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+        outputStream.writeObject(this);
+        outputStream.close();
+    }
+
+    public static RTree loadRTree(String file) throws IOException, ClassNotFoundException {
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+        RTree tree = (RTree) inputStream.readObject();
+        inputStream.close();
+        return tree;
     }
 
     @Override

@@ -1,10 +1,12 @@
 package com.konfuse.bean;
 
+import java.io.Serializable;
+
 /**
  * @Author: Konfuse
  * @Date: 2019/11/27 12:17
  */
-public class Line {
+public class Line implements Serializable {
     private String name;
     private double x1;
     private double y1;
