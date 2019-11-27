@@ -2,8 +2,8 @@ package com.konfuse;
 
 import com.konfuse.bean.Entry;
 import com.konfuse.bean.MBR;
-import com.konfuse.bean.RTreeNode;
-import com.konfuse.bean.Record;
+import com.konfuse.bean.NonLeafNode;
+import com.konfuse.bean.LeafNode;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -19,14 +19,14 @@ public class IndexBuilder implements Serializable {
     private int m = 16;
     private int entryCount;
     private int height;
-    private RTreeNode root;
+    private NonLeafNode root;
 
     public IndexBuilder(int M, int m) {
         this.M = M;
         this.m = m;
         this.entryCount = 0;
         this.height = 1;
-        root = new RTreeNode(M, 1);
+        root = new NonLeafNode(M, 1);
     }
 
     /*
@@ -36,13 +36,13 @@ public class IndexBuilder implements Serializable {
     * s is the due slice count of each dimension, i.e. s = Math.sqrt(r / M)
     * ctr is records traveling count
     * */
-    public RTree STRPacking(Record... records){
-        ArrayList<Entry> entries = new ArrayList<Entry>(Arrays.stream(records).collect(Collectors.toList()));
+    public RTree STRPacking(LeafNode... leafNodes){
+        ArrayList<Entry> entries = new ArrayList<Entry>(Arrays.stream(leafNodes).collect(Collectors.toList()));
         this.entryCount = entries.size();
         double p = entries.size() * 1.0 / M;
         entries.sort(new MBR.MBRComparator(0, true));
         entries = STRRecursive(2, p,  entries, 1);
-        root = new RTreeNode(M, this.height);
+        root = new NonLeafNode(M, this.height);
         root.entries = entries;
         root.mbr = MBR.union(root.getMBRs());
         return new RTree(root);
@@ -76,22 +76,22 @@ public class IndexBuilder implements Serializable {
 
     public void STRPackNodes(int dim, int height, ArrayList<Entry> list, ArrayList<Entry> nextLevel) {
         list.sort(new MBR.MBRComparator(dim, true));
-        RTreeNode rTreeNode = new RTreeNode(M, height);
+        NonLeafNode nonLeafNode = new NonLeafNode(M, height);
         for (Entry entrySlide : list) {
-            rTreeNode.entries.add(entrySlide);
-            if (rTreeNode.entries.size() == M) {
-                rTreeNode.mbr = MBR.union(rTreeNode.getMBRs());
-                nextLevel.add(rTreeNode);
-                rTreeNode = new RTreeNode(M, height);
+            nonLeafNode.entries.add(entrySlide);
+            if (nonLeafNode.entries.size() == M) {
+                nonLeafNode.mbr = MBR.union(nonLeafNode.getMBRs());
+                nextLevel.add(nonLeafNode);
+                nonLeafNode = new NonLeafNode(M, height);
             }
         }
-        if (rTreeNode.entries.size() > 0) {
-            while (rTreeNode.entries.size() < m) {
-                RTreeNode swapped = (RTreeNode)nextLevel.get(nextLevel.size() - 1);
-                rTreeNode.entries.add(0,swapped.entries.remove(swapped.entries.size() - 1));
+        if (nonLeafNode.entries.size() > 0) {
+            while (nonLeafNode.entries.size() < m) {
+                NonLeafNode swapped = (NonLeafNode)nextLevel.get(nextLevel.size() - 1);
+                nonLeafNode.entries.add(0,swapped.entries.remove(swapped.entries.size() - 1));
             }
-            rTreeNode.mbr = MBR.union(rTreeNode.getMBRs());
-            nextLevel.add(rTreeNode);
+            nonLeafNode.mbr = MBR.union(nonLeafNode.getMBRs());
+            nextLevel.add(nonLeafNode);
         }
     }
 }

@@ -7,17 +7,17 @@ import java.util.ArrayList;
  * @Author: Konfuse
  * @Date: 2019/11/26 11:10
  */
-public class RTreeNode extends Entry implements Serializable {
+public class NonLeafNode extends Entry implements Serializable {
     public ArrayList<Entry> entries;
     public int height = 1;
 
-    public RTreeNode(int M, int height) {
+    public NonLeafNode(int M, int height) {
         super(new MBR());
         this.height = height;
         this.entries = new ArrayList<Entry>(M);
     }
 
-    public RTreeNode(RTreeNode node) {
+    public NonLeafNode(NonLeafNode node) {
         super(new MBR());
         this.entries = new ArrayList<Entry>(node.entries);
         this.height = node.height;

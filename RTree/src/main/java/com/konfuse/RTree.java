@@ -2,8 +2,8 @@ package com.konfuse;
 
 import com.konfuse.bean.Entry;
 import com.konfuse.bean.MBR;
-import com.konfuse.bean.RTreeNode;
-import com.konfuse.bean.Record;
+import com.konfuse.bean.NonLeafNode;
+import com.konfuse.bean.LeafNode;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -15,35 +15,35 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @Date: 2019/11/26 11:07
  */
 public class RTree implements Serializable {
-    private RTreeNode root;
+    private NonLeafNode root;
 
-    public RTree(RTreeNode root) {
+    public RTree(NonLeafNode root) {
         this.root = root;
     }
 
-    public RTreeNode getRoot() {
+    public NonLeafNode getRoot() {
         return root;
     }
 
-    public void setRoot(RTreeNode root) {
+    public void setRoot(NonLeafNode root) {
         this.root = root;
     }
 
-    public ArrayList<Record> search(MBR area) {
-        if (!MBR.intersects(this.root.getMbr(), area)) {
-            return new ArrayList<Record>();
+    public ArrayList<LeafNode> search(MBR area) {
+        if (!MBR.intersects(this.root.getMBR(), area)) {
+            return new ArrayList<LeafNode>();
         }
         Queue<Entry> queue = new LinkedBlockingQueue<>();
-        RTreeNode node;
+        NonLeafNode node;
         queue.add(this.root);
-        ArrayList<Record> result = new ArrayList<Record> ();
+        ArrayList<LeafNode> result = new ArrayList<LeafNode> ();
         while (!queue.isEmpty()) {
-            node = (RTreeNode) queue.poll();
+            node = (NonLeafNode) queue.poll();
             ArrayList<Entry> entries = node.getEntries();
             for (Entry entry : entries) {
-                if (MBR.intersects(entry.getMbr(), area)) {
-                    if (entry instanceof Record) {
-                        result.add((Record) entry);
+                if (MBR.intersects(entry.getMBR(), area)) {
+                    if (entry instanceof LeafNode) {
+                        result.add((LeafNode) entry);
                     } else {
                         queue.add(entry);
                     }

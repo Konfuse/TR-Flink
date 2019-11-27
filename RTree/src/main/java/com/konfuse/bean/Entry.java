@@ -12,11 +12,11 @@ public abstract class Entry implements Serializable {
         this.mbr = mbr;
     }
 
-    public MBR getMbr() {
+    public MBR getMBR() {
         return mbr;
     }
 
-    public void setMbr(MBR mbr) {
+    public void setMBR(MBR mbr) {
         this.mbr = mbr;
     }
 }

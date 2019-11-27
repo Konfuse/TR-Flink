@@ -1,7 +1,7 @@
 package com.konfuse;
 
 import com.konfuse.bean.Entry;
-import com.konfuse.bean.RTreeNode;
+import com.konfuse.bean.NonLeafNode;
 
 import java.util.ArrayList;
 
@@ -39,7 +39,7 @@ public class Test {
         arrayList = test.getArrayList();
         arrayList.add(4);
         System.out.println(test);
-        Entry entry = new RTreeNode(1, 1);
-        System.out.println(entry instanceof RTreeNode);
+        Entry entry = new NonLeafNode(1, 1);
+        System.out.println(entry instanceof NonLeafNode);
     }
 }
