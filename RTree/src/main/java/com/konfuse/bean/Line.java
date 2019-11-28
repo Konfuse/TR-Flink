@@ -21,11 +21,30 @@ public class Line implements Serializable {
         this.y2 = y2;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Line{" +
+                "name='" + name + '\'' +
+                ", x1=" + x1 +
+                ", y1=" + y1 +
+                ", x2=" + x2 +
+                ", y2=" + y2 +
+                '}';
+    }
+
     public MBR mbr() {
         return new MBR(Math.min(this.x1, this.x2), Math.min(this.y1, this.y2), Math.max(this.x1, this.x2), Math.max(this.y1, this.y2));
     }
 
     public LeafNode toLeafNode() {
-        return new LeafNode(name, mbr());
+        return new LeafNode(this.name, mbr());
     }
 }

@@ -9,7 +9,7 @@ import com.konfuse.tools.Visualization;
 import javax.swing.*;
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
+import java.util.*;
 
 
 /**
@@ -24,6 +24,9 @@ public class Test4IndexBuild {
         open();
         ResultSet resultSet = ps.executeQuery();
         ArrayList<LeafNode> lines = new ArrayList<>();
+        MBR[] queries = new MBR[10];
+        Set<String> dueWays = new HashSet<>();
+        int count = 0;
         while (resultSet.next()) {
             Line line = new Line(
                     resultSet.getString("name"),
@@ -33,29 +36,55 @@ public class Test4IndexBuild {
                     resultSet.getDouble("y2")
             );
             lines.add(line.toLeafNode());
+            if (count < 10) {
+                dueWays.add(line.getName());
+                queries[count] = line.mbr();
+            }
+            ++count;
         }
         close();
         int size = lines.size();
         System.out.println("total data size: " + size + " lines...");
         LeafNode[] leafNodes = lines.toArray(new LeafNode[size]);
         System.out.println("start building r-tree");
+        long startTime = System.currentTimeMillis();
         RTree tree = new IndexBuilder().STRPacking(leafNodes);
+        long endTime = System.currentTimeMillis();
+        System.out.println("building time: " + (endTime - startTime) + "ms");
         System.out.println("the root height is: " + tree.getRoot().getHeight());
         System.out.println("the root's mbr is: " + tree.getRoot().getMBR());
 
-        System.out.println("**************after serializable**************");
+        System.out.println("************************query test*************************");
+        MBR area = MBR.union(queries);
+        ArrayList<LeafNode> nodes = tree.search(area);
+        Set<String> results = new HashSet<>();
+        System.out.println("query result is: ");
+        for (LeafNode node : nodes) {
+            results.add(node.getDescribe());
+            System.out.print(node.getDescribe() + ", ");
+        }
+        System.out.println("\ndue result: ");
+        dueWays.remove("null");
+        for (String dueWay : dueWays) {
+            System.out.print(dueWay + ", ");
+        }
+        results.retainAll(dueWays);
+        System.out.println("\nset intersection is:\n" + results);
+        System.out.println("accuracy is: " + results.size() * 1.0 / dueWays.size());
+
+        System.out.println("*********************after serializable*********************");
         tree.save("tree.model");
         tree = RTree.loadRTree("tree.model");
         System.out.println("the root height is: " + tree.getRoot().getHeight());
         System.out.println("the root's mbr is: " + tree.getRoot().getMBR());
 
         //test for visualization
-        RTree finalTree = tree;
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                Visualization.createAndShowGui(finalTree);
-            }
-        });
+//        RTree finalTree = tree;
+//        SwingUtilities.invokeLater(new Runnable() {
+//            public void run() {
+//                Visualization.createAndShowGui(finalTree);
+//            }
+//        });
     }
 
     public static void close() throws SQLException {
