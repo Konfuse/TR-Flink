@@ -1,6 +1,5 @@
 package com.konfuse;
 
-import com.konfuse.bean.Entry;
 import com.konfuse.bean.LeafNode;
 import com.konfuse.bean.Line;
 import com.konfuse.bean.MBR;
@@ -9,7 +8,9 @@ import com.konfuse.tools.Visualization;
 import javax.swing.*;
 import java.io.IOException;
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 
 /**
@@ -79,12 +80,12 @@ public class Test4IndexBuild {
         System.out.println("the root's mbr is: " + tree.getRoot().getMBR());
 
         //test for visualization
-//        RTree finalTree = tree;
-//        SwingUtilities.invokeLater(new Runnable() {
-//            public void run() {
-//                Visualization.createAndShowGui(finalTree);
-//            }
-//        });
+        RTree finalTree = tree;
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                Visualization.createAndShowGui(finalTree);
+            }
+        });
     }
 
     public static void close() throws SQLException {
