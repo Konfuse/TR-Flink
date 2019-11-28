@@ -5,7 +5,7 @@
 
 ## 项目的整体流程
 1. 提取包含所有点的MBR（在分布式中，作为全局变量。将得到的值广播到每一个子任务中（分区）并进行相应的运算）。
-2. 对所有的点进行采样（能够近似所有点的分布），得到采样点。对采样点进行STR分区，根据得到的分区的MBR，构建一个sample R-tree。
+2. 对所有的点进行采样（能够近似所有点的分布），得到采样点。对采样点进行STR分区，根据得到的分区MBR，构建一个sample R-tree。
 3. 利用sample R-tree的分区，将所有点分配到不同的分区中（每个分区对应一个子任务）。
 4. 对每个分区（子任务）中的点构建一个Local R-tree。收集所有子任务得到的Local R-tree。最后根据每个Local Rtree的根节点的MBR构建一个真正的Global R-tree。
 
@@ -146,3 +146,25 @@ public class PointSerializer extends Serializer<Point>{
     }
 }
 ```
+
+## 利用分布式R-tree的搜索流程
+这里拿范围搜索（针对Point数据）举例，其他搜索类似。
+
+```
+//1. 输入参数是所有点，找出所有的在MBR范围内的点集。
+public DataSet<Point> boxRangeQuery(final MBR box, DataSet<Point> data) 
+//2. 输入的是构建好的global R-tree，local R-tree。找出所有的MBR范围内的点集。
+public DataSet<Point> boxRangeQuery(final MBR box, DataSet<RTree> globalTree, DataSet<RTree> localTrees)
+```
+### boxRangeQuery(final MBR box, DataSet<Point> data)
+1. 该方法首先对data数据集进行分区，构建全局R树，得到经过分区的批数据、Global R-tree。
+
+2. 通过Global R-tree，找到与其相交的所有叶子结点，并得到相应的分区号。最后将这些分区好收集起来得到DataSet<Integer> partitionFlags，指代所有相交的分区号。
+
+3. 将partitionFlags作为分布式系统中的全局变量，通过Broadcast函数进行广播，传递到执行搜索操作的不同数据分区的每一个子任务中。通过getRuntimeContext().getIndexOfThisSubtask()得到当前正在搜索的分区号（与子任务号相对应）。在partitionFlags序号集合中的分区中执行搜索，对满足box.contains(point)的Point进行收集。最终得到所有满足的点。
+
+### public DataSet<Point> boxRangeQuery(final MBR box, DataSet<RTree> globalTree, DataSet<RTree> localTrees)
+1. 该方法首先通过Global R-tree，找到与其相交的所有叶子结点，并得到相应的分区号。最后将这些分区号收集起来得到DataSet<Integer> partitionFlags，指代所有相交的分区号。
+
+2. 与前面一致，不过这里是在对应local R-tree中。由于local R-tree的叶子节点存储了Point数据，于是直接从每一个满足条件local R-tree的中收集所有满足条件的点，最后将所有结果返回。
+
