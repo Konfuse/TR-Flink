@@ -159,12 +159,12 @@ public DataSet<Point> boxRangeQuery(final MBR box, DataSet<RTree> globalTree, Da
 ### boxRangeQuery(final MBR box, DataSet<Point> data)
 1. 该方法首先对data数据集进行分区，构建全局R树，得到经过分区的批数据、Global R-tree。
 
-2. 通过Global R-tree，找到与其相交的所有叶子结点，并得到相应的分区号。最后将这些分区好收集起来得到DataSet<Integer> partitionFlags，指代所有相交的分区号。
+2. 通过Global R-tree，找到与其相交的所有叶子结点，并得到叶子结点中相应的分区号。最后将这些分区号收集起来得到DataSet<Integer> partitionFlags，指代所有相交的分区号。
 
 3. 将partitionFlags作为分布式系统中的全局变量，通过Broadcast函数进行广播，传递到执行搜索操作的不同数据分区的每一个子任务中。通过getRuntimeContext().getIndexOfThisSubtask()得到当前正在搜索的分区号（与子任务号相对应）。在partitionFlags序号集合中的分区中执行搜索，对满足box.contains(point)的Point进行收集。最终得到所有满足的点。
 
 ### public DataSet<Point> boxRangeQuery(final MBR box, DataSet<RTree> globalTree, DataSet<RTree> localTrees)
-1. 该方法首先通过Global R-tree，找到与其相交的所有叶子结点，并得到相应的分区号。最后将这些分区号收集起来得到DataSet<Integer> partitionFlags，指代所有相交的分区号。
+1. 该方法首先通过Global R-tree，找到与其相交的所有叶子结点，并得到叶子结点中相应的分区号。最后将这些分区号收集起来得到DataSet<Integer> partitionFlags，指代所有相交的分区号。
 
 2. 与前面一致，不过这里是在对应local R-tree中。由于local R-tree的叶子节点存储了Point数据，于是直接从每一个满足条件local R-tree的中收集所有满足条件的点，最后将所有结果返回。
 
