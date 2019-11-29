@@ -48,4 +48,18 @@ public class Line extends DataObject implements Serializable {
         }
         return mbrs;
     }
+
+    @Override
+    public double calDistance(Point point) {
+        double cross = (x2 - x1) * (point.getX() - x1) + (y2 - y1) * (point.getY() - y1);
+        double distanceSquared = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+        double r = cross / distanceSquared;
+        if (r <= 0) return Math.sqrt((point.getX() - x1) * (point.getX() - x1) + (point.getY() - y1) * (point.getY() - y1));
+        else if (cross >= distanceSquared) return Math.sqrt((point.getX() - x2) * (point.getX() - x2) + (point.getY() - y2) * (point.getY() - y2));
+        else {
+            double px = x1 + (x2 - x1) * r;
+            double py = y1 + (y2 - y1) * r;
+            return Math.sqrt((point.getX() - px) * (point.getX() - px) + (point.getY() - py) * (point.getY() - py));
+        }
+    }
 }

@@ -28,6 +28,11 @@ public class Point extends DataObject implements Serializable {
         return y;
     }
 
+    @Override
+    public double calDistance(Point point) {
+        return Math.sqrt((x - point.x) * (x - point.x) + (y - point.y) * (y - point.y));
+    }
+
     public static class PointComparator implements Comparator<Point> {
         private int dimension;
 

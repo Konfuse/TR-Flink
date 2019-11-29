@@ -30,4 +30,6 @@ public abstract class DataObject implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
+
+    public abstract double calDistance(Point point);
 }

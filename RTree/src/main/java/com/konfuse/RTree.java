@@ -1,15 +1,14 @@
 package com.konfuse;
 
 import com.konfuse.geometry.DataObject;
+import com.konfuse.geometry.Point;
 import com.konfuse.internal.TreeNode;
 import com.konfuse.internal.MBR;
 import com.konfuse.internal.NonLeafNode;
 import com.konfuse.internal.LeafNode;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -84,6 +83,24 @@ public class RTree implements Serializable {
         return result;
     }
 
+    public ArrayList<DataObject> knnQuery(final Point queryPoint, int k) {
+        ArrayList<DataObject> dataObjects = getDataObjects();
+
+        ArrayList<DataObject> result = new ArrayList<>(k);
+        dataObjects.sort((o1, o2) -> {
+            Double distance1 = o1.calDistance(queryPoint);
+            Double distance2 = o2.calDistance(queryPoint);
+            return distance2.compareTo(distance1);
+        });
+
+        for (int i = 0; i < dataObjects.size(); i++) {
+            if (i <= k) {
+                result.add(dataObjects.get(i));
+            }
+        }
+        return result;
+    }
+
     public ArrayList<DataObject> getDataObjects() {
         ArrayList<TreeNode> leafNodes = getLeafNodes();
         ArrayList<DataObject> results = new ArrayList<>(leafNodes.size() * maxNodeNb);
@@ -93,7 +110,7 @@ public class RTree implements Serializable {
         return results;
     }
 
-    public ArrayList<TreeNode> getLeafNodes(){
+    private ArrayList<TreeNode> getLeafNodes(){
         return getTreeNode(1);
     }
 
