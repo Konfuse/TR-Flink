@@ -1,10 +1,14 @@
 package com.konfuse.tools;
 
 import com.konfuse.RTree;
+import com.konfuse.geometry.DataObject;
+import com.konfuse.geometry.Line;
+import com.konfuse.geometry.Point;
 import com.konfuse.internal.MBR;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.channels.Pipe;
 import java.util.ArrayList;
 
 /**
@@ -19,7 +23,7 @@ public class Visualization extends JComponent {
     
     private RTree tree;
 
-    public Visualization(RTree tree) {
+    private Visualization(RTree tree) {
         this.tree = tree;
     }
 
@@ -43,6 +47,16 @@ public class Visualization extends JComponent {
                 g.drawRect((int) (mbr.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000), (int) (mbr.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000),
                         (int) (mbr.getX2() * 10000 - mbr.getX1() * 10000), (int) (mbr.getY2() * 10000 - mbr.getY1() * 10000));
             }
+        }
+        g.setColor(iterateColor(0));
+        ArrayList<DataObject> dataObjects = tree.getDataObjects();
+        if (dataObjects.get(0) instanceof Point) {
+            for (DataObject dataObject : dataObjects) {
+                Point point = (Point) dataObject;
+                g.fillOval((int) (point.getX() * 10000 - tree.getRoot().getMBR().getX1() * 10000), (int) (point.getY() * 10000 - tree.getRoot().getMBR().getY1() * 10000), 2, 2);
+            }
+        } else if (dataObjects.get(0) instanceof Line) {
+
         }
     }
 
