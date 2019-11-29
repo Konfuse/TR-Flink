@@ -34,7 +34,7 @@ public class LeafNode<T extends DataObject> extends TreeNode implements Serializ
         return "LeafNode{" +
                 "dataObjects=" + entries +
                 ", height=" + height +
-                ", mbr=" + mbr +
+                ", unionPoints=" + mbr +
                 '}';
     }
 }

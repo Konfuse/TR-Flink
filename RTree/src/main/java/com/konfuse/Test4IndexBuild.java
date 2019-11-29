@@ -1,7 +1,6 @@
 package com.konfuse;
 
 import com.konfuse.geometry.DataObject;
-import com.konfuse.internal.LeafNode;
 import com.konfuse.geometry.Line;
 import com.konfuse.internal.MBR;
 import com.konfuse.tools.Visualization;
@@ -32,7 +31,7 @@ public class Test4IndexBuild {
         int count = 0;
         while (resultSet.next()) {
             Line line = new Line(
-                    resultSet.getLong("id"),
+                    resultSet.getLong("gid"),
                     resultSet.getString("name"),
                     resultSet.getDouble("x1"),
                     resultSet.getDouble("y1"),
@@ -53,19 +52,26 @@ public class Test4IndexBuild {
 
         System.out.println("start building r-tree");
         long startTime = System.currentTimeMillis();
-        RTree tree = new IndexBuilder().STRPacking(lines.toArray(new Line[size]));
+        RTree tree = new IndexBuilder().createRTreeBySTR(lines.toArray(new Line[size]));
         long endTime = System.currentTimeMillis();
 
         System.out.println("building time: " + (endTime - startTime) + "ms");
         System.out.println("the root height is: " + tree.getRoot().getHeight());
-        System.out.println("the root's mbr is: " + tree.getRoot().getMBR());
+        System.out.println("the root's unionPoints is: " + tree.getRoot().getMBR());
 
         System.out.println("************************query test*************************");
+
+        System.out.println("the data objects included in rtree are: ");
+        ArrayList<DataObject> list = tree.getDataObjects();
+        for (DataObject dataObject : list) {
+            System.out.print(dataObject.getId() + ", ");
+        }
+
         MBR area = MBR.union(queries);
         ArrayList<DataObject> dataObjects = tree.rangeQuery(area);
 
         Set<Long> results = new HashSet<>();
-        System.out.println("query result is: ");
+        System.out.println("\nquery result is: ");
         for (DataObject dataObject : dataObjects) {
             results.add(dataObject.getId());
             System.out.print(dataObject.getId() + ", ");
@@ -84,15 +90,15 @@ public class Test4IndexBuild {
         tree.save("tree.model");
         tree = RTree.loadRTree("tree.model");
         System.out.println("the root height is: " + tree.getRoot().getHeight());
-        System.out.println("the root's mbr is: " + tree.getRoot().getMBR());
+        System.out.println("the root's unionPoints is: " + tree.getRoot().getMBR());
 
         //test for visualization
-        RTree finalTree = tree;
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                Visualization.createAndShowGui(finalTree);
-            }
-        });
+//        RTree finalTree = tree;
+//        SwingUtilities.invokeLater(new Runnable() {
+//            public void run() {
+//                Visualization.createAndShowGui(finalTree);
+//            }
+//        });
     }
 
     public static void close() throws SQLException {

@@ -6,7 +6,6 @@ import com.konfuse.internal.MBR;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Stack;
 
 /**
  * @Author: Konfuse
@@ -17,16 +16,11 @@ public class Visualization extends JComponent {
     private static final int RECT_Y = 400;
     private static final int RECT_WIDTH = 400;
     private static final int RECT_HEIGHT = 400;
-    private static Stack<ArrayList<MBR>> stack = new Stack<ArrayList<MBR>>();
     
     private RTree tree;
 
     public Visualization(RTree tree) {
         this.tree = tree;
-        int level = tree.getRoot().getHeight();
-        for(int i = 0 ; i <= level ; i++ ){
-            stack.add(tree.getMBRs(i));
-        }
     }
 
     @Override
@@ -34,17 +28,17 @@ public class Visualization extends JComponent {
         super.paintComponent(g);
         int height = tree.getRoot().getHeight();
         for (int i = 1; i <= height; i++) {
-            ArrayList<MBR> mbrList = tree.getMBRs(i);
+            ArrayList<MBR> mbrList = tree.getLevelMBRs(i);
             g.setColor(iterateColor(i));
             for (MBR mbr : mbrList) {
 //                System.out.println("x1 of bound is: " +
-//                        (int) (mbr.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000) +
+//                        (int) (unionPoints.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000) +
 //                        "; y1 of bound is: " +
-//                        (int) (mbr.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000) +
+//                        (int) (unionPoints.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000) +
 //                        "; width of x is: " +
-//                        (int) (mbr.getX2() * 10000 - mbr.getX1() * 10000) +
+//                        (int) (unionPoints.getX2() * 10000 - unionPoints.getX1() * 10000) +
 //                        "; length of x is: " +
-//                        (int) (mbr.getY2() * 10000 - mbr.getY1() * 10000)
+//                        (int) (unionPoints.getY2() * 10000 - unionPoints.getY1() * 10000)
 //                );
                 g.drawRect((int) (mbr.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000), (int) (mbr.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000),
                         (int) (mbr.getX2() * 10000 - mbr.getX1() * 10000), (int) (mbr.getY2() * 10000 - mbr.getY1() * 10000));

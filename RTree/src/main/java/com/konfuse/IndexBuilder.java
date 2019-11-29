@@ -43,7 +43,7 @@ public class IndexBuilder implements Serializable {
     * s is the due slice count of each dimension, i.e. s = Math.sqrt(r / M)
     * ctr is records traveling count
     * */
-    public RTree STRPacking(Point... points) {
+    public RTree createRTreeBySTR(Point... points) {
         ArrayList<Point> pointList = new ArrayList<>(Arrays.stream(points).collect(Collectors.toList()));
         this.entryCount = pointList.size();
 
@@ -53,8 +53,9 @@ public class IndexBuilder implements Serializable {
         //start building r-tree leaf node
         pointList.sort(new Point.PointComparator(1));
         if (pointList.size() <= M) {
-            this.root = new LeafNode<>(pointList, Point.mbr(pointList));
-            return new RTree(root);
+            this.height = 1;
+            this.root = new LeafNode<>(pointList, Point.unionPoints(pointList));
+            return new RTree(root, M, m);
         }
 
         int s = (int) Math.ceil(Math.pow(Math.E, Math.log(p) / 2));
@@ -66,19 +67,19 @@ public class IndexBuilder implements Serializable {
             list.add(point);
             ++ctr;
             if (ctr == s * M) {
-                PackPoint(list, nextLevel);
+                packPoints(list, nextLevel);
                 list.clear();
                 ctr = 0;
             }
         }
         if(list.size() > 0) {
-            PackPoint(list, nextLevel);
+            packPoints(list, nextLevel);
             list.clear();
         }
-        return STRLeafNodePacking(nextLevel);
+        return leafNodePacking(nextLevel);
     }
 
-    public RTree STRPacking(Line... lines) {
+    public RTree createRTreeBySTR(Line... lines) {
         ArrayList<Line> lineList = new ArrayList<>(Arrays.stream(lines).collect(Collectors.toList()));
         this.entryCount = lineList.size();
 
@@ -90,8 +91,9 @@ public class IndexBuilder implements Serializable {
 
         // if size of lines <= M, then return RTree directly
         if (lineList.size() <= M) {
-            this.root = new LeafNode<>(lineList, MBR.union(Line.getMBRs(lineList)));
-            return new RTree(root);
+            this.height = 1;
+            this.root = new LeafNode<>(lineList, MBR.union(Line.unionLines(lineList)));
+            return new RTree(root, M, m);
         }
 
         int s = (int) Math.ceil(Math.pow(Math.E, Math.log(p) / 2));
@@ -103,34 +105,35 @@ public class IndexBuilder implements Serializable {
             list.add(line);
             ++ctr;
             if (ctr == s * M) {
-                PackLine(list, nextLevel);
+                packLines(list, nextLevel);
                 list.clear();
                 ctr = 0;
             }
         }
         if(list.size() > 0) {
-            PackLine(list, nextLevel);
+            packLines(list, nextLevel);
             list.clear();
         }
-        return STRLeafNodePacking(nextLevel);
+        return leafNodePacking(nextLevel);
     }
 
-    public RTree STRLeafNodePacking(ArrayList<TreeNode> treeNodes) {
+    private RTree leafNodePacking(ArrayList<TreeNode> treeNodes) {
         // calculate partition num
         double p = treeNodes.size() * 1.0 / M;
 
         // start build r-tree structure bottom-to-up recursively
         treeNodes.sort(new MBR.MBRComparatorWithTreeNode(1, true));
-        treeNodes = STRRecursive(p, treeNodes, 2);
+        treeNodes = buildRecursivelyBySTR(p, treeNodes, 1);
 
-        NonLeafNode nonLeafNode = new NonLeafNode(M, this.height);
+        NonLeafNode nonLeafNode = new NonLeafNode(M, this.height + 1);
         nonLeafNode.setChildNodes(treeNodes);
         nonLeafNode.setMBR(MBR.union(nonLeafNode.getMBRs()));
+
         this.root = nonLeafNode;
-        return new RTree(root);
+        return new RTree(root, M, m);
     }
 
-    public ArrayList<TreeNode> STRRecursive(double p, ArrayList<TreeNode> entries, int height) {
+    private ArrayList<TreeNode> buildRecursivelyBySTR(double p, ArrayList<TreeNode> entries, int height) {
         if (entries.size() <= M) {
             this.height = height;
             return entries;
@@ -144,25 +147,25 @@ public class IndexBuilder implements Serializable {
             list.add(treeNode);
             ++ctr;
             if (ctr == s * M) {
-                PackNodes(height, list, nextLevel);
+                packNodes(height, list, nextLevel);
                 list.clear();
                 ctr = 0;
             }
         }
         if(list.size() > 0) {
-            PackNodes(height, list, nextLevel);
+            packNodes(height, list, nextLevel);
             list.clear();
         }
-        return STRRecursive(nextLevel.size() * 1.0 / M, nextLevel, height + 1);
+        return buildRecursivelyBySTR(nextLevel.size() * 1.0 / M, nextLevel, height + 1);
     }
 
-    public void PackPoint(ArrayList<Point> points, ArrayList<TreeNode> nextLevel) {
+    private void packPoints(ArrayList<Point> points, ArrayList<TreeNode> nextLevel) {
         points.sort(new Point.PointComparator(2));
         LeafNode<Point> leafNode = new LeafNode<>(M);
         for (Point point : points) {
             leafNode.getEntries().add(point);
             if (leafNode.getEntries().size() == M) {
-                leafNode.setMBR(Point.mbr(leafNode.getEntries()));
+                leafNode.setMBR(Point.unionPoints(leafNode.getEntries()));
                 nextLevel.add(leafNode);
                 leafNode = new LeafNode<Point>(M);
             }
@@ -176,18 +179,18 @@ public class IndexBuilder implements Serializable {
                     lastPoints.add(0, swappedPoints.remove(swappedPoints.size() - 1));
                 }
             }
-            leafNode.setMBR(Point.mbr(leafNode.getEntries()));
+            leafNode.setMBR(Point.unionPoints(leafNode.getEntries()));
             nextLevel.add(leafNode);
         }
     }
 
-    public void PackLine(ArrayList<Line> lines, ArrayList<TreeNode> nextLevel) {
+    private void packLines(ArrayList<Line> lines, ArrayList<TreeNode> nextLevel) {
         lines.sort(new MBR.MBRComparatorWithLine(2, true));
         LeafNode<Line> leafNode = new LeafNode<>(M);
         for (Line line : lines) {
             leafNode.getEntries().add(line);
             if (leafNode.getEntries().size() == M) {
-                leafNode.setMBR(MBR.union(Line.getMBRs(leafNode.getEntries())));
+                leafNode.setMBR(MBR.union(Line.unionLines(leafNode.getEntries())));
                 nextLevel.add(leafNode);
                 leafNode = new LeafNode<Line>(M);
             }
@@ -201,21 +204,21 @@ public class IndexBuilder implements Serializable {
                     lastLines.add(0, swappedLines.remove(swappedLines.size() - 1));
                 }
             }
-            leafNode.setMBR(MBR.union(Line.getMBRs(leafNode.getEntries())));
+            leafNode.setMBR(MBR.union(Line.unionLines(leafNode.getEntries())));
             nextLevel.add(leafNode);
         }
     }
 
     //get a slide in list, and divide it into nodes
-    public void PackNodes(int height, ArrayList<TreeNode> list, ArrayList<TreeNode> nextLevel) {
+    private void packNodes(int height, ArrayList<TreeNode> list, ArrayList<TreeNode> nextLevel) {
         list.sort(new MBR.MBRComparatorWithTreeNode(2, true));
-        NonLeafNode nonLeafNode = new NonLeafNode(M, height);
+        NonLeafNode nonLeafNode = new NonLeafNode(M, height + 1);
         for (TreeNode treeNode : list) {
             nonLeafNode.getChildNodes().add(treeNode);
             if (nonLeafNode.getChildNodes().size() == M) {
                 nonLeafNode.setMBR(MBR.union(nonLeafNode.getMBRs()));
                 nextLevel.add(nonLeafNode);
-                nonLeafNode = new NonLeafNode(M, height);
+                nonLeafNode = new NonLeafNode(M, height + 1);
             }
         }
         if (nonLeafNode.getChildNodes().size() > 0) {

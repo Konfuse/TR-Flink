@@ -19,13 +19,17 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class RTree implements Serializable {
     private TreeNode root;
     private int height;
+    private int maxNodeNb;
+    private int minNodeNb;
 
     public RTree() {
     }
 
-    public RTree(TreeNode root) {
+    public RTree(TreeNode root, int M, int m) {
         this.root = root;
         this.height = root.getHeight();
+        this.maxNodeNb = M;
+        this.minNodeNb = m;
     }
 
     public TreeNode getRoot() {
@@ -42,6 +46,14 @@ public class RTree implements Serializable {
 
     public void setRoot(NonLeafNode root) {
         this.root = root;
+    }
+
+    public int getMaxNodeNb() {
+        return maxNodeNb;
+    }
+
+    public int getMinNodeNb() {
+        return minNodeNb;
     }
 
     public ArrayList<DataObject> rangeQuery(MBR area) {
@@ -72,21 +84,32 @@ public class RTree implements Serializable {
         return result;
     }
 
-    public ArrayList<MBR> getMBRs(int level) {
+    public ArrayList<DataObject> getDataObjects() {
+        ArrayList<TreeNode> leafNodes = getLeafNodes();
+        ArrayList<DataObject> results = new ArrayList<>(leafNodes.size() * maxNodeNb);
+        for (TreeNode leafNode : leafNodes) {
+            results.addAll(((LeafNode) leafNode).getEntries());
+        }
+        return results;
+    }
+
+    public ArrayList<TreeNode> getLeafNodes(){
+        return getTreeNode(1);
+    }
+
+    private ArrayList<TreeNode> getTreeNode(int level) {
         assert level >= 1 && level <= root.getHeight();
         TreeNode node = this.root;
         Queue<TreeNode> queue = new LinkedList<>();
-        ArrayList<MBR> result = new ArrayList<MBR>();
+        ArrayList<TreeNode> result = new ArrayList<>();
 
         // If root level, then return the MBR of the whole tree.
         if (node.getHeight() == level) {
-            result.add(node.getMBR());
+            result.add(node);
             return result;
         } else if (node.getHeight() - 1 == level) {
             NonLeafNode nonLeafNode = (NonLeafNode) node;
-            for(TreeNode e : nonLeafNode.getChildNodes()) {
-                result.add(e.getMBR());
-            }
+            result.addAll(nonLeafNode.getChildNodes());
             return result;
         }
 
@@ -96,15 +119,22 @@ public class RTree implements Serializable {
             nonLeafNode = (NonLeafNode) queue.poll();
             for (TreeNode child : nonLeafNode.getChildNodes()) {
                 if (child.getHeight() == level + 1) {
-                    for (TreeNode e : ((NonLeafNode) child).getChildNodes()) {
-                        result.add(e.getMBR());
-                    }
-                } else if (level + 1 < ((NonLeafNode) child).getHeight()) {
+                    result.addAll(((NonLeafNode) child).getChildNodes());
+                } else if (level + 1 < child.getHeight()) {
                     queue.add(child);
                 }
             }
         }
         return result;
+    }
+
+    public ArrayList<MBR> getLevelMBRs(int level) {
+        ArrayList<TreeNode> treeNodes = getTreeNode(level);
+        ArrayList<MBR> results = new ArrayList<>(treeNodes.size());
+        for (TreeNode treeNode : treeNodes) {
+            results.add(treeNode.getMBR());
+        }
+        return results;
     }
 
     public void save(String file) throws IOException {

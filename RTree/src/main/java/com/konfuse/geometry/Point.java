@@ -46,7 +46,7 @@ public class Point extends DataObject implements Serializable {
         }
     }
 
-    public static MBR mbr(ArrayList<Point> points) {
+    public static MBR unionPoints(ArrayList<Point> points) {
         if (points.size() == 0)
             return new MBR();
 
