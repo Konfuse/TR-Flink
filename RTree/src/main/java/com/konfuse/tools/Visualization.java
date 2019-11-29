@@ -1,7 +1,7 @@
 package com.konfuse.tools;
 
 import com.konfuse.RTree;
-import com.konfuse.bean.MBR;
+import com.konfuse.internal.MBR;
 
 import javax.swing.*;
 import java.awt.*;
@@ -33,7 +33,7 @@ public class Visualization extends JComponent {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         int height = tree.getRoot().getHeight();
-        for (int i = 0; i <= height; i++) {
+        for (int i = 1; i <= height; i++) {
             ArrayList<MBR> mbrList = tree.getMBRs(i);
             g.setColor(iterateColor(i));
             for (MBR mbr : mbrList) {

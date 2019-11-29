@@ -1,4 +1,8 @@
-package com.konfuse.bean;
+package com.konfuse.internal;
+
+import com.konfuse.geometry.DataObject;
+import com.konfuse.geometry.Line;
+import com.konfuse.geometry.Point;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -50,16 +54,16 @@ public class MBR implements Serializable {
         return y2;
     }
 
-    public static class MBRComparator implements Comparator<Entry> {
+    public static class MBRComparatorWithTreeNode implements Comparator<TreeNode> {
         private int dimension;
         private boolean low;
 
-        public MBRComparator(int dimension, boolean low) {
+        public MBRComparatorWithTreeNode(int dimension, boolean low) {
             this.dimension = dimension;
             this.low = low;
         }
 
-        public int compare(Entry e1, Entry e2) {
+        public int compare(TreeNode e1, TreeNode e2) {
             if (dimension == 1) {
                 if (low) {
                     return Double.compare(e1.mbr.x1, e2.mbr.x1);
@@ -71,6 +75,32 @@ public class MBR implements Serializable {
                     return Double.compare(e1.mbr.y1, e2.mbr.y1);
                 } else {
                     return Double.compare(e1.mbr.y2, e2.mbr.y2);
+                }
+            }
+        }
+    }
+
+    public static class MBRComparatorWithLine implements Comparator<Line> {
+        private int dimension;
+        private boolean low;
+
+        public MBRComparatorWithLine(int dimension, boolean low) {
+            this.dimension = dimension;
+            this.low = low;
+        }
+
+        public int compare(Line line1, Line line2) {
+            if (dimension == 1) {
+                if (low) {
+                    return Double.compare(line1.mbr().x1, line2.mbr().x1);
+                } else {
+                    return Double.compare(line1.mbr().x2, line2.mbr().x2);
+                }
+            } else {
+                if (low) {
+                    return Double.compare(line1.mbr().y1, line2.mbr().y1);
+                } else {
+                    return Double.compare(line1.mbr().y2, line2.mbr().y2);
                 }
             }
         }
@@ -133,6 +163,26 @@ public class MBR implements Serializable {
         if (mbr.x1 < x1 || mbr.x2 > x2 || mbr.y1 < y1 || mbr.y2 > y2)
             return false;
         return true;
+    }
+
+    public boolean contains(Point point) {
+        if (point.getX() >= x1 && point.getX() <= x2 && point.getY() >= y1 && point.getY() <= y2)
+            return true;
+        return false;
+    }
+
+    public boolean contains(Line line) {
+        if (intersects(this, line.mbr()))
+            return true;
+        return false;
+    }
+
+    public boolean contains(DataObject dataObject) {
+        if (dataObject instanceof Point)
+            return contains((Point) dataObject);
+        else if (dataObject instanceof Line)
+            return contains((Line) dataObject);
+        return false;
     }
 
     @Override

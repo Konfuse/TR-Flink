@@ -1,8 +1,9 @@
 package com.konfuse;
 
-import com.konfuse.bean.LeafNode;
-import com.konfuse.bean.Line;
-import com.konfuse.bean.MBR;
+import com.konfuse.geometry.DataObject;
+import com.konfuse.internal.LeafNode;
+import com.konfuse.geometry.Line;
+import com.konfuse.internal.MBR;
 import com.konfuse.tools.Visualization;
 
 import javax.swing.*;
@@ -24,54 +25,60 @@ public class Test4IndexBuild {
     public static void main(String[] args) throws SQLException, IOException, ClassNotFoundException {
         open();
         ResultSet resultSet = ps.executeQuery();
-        ArrayList<LeafNode> lines = new ArrayList<>();
+        ArrayList<Line> lines = new ArrayList<>();
         MBR[] queries = new MBR[10];
-        Set<String> dueWays = new HashSet<>();
+        Set<Long> dueResults = new HashSet<>();
+
         int count = 0;
         while (resultSet.next()) {
             Line line = new Line(
+                    resultSet.getLong("id"),
                     resultSet.getString("name"),
                     resultSet.getDouble("x1"),
                     resultSet.getDouble("y1"),
                     resultSet.getDouble("x2"),
                     resultSet.getDouble("y2")
             );
-            lines.add(line.toLeafNode());
+            lines.add(line);
             if (count < 10) {
-                dueWays.add(line.getName());
+                dueResults.add(line.getId());
                 queries[count] = line.mbr();
             }
             ++count;
         }
         close();
+
         int size = lines.size();
         System.out.println("total data size: " + size + " lines...");
-        LeafNode[] leafNodes = lines.toArray(new LeafNode[size]);
+
         System.out.println("start building r-tree");
         long startTime = System.currentTimeMillis();
-        RTree tree = new IndexBuilder().STRPacking(leafNodes);
+        RTree tree = new IndexBuilder().STRPacking(lines.toArray(new Line[size]));
         long endTime = System.currentTimeMillis();
+
         System.out.println("building time: " + (endTime - startTime) + "ms");
         System.out.println("the root height is: " + tree.getRoot().getHeight());
         System.out.println("the root's mbr is: " + tree.getRoot().getMBR());
 
         System.out.println("************************query test*************************");
         MBR area = MBR.union(queries);
-        ArrayList<LeafNode> nodes = tree.search(area);
-        Set<String> results = new HashSet<>();
+        ArrayList<DataObject> dataObjects = tree.rangeQuery(area);
+
+        Set<Long> results = new HashSet<>();
         System.out.println("query result is: ");
-        for (LeafNode node : nodes) {
-            results.add(node.getDescribe());
-            System.out.print(node.getDescribe() + ", ");
+        for (DataObject dataObject : dataObjects) {
+            results.add(dataObject.getId());
+            System.out.print(dataObject.getId() + ", ");
         }
+
         System.out.println("\ndue result: ");
-        dueWays.remove("null");
-        for (String dueWay : dueWays) {
-            System.out.print(dueWay + ", ");
+        dueResults.remove("null");
+        for (Long dueId : dueResults) {
+            System.out.print(dueId + ", ");
         }
-        results.retainAll(dueWays);
+        results.retainAll(dueResults);
         System.out.println("\nset intersection is:\n" + results);
-        System.out.println("accuracy is: " + results.size() * 1.0 / dueWays.size());
+        System.out.println("accuracy is: " + results.size() * 1.0 / dueResults.size());
 
         System.out.println("*********************after serializable*********************");
         tree.save("tree.model");
@@ -99,7 +106,7 @@ public class Test4IndexBuild {
 
     public static void open() throws SQLException {
         connection = getConnection();
-        String sql = "select name, x1, y1, x2, y2 from ways;";
+        String sql = "select gid, name, x1, y1, x2, y2 from ways;";
         ps = connection.prepareStatement(sql);
     }
 

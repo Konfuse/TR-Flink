@@ -1,9 +1,10 @@
 package com.konfuse;
 
-import com.konfuse.bean.Entry;
-import com.konfuse.bean.MBR;
-import com.konfuse.bean.NonLeafNode;
-import com.konfuse.bean.LeafNode;
+import com.konfuse.geometry.DataObject;
+import com.konfuse.internal.TreeNode;
+import com.konfuse.internal.MBR;
+import com.konfuse.internal.NonLeafNode;
+import com.konfuse.internal.LeafNode;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -16,18 +17,18 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @Date: 2019/11/26 11:07
  */
 public class RTree implements Serializable {
-    private NonLeafNode root;
+    private TreeNode root;
     private int height;
 
     public RTree() {
     }
 
-    public RTree(NonLeafNode root) {
+    public RTree(TreeNode root) {
         this.root = root;
         this.height = root.getHeight();
     }
 
-    public NonLeafNode getRoot() {
+    public TreeNode getRoot() {
         return root;
     }
 
@@ -43,23 +44,27 @@ public class RTree implements Serializable {
         this.root = root;
     }
 
-    public ArrayList<LeafNode> search(MBR area) {
+    public ArrayList<DataObject> rangeQuery(MBR area) {
         if (!MBR.intersects(this.root.getMBR(), area)) {
-            return new ArrayList<LeafNode>();
+            return new ArrayList<>();
         }
-        Queue<Entry> queue = new LinkedBlockingQueue<>();
-        NonLeafNode node;
+        Queue<TreeNode> queue = new LinkedBlockingQueue<>();
+        TreeNode node;
         queue.add(this.root);
-        ArrayList<LeafNode> result = new ArrayList<LeafNode> ();
+        ArrayList<DataObject> result = new ArrayList<> ();
         while (!queue.isEmpty()) {
-            node = (NonLeafNode) queue.poll();
-            ArrayList<Entry> entries = node.getEntries();
-            for (Entry entry : entries) {
-                if (MBR.intersects(entry.getMBR(), area)) {
-                    if (entry instanceof LeafNode) {
-                        result.add((LeafNode) entry);
-                    } else {
-                        queue.add(entry);
+            node = queue.poll();
+            if (node.getHeight() == 1) {
+                ArrayList<DataObject> dataObjects = ((LeafNode<DataObject>) node).getEntries();
+                for (DataObject dataObject : dataObjects) {
+                    if (area.contains(dataObject))
+                        result.add(dataObject);
+                }
+            } else {
+                ArrayList<TreeNode> treeNodes = ((NonLeafNode) node).getChildNodes();
+                for (TreeNode treeNode : treeNodes) {
+                    if (MBR.intersects(treeNode.getMBR(), area)) {
+                        queue.add(treeNode);
                     }
                 }
             }
@@ -68,8 +73,9 @@ public class RTree implements Serializable {
     }
 
     public ArrayList<MBR> getMBRs(int level) {
-        NonLeafNode node = this.root;
-        Queue<Entry> queue = new LinkedList<>();
+        assert level >= 1 && level <= root.getHeight();
+        TreeNode node = this.root;
+        Queue<TreeNode> queue = new LinkedList<>();
         ArrayList<MBR> result = new ArrayList<MBR>();
 
         // If root level, then return the MBR of the whole tree.
@@ -77,18 +83,20 @@ public class RTree implements Serializable {
             result.add(node.getMBR());
             return result;
         } else if (node.getHeight() - 1 == level) {
-            for(Entry e : node.getEntries()) {
+            NonLeafNode nonLeafNode = (NonLeafNode) node;
+            for(TreeNode e : nonLeafNode.getChildNodes()) {
                 result.add(e.getMBR());
             }
             return result;
         }
 
         queue.add(node);
+        NonLeafNode nonLeafNode;
         while (!queue.isEmpty()) {
-            node = (NonLeafNode) queue.poll();
-            for (Entry child : node.getEntries()) {
-                if (((NonLeafNode)child).getHeight() == level + 1) {
-                    for (Entry e : ((NonLeafNode) child).getEntries()) {
+            nonLeafNode = (NonLeafNode) queue.poll();
+            for (TreeNode child : nonLeafNode.getChildNodes()) {
+                if (child.getHeight() == level + 1) {
+                    for (TreeNode e : ((NonLeafNode) child).getChildNodes()) {
                         result.add(e.getMBR());
                     }
                 } else if (level + 1 < ((NonLeafNode) child).getHeight()) {
