@@ -40,13 +40,17 @@ public class Line extends DataObject implements Serializable {
         return new MBR(Math.min(this.x1, this.x2), Math.min(this.y1, this.y2), Math.max(this.x1, this.x2), Math.max(this.y1, this.y2));
     }
 
-    public static MBR[] unionLines(ArrayList<Line> lines) {
+    public static MBR[] linesToMBRs(ArrayList<Line> lines) {
         MBR[] mbrs = new MBR[lines.size()];
         int i = 0;
         for (Line line : lines) {
             mbrs[i++] = line.mbr();
         }
         return mbrs;
+    }
+
+    public static MBR unionLines(ArrayList<Line> lines) {
+        return MBR.union(linesToMBRs(lines));
     }
 
     @Override

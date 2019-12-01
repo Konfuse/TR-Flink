@@ -92,7 +92,7 @@ public class IndexBuilder implements Serializable {
         // if size of lines <= M, then return RTree directly
         if (lineList.size() <= M) {
             this.height = 1;
-            this.root = new LeafNode<>(lineList, MBR.union(Line.unionLines(lineList)));
+            this.root = new LeafNode<>(lineList, Line.unionLines(lineList));
             return new RTree(root, M, m);
         }
 
@@ -190,7 +190,7 @@ public class IndexBuilder implements Serializable {
         for (Line line : lines) {
             leafNode.getEntries().add(line);
             if (leafNode.getEntries().size() == M) {
-                leafNode.setMBR(MBR.union(Line.unionLines(leafNode.getEntries())));
+                leafNode.setMBR(Line.unionLines(leafNode.getEntries()));
                 nextLevel.add(leafNode);
                 leafNode = new LeafNode<Line>(M);
             }
@@ -204,7 +204,7 @@ public class IndexBuilder implements Serializable {
                     lastLines.add(0, swappedLines.remove(swappedLines.size() - 1));
                 }
             }
-            leafNode.setMBR(MBR.union(Line.unionLines(leafNode.getEntries())));
+            leafNode.setMBR(Line.unionLines(leafNode.getEntries()));
             nextLevel.add(leafNode);
         }
     }
