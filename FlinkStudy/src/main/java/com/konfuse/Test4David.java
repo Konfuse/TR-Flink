@@ -58,7 +58,8 @@ public class Test4David {
 
         System.out.println("the root's unionPoints is: " + tree.mbr().get().toString());
 
-        knnQueryTest(tree);
+//        knnQueryTest(tree);
+        queryTest(tree);
     }
 
 //    public static void queryTest(RTree<Long, Line> tree) {
