@@ -100,6 +100,16 @@
 
 可以看出结果一致。
 
+
+
+另外对于**时间效率**：
+
+本系统的方法和`spatial flink`的实验的时间效率对比如图所示：
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/points_areas_query_spflink_time.png)
+
+
+
 ##### 2. knn query：
 
 本系统的方法和Dave Moten实验结果集的相似度对比如图所示：
@@ -115,6 +125,18 @@
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/points_knn_query_spflink.png)
 
 可以看出结果一致。
+
+
+
+另外，本系统方法和David Moten实验的时间效率对比如图所示：
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/points_knn_query_david_time.png)
+
+
+
+和`spatial flink`的实验的时间效率对比如图所示：
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/points_knn_query_spflink_time.png)
 
 ## 3. 实验结果分析：
 
