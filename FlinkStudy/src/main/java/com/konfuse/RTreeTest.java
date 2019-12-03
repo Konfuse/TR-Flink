@@ -1,13 +1,10 @@
 package com.konfuse;
 
-import com.alibaba.fastjson.JSON;
 import com.github.davidmoten.rtree.Entry;
 import com.github.davidmoten.rtree.RTree;
 import com.github.davidmoten.rtree.geometry.Line;
-import com.github.davidmoten.rtree.geometry.Point;
 import com.github.davidmoten.rtree.geometry.Rectangle;
 import com.github.davidmoten.rtree.internal.LeafDefault;
-import com.konfuse.bean.MBR;
 
 import static com.github.davidmoten.rtree.geometry.Geometries.line;
 

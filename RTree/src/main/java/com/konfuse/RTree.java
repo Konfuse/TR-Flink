@@ -90,11 +90,11 @@ public class RTree implements Serializable {
         dataObjects.sort((o1, o2) -> {
             Double distance1 = o1.calDistance(queryPoint);
             Double distance2 = o2.calDistance(queryPoint);
-            return distance2.compareTo(distance1);
+            return distance1.compareTo(distance2);
         });
 
         for (int i = 0; i < dataObjects.size(); i++) {
-            if (i <= k) {
+            if (i < k) {
                 result.add(dataObjects.get(i));
             }
         }

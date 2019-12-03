@@ -56,13 +56,13 @@ public class Test4David {
             e.printStackTrace();
         }
 
-
         System.out.println("the root's unionPoints is: " + tree.mbr().get().toString());
-        queryTest(tree);
+
+        knnQueryTest(tree);
     }
 
 //    public static void queryTest(RTree<Long, Line> tree) {
-//        System.out.println("************************query test*************************");
+//        System.out.println("************************line query test*************************");
 //        String path = "lines_areas_to_query.txt";
 //        String output = "lines_areas_query_result_david.txt";
 //
@@ -129,7 +129,7 @@ public class Test4David {
 //    }
 
     public static void queryTest(RTree<Long, Point> tree) {
-        System.out.println("************************query test*************************");
+        System.out.println("************************point query test*************************");
         String path = "points_areas_to_query.txt";
         String output = "points_areas_query_result_david.txt";
 
@@ -162,6 +162,71 @@ public class Test4David {
                 long startTime = System.currentTimeMillis();
 
                 Observable<Entry<Long, Point>> entries = tree.search(rectangle);
+
+                long endTime = System.currentTimeMillis();
+                System.out.println("query time: " + (endTime - startTime) + "ms");
+                writer.write((endTime - startTime) + ":");
+
+                Iterator<Entry<Long, Point>> iterator = entries.toBlocking().toIterable().iterator();
+                System.out.println("query result is: ");
+                boolean flag = false;
+                while (iterator.hasNext()) {
+                    Entry<Long, Point> entry = iterator.next();
+                    if (!flag) {
+                        writer.write(String.valueOf(entry.value()));
+                        System.out.print(entry.value());
+                        flag = true;
+                    } else {
+                        writer.write( "," + entry.value());
+                        System.out.print("," + entry.value());
+                    }
+                }
+                writer.newLine();
+                System.out.println();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void knnQueryTest(RTree<Long, Point> tree) {
+        System.out.println("************************point knn query test*************************");
+        String path = "points_knn_to_query.txt";
+        String output = "points_knn_query_result_david.txt";
+
+        BufferedReader reader = null;
+        String line;
+        String[] data;
+        ArrayList<Point> list = new ArrayList<>(100);
+
+        try {
+            reader = new BufferedReader(new FileReader(path));
+            Point point;
+            while ((line = reader.readLine()) != null) {
+                data = line.split(",");
+                point = Geometries.point(
+                        Double.parseDouble(data[0]),
+                        Double.parseDouble(data[1])
+                );
+                list.add(point);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(output));
+            for (Point point : list) {
+                long startTime = System.currentTimeMillis();
+
+                Observable<Entry<Long, Point>> entries = tree.nearest(point, 100, 100);
 
                 long endTime = System.currentTimeMillis();
                 System.out.println("query time: " + (endTime - startTime) + "ms");

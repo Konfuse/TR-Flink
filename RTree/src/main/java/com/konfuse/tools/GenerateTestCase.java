@@ -16,14 +16,14 @@ public class GenerateTestCase {
     public static double lat2 = 39.3037728 * 10000000;
 
     public static void main(String[] args) {
-        String pathPoint = "query_points.txt";
+        String pathPoint = "points_knn_to_query.txt";
         String pathArea = "points_areas_to_query.txt";
         String pathData = "data_points.txt";
         int caseNum = 100;
         int size = 1000000;
         int boarder = 100;
-//        pointGenerate(pathPoint, caseNum);
-        areaGenerate(pathArea, caseNum);
+        pointGenerate(pathPoint, caseNum);
+//        areaGenerate(pathArea, caseNum);
 //        dataGenerate(pathData, size, boarder);
     }
 
@@ -76,8 +76,10 @@ public class GenerateTestCase {
         try {
             writer = new BufferedWriter(new FileWriter(path));
             for (int i = 0; i < caseNum; i++) {
-                double x = ((lat2 - lat1) * random.nextDouble() + lat1) / 10000000;
-                double y = ((lon2 - lon1) * random.nextDouble() + lon1) / 10000000;
+//                double x = ((lat2 - lat1) * random.nextDouble() + lat1) / 10000000;
+//                double y = ((lon2 - lon1) * random.nextDouble() + lon1) / 10000000;
+                double x = (100 * random.nextDouble() + 100);
+                double y = (100 * random.nextDouble() + 100);
                 writer.write(x + "," + y);
                 writer.newLine();
             }

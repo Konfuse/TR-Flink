@@ -41,12 +41,78 @@ public class Test4MyTree {
 //        String areaQueryPath = "lines_areas_to_query.txt";
 //        String output = "lines_areas_query_result.txt";
 
-        String areaQueryPath = "points_areas_to_query.txt";
-        String output = "points_areas_query_result_linescan.txt";
+//        String areaQueryPath = "points_areas_to_query.txt";
+//        String output = "points_areas_query_result_linescan.txt";
 
 //        areaQueryTest(myTree, areaQueryPath, output);
 //        visualizationTest(myTree);
-        travelRangeQuery(myTree, areaQueryPath, output);
+//        travelRangeQuery(myTree, areaQueryPath, output);
+
+        String areaQueryPath = "points_knn_to_query.txt";
+        String output = "points_knn_query_result.txt";
+        knnQueryTest(myTree, areaQueryPath, output);
+    }
+
+    public static void knnQueryTest(RTree tree, String pointQueryPath, String output) {
+        System.out.println("************************point query test*************************");
+
+        BufferedReader reader = null;
+        String line;
+        String[] data;
+        ArrayList<Point> list = new ArrayList<>(100);
+
+        try {
+            reader = new BufferedReader(new FileReader(pointQueryPath));
+            Point point;
+            while ((line = reader.readLine()) != null) {
+                data = line.split(",");
+                point = new Point(
+                        0,
+                        "",
+                        Double.parseDouble(data[0]),
+                        Double.parseDouble(data[1])
+                );
+                list.add(point);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(output));
+            for (Point point : list) {
+                long startTime = System.currentTimeMillis();
+
+                ArrayList<DataObject> dataObjects = tree.knnQuery(point, 100);
+
+                long endTime = System.currentTimeMillis();
+                System.out.println("query time: " + (endTime - startTime) + "ms");
+                System.out.println("query result is: ");
+                boolean flag = false;
+                writer.write((endTime - startTime) + ":");
+                for (DataObject dataObject : dataObjects) {
+                    if (!flag) {
+                        writer.write(String.valueOf(dataObject.getId()));
+                        System.out.print(dataObject.getId());
+                        flag = true;
+                    } else {
+                        writer.write( "," + dataObject.getId());
+                        System.out.print("," + dataObject.getId());
+                    }
+                }
+                writer.newLine();
+                System.out.println();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void travelRangeQuery(RTree tree, String areaQueryPath, String output) {
@@ -106,15 +172,6 @@ public class Test4MyTree {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    public static void travelDataObjects(RTree tree) {
-        System.out.println("************************travel all test*************************");
-        System.out.println("the data objects included in rtree are: ");
-        ArrayList<DataObject> list = tree.getDataObjects();
-        for (DataObject dataObject : list) {
-            System.out.print(dataObject.getId() + ",");
         }
     }
 
@@ -191,6 +248,15 @@ public class Test4MyTree {
     public static void visualizationTest(RTree tree) {
         System.out.println("*********************visualization test*********************");
         SwingUtilities.invokeLater(() -> Visualization.createAndShowGui(tree));
+    }
+
+    public static void travelDataObjects(RTree tree) {
+        System.out.println("************************travel all test*************************");
+        System.out.println("the data objects included in rtree are: ");
+        ArrayList<DataObject> list = tree.getDataObjects();
+        for (DataObject dataObject : list) {
+            System.out.print(dataObject.getId() + ",");
+        }
     }
 
     public static ArrayList<Point> getPoints(String path, int size) {
