@@ -53,6 +53,36 @@ public class Line extends DataObject implements Serializable {
         return MBR.union(linesToMBRs(lines));
     }
 
+    public static boolean intersects(Line line1, Line line2) {
+        if (
+                Math.max(line1.x1, line1.x2) < Math.min(line2.x1, line2.x2) ||
+                Math.max(line1.y1, line1.y2) < Math.min(line2.y1, line2.y2) ||
+                Math.max(line2.x1, line2.x2) < Math.min(line1.x1, line1.x2) ||
+                Math.max(line2.y1, line2.y2) < Math.min(line1.y1, line1.y2)
+        )
+            return false;
+
+        double cross1 = (((line1.x1 - line2.x1) * (line2.y2 - line2.y1) - (line1.y1 - line2.y1) * (line2.x2 - line1.x1)) *
+                ((line1.x2 - line2.x1) * (line2.y2 - line2.y1) - (line1.y2 - line2.y1) * (line2.x2 - line2.x1)));
+
+        double cross2 = (((line2.x1 - line1.x1) * (line1.y2 - line1.y1) - (line2.y1 - line1.y1) * (line1.x2 - line1.x1)) *
+                ((line2.x2 - line1.x1) * (line1.y2 - line1.y1) - (line2.y2 - line1.y1) * (line1.x2 - line1.x1)));
+
+        if (cross1 > 0 || cross2 > 0) {
+            return false;
+        }
+        return true;
+    }
+
+    public Point[] getEndPoints() {
+        Point[] points = new Point[2];
+        Point endPoint = new Point(0, "", x1, y1);
+        points[0] = endPoint;
+        endPoint = new Point(0, "", x2, y2);
+        points[1] = endPoint;
+        return points;
+    }
+
     @Override
     public double calDistance(Point point) {
         double cross = (x2 - x1) * (point.getX() - x1) + (y2 - y1) * (point.getY() - y1);

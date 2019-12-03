@@ -83,19 +83,81 @@ public class RTree implements Serializable {
         return result;
     }
 
-    public ArrayList<DataObject> knnQuery(final Point queryPoint, int k) {
-        ArrayList<DataObject> dataObjects = getDataObjects();
+    public ArrayList<DataObject> circleRangeQuery(final Point queryPoint, double radius) {
+        ArrayList<DataObject> result = new ArrayList<>();
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.add(this.root);
+        while (!queue.isEmpty()) {
+            TreeNode curNode = queue.poll();
+            if(curNode.getMBR().intersects(queryPoint, radius)) {
+                if(curNode.getHeight() == 1) {
+                    ArrayList<DataObject> entries = ((LeafNode<DataObject>) curNode).getEntries();
+                    for (DataObject dataObject: entries) {
+                        if(dataObject.calDistance(queryPoint) <= radius * radius){
+                            result.add(dataObject);
+                        }
+                    }
+                }
+                else {
+                    ArrayList<TreeNode> childNodes = ((NonLeafNode) curNode).getChildNodes();
+                    queue.addAll(childNodes);
+                }
+            }
+        }
+        return result;
+    }
 
+    public ArrayList<DataObject> knnQuery(final Point queryPoint, int k) {
+        ArrayList<Double> distances = this.knnDistance(queryPoint, k);
+        double refined_bound = distances.get(distances.size() - 1);
+        ArrayList<DataObject> rangeDataObjects = circleRangeQuery(queryPoint, refined_bound);
+        rangeDataObjects.sort((o1, o2) -> {
+            Double d1 = o1.calDistance(queryPoint);
+            Double d2 = o2.calDistance(queryPoint);
+            return d1.compareTo(d2);
+        });
         ArrayList<DataObject> result = new ArrayList<>(k);
-        dataObjects.sort((o1, o2) -> {
-            Double distance1 = o1.calDistance(queryPoint);
-            Double distance2 = o2.calDistance(queryPoint);
+        for (int i = 0; i < rangeDataObjects.size(); i++) {
+            if (i == k)
+                break;
+            result.add(rangeDataObjects.get(i));
+        }
+        return result;
+    }
+
+    public ArrayList<Double> knnDistance(final Point queryPoint, int k) {
+        ArrayList<Double> result = new ArrayList<>();
+        int count = 0;
+        PriorityQueue<TreeNode> queue = new PriorityQueue<>(1, (o1, o2) -> {
+            Double distance1 = o1.getMBR().calculateDistance(queryPoint);
+            Double distance2 = o2.getMBR().calculateDistance(queryPoint);
             return distance1.compareTo(distance2);
         });
 
-        for (int i = 0; i < dataObjects.size(); i++) {
-            if (i < k) {
-                result.add(dataObjects.get(i));
+        queue.add(this.root);
+        while(!queue.isEmpty()) {
+            TreeNode curNode = queue.poll();
+            if(curNode.getHeight() == 1) {
+                ArrayList<DataObject> dataObjects = ((LeafNode<DataObject>) curNode).getEntries();
+                for (DataObject dataObject : dataObjects) {
+                    result.add(dataObject.calDistance(queryPoint));
+                }
+                count += dataObjects.size();
+            }
+            else {
+                ArrayList<TreeNode> childNodes = ((NonLeafNode) curNode).getChildNodes();
+                queue.addAll(childNodes);
+            }
+
+            if(count >= k){
+                Collections.sort(result);
+                ArrayList<Double> list = new ArrayList<>(k);
+                for (int i = 0; i < result.size(); i++) {
+                    if (i == k)
+                        break;
+                    list.add(result.get(i));
+                }
+                return result;
             }
         }
         return result;

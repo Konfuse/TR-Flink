@@ -54,6 +54,101 @@ public class MBR implements Serializable {
         return y2;
     }
 
+    public double getArea() {
+        return 1.0 * (y1 - y2) * (x1 - x2);
+    }
+
+    public double getMargin() {
+        return 0.0F + (x2 - x1) + (y2 - y1);
+    }
+
+    public double enlargement(MBR mbr) {
+        double xLine = x2 - x1;
+        double yLine = y2 - y1;
+        if (mbr.x2 > x2) xLine += (mbr.x2 - x2);
+        if (mbr.x1 < x1) xLine += (x1 - mbr.x1);
+        if (mbr.y2 > y2) yLine += (mbr.y2 - y2);
+        if (mbr.y1 < y1) yLine += (y1 - mbr.y1);
+        return xLine * yLine - getArea();
+    }
+
+    public double calculateDistance(Point point) {
+        double distance = 0L;
+
+        double center = (x2 + x1) / 2.0;
+        double distanceDim = center - point.getX();
+        distance += distanceDim * distanceDim;
+
+        center = (y1 + y2) / 2.0;
+        distanceDim = center - point.getY();
+        distance += distanceDim * distanceDim;
+
+        return Math.sqrt(distance);
+    }
+
+    public double calculateDistanceToBorder(Point point) {
+        double distance = 0L;
+        if (point.getX() < this.x1) {
+            distance += (point.getX() - this.x1) * (point.getX() - this.x1);
+        }
+        else {
+            if (point.getX() > this.x2) {
+                distance += (point.getX() - this.x2) * (point.getX() - this.x2);
+            }
+        }
+
+        if (point.getY() < this.y1) {
+            distance += (point.getY() - this.y1) * (point.getY() - this.y1);
+        } else {
+            if (point.getY() > this.y2) {
+                distance += (point.getY() - this.y2) * (point.getY() - this.y2);
+            }
+        }
+        return Math.sqrt(distance);
+    }
+
+    public boolean intersects(Point point, double radius) {
+        if (this.contains(point))
+            return true;
+
+        double distance = calculateDistanceToBorder(point);
+        return radius >= distance;
+    }
+
+    public boolean contains(MBR mbr) {
+        if (mbr.x1 < x1 || mbr.x2 > x2 || mbr.y1 < y1 || mbr.y2 > y2)
+            return false;
+        return true;
+    }
+
+    public boolean contains(Point point) {
+        if (point.getX() >= x1 && point.getX() <= x2 && point.getY() >= y1 && point.getY() <= y2)
+            return true;
+        return false;
+    }
+
+    public boolean contains(Line line) {
+        Point[] points = line.getEndPoints();
+        for (Point point : points) {
+            if (this.contains(point))
+                return true;
+        }
+
+        Line diagonal1 = new Line(0, "", x1, y1, x2, y2);
+        Line diagonal2 = new Line(0, "", x1, y2, x2, y1);
+        if (Line.intersects(line, diagonal1) || Line.intersects(line, diagonal2))
+            return true;
+        return false;
+    }
+
+    public boolean contains(DataObject dataObject) {
+        if (dataObject instanceof Point)
+            return contains((Point) dataObject);
+        else if (dataObject instanceof Line)
+            return contains((Line) dataObject);
+        return false;
+    }
+
     public static class MBRComparatorWithTreeNode implements Comparator<TreeNode> {
         private int dimension;
         private boolean low;
@@ -106,14 +201,6 @@ public class MBR implements Serializable {
         }
     }
 
-    public double getArea() {
-        return 1.0 * (y1 - y2) * (x1 - x2);
-    }
-
-    public double getMargin() {
-        return 0.0F + (x2 - x1) + (y2 - y1);
-    }
-
     public static MBR union(MBR... regions) {
         double x1 = regions[0].x1;
         double y1 = regions[0].y1;
@@ -127,16 +214,6 @@ public class MBR implements Serializable {
             if (region.y2 > y2) y2 = region.y2;
         }
         return new MBR(x1, y1, x2, y2);
-    }
-
-    public double enlargement(MBR mbr) {
-        double xLine = x2 - x1;
-        double yLine = y2 - y1;
-        if (mbr.x2 > x2) xLine += (mbr.x2 - x2);
-        if (mbr.x1 < x1) xLine += (x1 - mbr.x1);
-        if (mbr.y2 > y2) yLine += (mbr.y2 - y2);
-        if (mbr.y1 < y1) yLine += (y1 - mbr.y1);
-        return xLine * yLine - getArea();
     }
 
     public static MBR intersection(MBR... regions) {
@@ -157,32 +234,6 @@ public class MBR implements Serializable {
         if (mbr2.x1 > mbr1.x2 || mbr1.x1 > mbr2.x2 || mbr2.y1 > mbr2.y2 || mbr1.y1 > mbr2.y2)
             return false;
         return true;
-    }
-
-    public boolean contains(MBR mbr) {
-        if (mbr.x1 < x1 || mbr.x2 > x2 || mbr.y1 < y1 || mbr.y2 > y2)
-            return false;
-        return true;
-    }
-
-    public boolean contains(Point point) {
-        if (point.getX() >= x1 && point.getX() <= x2 && point.getY() >= y1 && point.getY() <= y2)
-            return true;
-        return false;
-    }
-
-    public boolean contains(Line line) {
-        if (intersects(this, line.mbr()))
-            return true;
-        return false;
-    }
-
-    public boolean contains(DataObject dataObject) {
-        if (dataObject instanceof Point)
-            return contains((Point) dataObject);
-        else if (dataObject instanceof Line)
-            return contains((Line) dataObject);
-        return false;
     }
 
     @Override
