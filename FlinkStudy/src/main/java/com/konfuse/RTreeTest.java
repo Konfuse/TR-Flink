@@ -3,12 +3,13 @@ package com.konfuse;
 import com.alibaba.fastjson.JSON;
 import com.github.davidmoten.rtree.Entry;
 import com.github.davidmoten.rtree.RTree;
+import com.github.davidmoten.rtree.geometry.Line;
 import com.github.davidmoten.rtree.geometry.Point;
 import com.github.davidmoten.rtree.geometry.Rectangle;
 import com.github.davidmoten.rtree.internal.LeafDefault;
 import com.konfuse.bean.MBR;
 
-import static com.github.davidmoten.rtree.geometry.Geometries.pointGeographic;
+import static com.github.davidmoten.rtree.geometry.Geometries.line;
 
 /**
  * @Author: Konfuse
@@ -17,12 +18,12 @@ import static com.github.davidmoten.rtree.geometry.Geometries.pointGeographic;
 public class RTreeTest {
     public static void printRtree() {
         //        创建RTree
-        RTree<String, Point> tree = RTree.maxChildren(5).create();
-        tree = tree.add("DAVE", pointGeographic(10, 20))
-                .add("FRED", pointGeographic(12, 25))
-                .add("MARY", pointGeographic(97, 125));
-        LeafDefault<String, Point> nodes = (LeafDefault<String, Point>) tree.root().get();
-        for (Entry<String, Point> entry : nodes.entries()) {
+        RTree<String, Line> tree = RTree.maxChildren(5).create();
+        tree = tree.add("DAVE", line(10, 20, 11, 21))
+                .add("FRED", line(12, 25, 13, 26))
+                .add("MARY", line(97, 125, 98, 126));
+        LeafDefault<String, Line> nodes = (LeafDefault<String, Line>) tree.root().get();
+        for (Entry<String, Line> entry : nodes.entries()) {
             System.out.println(entry.value());
         }
         Rectangle rectangle = nodes.geometry().mbr();
@@ -30,10 +31,11 @@ public class RTreeTest {
     }
 
     public static void main(String[] args) {
-        for (int i = 0; i < 8; i++) {
-            MBR MBR = new MBR(-122.42 - i * 0.01, 37.7 - i * 0.01, -122.41 + i * 0.01, 37.71 + i * 0.01);
-            System.out.println("区域数据: " + JSON.toJSONString(MBR));
-        }
+//        for (int i = 0; i < 8; i++) {
+//            MBR MBR = new MBR(-122.42 - i * 0.01, 37.7 - i * 0.01, -122.41 + i * 0.01, 37.71 + i * 0.01);
+//            System.out.println("区域数据: " + JSON.toJSONString(MBR));
+//        }
+        printRtree();
         //创建RTree
 //        RTree<String, Point> tree = RTree.maxChildren(5).create();
 //        tree = tree.add("DAVE", pointGeographic(10, 20))

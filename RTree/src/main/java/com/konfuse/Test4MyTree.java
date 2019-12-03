@@ -2,6 +2,7 @@ package com.konfuse;
 
 import com.konfuse.geometry.DataObject;
 import com.konfuse.geometry.Line;
+import com.konfuse.geometry.Point;
 import com.konfuse.internal.MBR;
 import com.konfuse.tools.Visualization;
 
@@ -20,35 +21,92 @@ public class Test4MyTree {
     private static Connection connection;
 
     public static void main(String[] args) throws SQLException, IOException, ClassNotFoundException {
-        open();
-        ResultSet resultSet = ps.executeQuery();
-        ArrayList<Line> lines = new ArrayList<>();
+//        ArrayList<Line> lines = getLines();
+//        int size = lines.size();
 
-        while (resultSet.next()) {
-            Line line = new Line(
-                    resultSet.getLong("gid"),
-                    resultSet.getString("name"),
-                    resultSet.getDouble("x1"),
-                    resultSet.getDouble("y1"),
-                    resultSet.getDouble("x2"),
-                    resultSet.getDouble("y2")
-            );
-            lines.add(line);
-        }
-        close();
-
-        int size = lines.size();
+        ArrayList<Point> points = getPoints("data_points.txt", 1000000);
+        int size = points.size();
         System.out.println("total data size: " + size + " lines...");
 
         System.out.println("start building r-tree");
         long startTime = System.currentTimeMillis();
-        RTree myTree = new IndexBuilder().createRTreeBySTR(lines.toArray(new Line[size]));
+
+        RTree myTree = new IndexBuilder().createRTreeBySTR(points.toArray(new Point[size]));
+
         long endTime = System.currentTimeMillis();
         System.out.println("building time: " + (endTime - startTime) + "ms");
         System.out.println("the root height is: " + myTree.getRoot().getHeight());
         System.out.println("the root's unionPoints is: " + myTree.getRoot().getMBR());
 
-        queryTest(myTree);
+//        String areaQueryPath = "lines_areas_to_query.txt";
+//        String output = "lines_areas_query_result.txt";
+
+        String areaQueryPath = "points_areas_to_query.txt";
+        String output = "points_areas_query_result_linescan.txt";
+
+//        areaQueryTest(myTree, areaQueryPath, output);
+//        visualizationTest(myTree);
+        travelRangeQuery(myTree, areaQueryPath, output);
+    }
+
+    public static void travelRangeQuery(RTree tree, String areaQueryPath, String output) {
+        System.out.println("************************line scan test*************************");
+        ArrayList<DataObject> dataObjects = tree.getDataObjects();
+
+        BufferedReader reader = null;
+        String line;
+        String[] data;
+        ArrayList<MBR> list = new ArrayList<>(100);
+
+        try {
+            reader = new BufferedReader(new FileReader(areaQueryPath));
+            MBR area;
+            while ((line = reader.readLine()) != null) {
+                data = line.split(",");
+                area = new MBR(
+                        Double.parseDouble(data[0]),
+                        Double.parseDouble(data[1]),
+                        Double.parseDouble(data[2]),
+                        Double.parseDouble(data[3])
+                );
+                list.add(area);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(output));
+            for (MBR area : list) {
+                System.out.println("query result is: ");
+                boolean flag = false;
+                writer.write("0:");
+                for (DataObject dataObject : dataObjects) {
+                    Point point = (Point) dataObject;
+                    if (area.contains(point)) {
+                        if (!flag) {
+                            writer.write(String.valueOf(point.getId()));
+                            System.out.print(point.getId());
+                            flag = true;
+                        } else {
+                            writer.write( "," + point.getId());
+                            System.out.print("," + point.getId());
+                        }
+                    }
+                }
+                writer.newLine();
+                System.out.println();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void travelDataObjects(RTree tree) {
@@ -60,10 +118,8 @@ public class Test4MyTree {
         }
     }
 
-    public static void queryTest(RTree tree) {
+    public static void areaQueryTest(RTree tree, String areaQueryPath, String output) {
         System.out.println("************************query test*************************");
-        String path = "query_areas.txt";
-        String output = "query_areas_result.txt";
 
         BufferedReader reader = null;
         String line;
@@ -71,7 +127,7 @@ public class Test4MyTree {
         ArrayList<MBR> list = new ArrayList<>(100);
 
         try {
-            reader = new BufferedReader(new FileReader(path));
+            reader = new BufferedReader(new FileReader(areaQueryPath));
             MBR area;
             while ((line = reader.readLine()) != null) {
                 data = line.split(",");
@@ -91,17 +147,24 @@ public class Test4MyTree {
         try {
             writer = new BufferedWriter(new FileWriter(output));
             for (MBR area : list) {
+                long startTime = System.currentTimeMillis();
+
                 ArrayList<DataObject> dataObjects = tree.rangeQuery(area);
-                System.out.println("\nquery result is: ");
+
+                long endTime = System.currentTimeMillis();
+                System.out.println("query time: " + (endTime - startTime) + "ms");
+                System.out.println("query result is: ");
                 boolean flag = false;
+                writer.write((endTime - startTime) + ":");
                 for (DataObject dataObject : dataObjects) {
                     if (!flag) {
                         writer.write(String.valueOf(dataObject.getId()));
                         System.out.print(dataObject.getId());
                         flag = true;
+                    } else {
+                        writer.write( "," + dataObject.getId());
+                        System.out.print("," + dataObject.getId());
                     }
-                    writer.write( "," + dataObject.getId());
-                    System.out.print("," + dataObject.getId());
                 }
                 writer.newLine();
                 System.out.println();
@@ -128,6 +191,52 @@ public class Test4MyTree {
     public static void visualizationTest(RTree tree) {
         System.out.println("*********************visualization test*********************");
         SwingUtilities.invokeLater(() -> Visualization.createAndShowGui(tree));
+    }
+
+    public static ArrayList<Point> getPoints(String path, int size) {
+        BufferedReader reader = null;
+        String line;
+        String[] data;
+        Point point;
+        ArrayList<Point> points = new ArrayList<>(size);
+
+        try {
+            reader = new BufferedReader(new FileReader(path));
+            while ((line = reader.readLine()) != null) {
+                data = line.split(",");
+                point = new Point(
+                        Long.parseLong(data[0]),
+                        "",
+                        Double.parseDouble(data[1]),
+                        Double.parseDouble(data[2])
+                );
+                points.add(point);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return points;
+    }
+
+    public static ArrayList<Line> getLines() throws SQLException {
+        open();
+        ResultSet resultSet = ps.executeQuery();
+        ArrayList<Line> lines = new ArrayList<>();
+
+        while (resultSet.next()) {
+            Line line = new Line(
+                    resultSet.getLong("gid"),
+                    resultSet.getString("name"),
+                    resultSet.getDouble("x1"),
+                    resultSet.getDouble("y1"),
+                    resultSet.getDouble("x2"),
+                    resultSet.getDouble("y2")
+            );
+            lines.add(line);
+        }
+        close();
+        return lines;
     }
 
     public static void close() throws SQLException {

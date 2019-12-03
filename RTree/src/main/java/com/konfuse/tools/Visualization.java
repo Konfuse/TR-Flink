@@ -31,21 +31,23 @@ public class Visualization extends JComponent {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         int height = tree.getRoot().getHeight();
+//        int control = 10000;
+        int fix = 10;
         for (int i = 1; i <= height; i++) {
             ArrayList<MBR> mbrList = tree.getLevelMBRs(i);
             g.setColor(iterateColor(i));
             for (MBR mbr : mbrList) {
 //                System.out.println("x1 of bound is: " +
-//                        (int) (unionPoints.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000) +
+//                        (int) (unionPoints.getX1() * fix - tree.getRoot().getMBR().getX1() * fix) +
 //                        "; y1 of bound is: " +
-//                        (int) (unionPoints.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000) +
+//                        (int) (unionPoints.getY1() * fix - tree.getRoot().getMBR().getY1() * fix) +
 //                        "; width of x is: " +
-//                        (int) (unionPoints.getX2() * 10000 - unionPoints.getX1() * 10000) +
+//                        (int) (unionPoints.getX2() * fix - unionPoints.getX1() * fix) +
 //                        "; length of x is: " +
-//                        (int) (unionPoints.getY2() * 10000 - unionPoints.getY1() * 10000)
+//                        (int) (unionPoints.getY2() * fix - unionPoints.getY1() * fix)
 //                );
-                g.drawRect((int) (mbr.getX1() * 10000 - tree.getRoot().getMBR().getX1() * 10000), (int) (mbr.getY1() * 10000 - tree.getRoot().getMBR().getY1() * 10000),
-                        (int) (mbr.getX2() * 10000 - mbr.getX1() * 10000), (int) (mbr.getY2() * 10000 - mbr.getY1() * 10000));
+                g.drawRect((int) (mbr.getX1() * fix - tree.getRoot().getMBR().getX1() * fix), (int) (mbr.getY1() * fix - tree.getRoot().getMBR().getY1() * fix),
+                        (int) (mbr.getX2() * fix - mbr.getX1() * fix), (int) (mbr.getY2() * fix - mbr.getY1() * fix));
             }
         }
         g.setColor(iterateColor(0));
@@ -53,7 +55,7 @@ public class Visualization extends JComponent {
         if (dataObjects.get(0) instanceof Point) {
             for (DataObject dataObject : dataObjects) {
                 Point point = (Point) dataObject;
-                g.fillOval((int) (point.getX() * 10000 - tree.getRoot().getMBR().getX1() * 10000), (int) (point.getY() * 10000 - tree.getRoot().getMBR().getY1() * 10000), 2, 2);
+//                g.fillOval((int) (point.getX() * fix - tree.getRoot().getMBR().getX1() * fix), (int) (point.getY() * fix - tree.getRoot().getMBR().getY1() * fix), 2, 2);
             }
         } else if (dataObjects.get(0) instanceof Line) {
 
