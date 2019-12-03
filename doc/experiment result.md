@@ -122,3 +122,12 @@
 
 1. Dave Moten的R-Tree使用的是float作为精度，很多查询条件下，输入的地理数据的精度是double，所以会产生精度损失。
 2. Dave Moten构建R-Tree时也使用了float作为精度，也会产生精度损失。
+
+## 4. knnQuery实现方法
+总体思路：首先利用R-tree的矩形范围搜索方法（boxRangeQuery）粗略估计一个包含不小于k个结果的圆形范围（半径r），利用圆形范围搜索（circleRangeQuery）查找半径（半径r）内的所有点，再对所有得到的结果进行排序。
+
+1. 先构建一个基于每个非叶子节点的MBR的优先队列，按照MBR与查询点q的距离进行排序。
+2. 利用R-tree的矩形范围搜索方法（boxRangeQuery）进行搜索，每次弹出与查询点q最近的非叶子节点，如果子节点是叶子节点，遍历所有叶子节点，计算其与查询点q的距离，并将其存储到一个double类型的列表中。当列表的长度不小于k时，跳出循环，得到列表中最大的距离，作为圆形范围搜索的查找半径。 
+3. 利用圆形范围搜索（circleRangeQuery）查找半径（半径r）内的所有点，再对所有得到的结果进行排序。
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/knnQuery.jpg)

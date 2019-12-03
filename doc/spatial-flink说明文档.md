@@ -151,12 +151,12 @@ public class PointSerializer extends Serializer<Point>{
 这里拿范围搜索（针对Point数据）举例，其他搜索类似。
 
 ```
-//1. 输入参数是所有点，找出所有的在MBR范围内的点集。
+//1. 输入参数是所有点，直接找出所有的在MBR范围内的点集。
 public DataSet<Point> boxRangeQuery(final MBR box, DataSet<Point> data) 
 //2. 输入的是构建好的global R-tree，local R-tree。找出所有的MBR范围内的点集。
 public DataSet<Point> boxRangeQuery(final MBR box, DataSet<RTree> globalTree, DataSet<RTree> localTrees)
 ```
-### boxRangeQuery(final MBR box, DataSet<Point> data)
+### public DataSet<Point> boxRangeQuery(final MBR box, DataSet<Point> data)
 1. 该方法首先对data数据集进行分区，构建全局R树，得到经过分区的批数据、Global R-tree。
 
 2. 通过Global R-tree，找到与其相交的所有叶子结点，并得到叶子结点中相应的分区号。最后将这些分区号收集起来得到DataSet<Integer> partitionFlags，指代所有相交的分区号。
