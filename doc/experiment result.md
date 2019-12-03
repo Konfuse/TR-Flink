@@ -152,5 +152,5 @@
 2. 利用R-tree的矩形范围搜索方法（boxRangeQuery）进行搜索，每次弹出与查询点q最近的非叶子节点，如果子节点是叶子节点，遍历所有叶子节点，计算其与查询点q的距离，并将其存储到一个double类型的列表中。当列表的长度不小于k时，跳出循环，得到列表中最大的距离，作为圆形范围搜索的查找半径。 
 3. 利用圆形范围搜索（circleRangeQuery）查找半径（半径r）内的所有点，再对所有得到的结果进行排序。
 
-<img src="https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/knnQuery.jpg" style="zoom:50%;" />
+<img src="https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/knnQuery.jpg" style="width=375px" />
 
