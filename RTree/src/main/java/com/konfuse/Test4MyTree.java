@@ -206,7 +206,7 @@ public class Test4MyTree {
             for (MBR area : list) {
                 long startTime = System.currentTimeMillis();
 
-                ArrayList<DataObject> dataObjects = tree.rangeQuery(area);
+                ArrayList<DataObject> dataObjects = tree.boxRangeQuery(area);
 
                 long endTime = System.currentTimeMillis();
                 System.out.println("query time: " + (endTime - startTime) + "ms");

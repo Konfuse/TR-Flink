@@ -55,7 +55,7 @@ public class RTree implements Serializable {
         return minNodeNb;
     }
 
-    public ArrayList<DataObject> rangeQuery(MBR area) {
+    public ArrayList<DataObject> boxRangeQuery(MBR area) {
         if (!MBR.intersects(this.root.getMBR(), area)) {
             return new ArrayList<>();
         }
