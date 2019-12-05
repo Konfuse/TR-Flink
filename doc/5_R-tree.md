@@ -39,7 +39,7 @@
 ### 2.3 knn搜索
 &emsp;&emsp;最近邻搜索方法如下。首先利用R-tree的矩形范围搜索方法（boxRangeQuery）粗略估计一个包含不小于k个结果的圆形范围（半径r），利用圆形范围搜索（circleRangeQuery）查找半径（半径r）内的所有点，再对所有得到的结果进行排序。
 
-![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/knnQuery.jpg 250*250)
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/knnQuery.jpg)
 
 ## 3 R-tree的插入
 &emsp;&emsp;通常，R树的构造算法旨在最小化所有MBR的周长或面积总和。
