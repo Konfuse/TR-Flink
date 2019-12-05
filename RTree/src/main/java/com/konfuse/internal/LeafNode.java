@@ -6,6 +6,10 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
+ * The leaf node of r-tree containing a list of data objects extends TreeNode.
+ * It has an attribute referring to the list of data records in the r-tree,
+ * i.e.  entries.
+ *
  * @Author: Konfuse
  * @Date: 2019/11/26 11:01
  */

@@ -8,10 +8,12 @@ import com.konfuse.internal.MBR;
 
 import javax.swing.*;
 import java.awt.*;
-import java.nio.channels.Pipe;
 import java.util.ArrayList;
 
 /**
+ * Use for visualization
+ * Class contains four parameters to control canvas size.
+ *
  * @Author: Konfuse
  * @Date: 2019/11/27 14:46
  */
@@ -34,7 +36,7 @@ public class Visualization extends JComponent {
 //        int control = 10000;
         int fix = 10;
         for (int i = 1; i <= height; i++) {
-            ArrayList<MBR> mbrList = tree.getLevelMBRs(i);
+            ArrayList<MBR> mbrList = tree.getMBRsWithHeight(i);
             g.setColor(iterateColor(i));
             for (MBR mbr : mbrList) {
 //                System.out.println("x1 of bound is: " +
@@ -67,6 +69,11 @@ public class Visualization extends JComponent {
         return new Dimension(RECT_WIDTH + 2 * RECT_X, RECT_HEIGHT + 2 * RECT_Y);
     }
 
+    /**
+     * Select color according to height of nodes.
+     * @param i height of nodes
+     * @return Color
+     */
     private Color iterateColor(int i){
         switch (i % 6){
             case 0:
@@ -85,7 +92,10 @@ public class Visualization extends JComponent {
         return Color.red;
     }
 
-    // create the GUI
+    /**
+     * Create the GUI
+     * @param tree r-tree object
+     */
     public static void createAndShowGui(RTree tree) {
         Visualization visualization = new Visualization(tree);
 
