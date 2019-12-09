@@ -94,9 +94,7 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 ## Fast Viterbi map matching with tunable weight functions. SIGSPATIAL \[GIS 2012]:
 
 该方法的全局路网匹配算法使用了Viterbi动态规划方法，该方法综合了其他几种路网匹配算法的权重计算函数，并使用了一些优化方法。
-
 ---
- 
 ## Quick map matching using multi-core CPUs[SIGSPATIALGIS 2012]
 
 本文考虑到现有的方法如HMM，已经可以取得较高的准确率。因此本文重点关注方向是减少路网匹配的时间。这篇文章的方法充分利用了多核cpu的多线程，多线程可以应用到索引的构建、搜索和路网的匹配上。本文对上面的HMM方法进行了一点改进，将路段的速度信息进行了考虑，避免轨迹匹配到主路旁的辅路上。
