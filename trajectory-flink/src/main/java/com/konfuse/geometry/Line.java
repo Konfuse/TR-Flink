@@ -12,6 +12,9 @@ import java.util.ArrayList;
  * Class representing the road segment extends DataObject and implements interface Serializable.
  * x1, y1 is an end point of the line, x2, y2 is the other end point of the line.
  *
+ *  Line should also implements interface org.apache.flink.types.Key.
+ *  It makes a line object as a key in KeySelector when divide partitions
+ *
  * @Author: Konfuse
  * @Date: 2019/11/27 12:17
  */
@@ -132,10 +135,18 @@ public class Line extends DataObject implements Key<Line>, Serializable {
                 '}';
     }
 
+    /**
+     * If two lines's end points are the same position in space, return 0,
+     * else return -1.
+     */
     @Override
     public int compareTo(Line line) {
+        // either situation will make it return true
         if (line.x1 == x1 && line.y1 == y1 && line.x2 == x2 && line.y2 == y2)
             return 0;
+        if (line.x1 == x2 && line.y1 == y2 && line.x2 == x1 && line.y2 == y1)
+            return 0;
+        // else return false
         else return -1;
     }
 

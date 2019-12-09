@@ -5,6 +5,11 @@ import com.konfuse.geometry.PartitionedMBR;
 import java.io.Serializable;
 
 /**
+ * The leaf node of r-tree containing a list of Partitioned MBR entries.
+ *
+ * Extends form LeafNodes.
+ * entries: is the list of Partitioned MBR entries in the r-tree,
+ *
  * @Author: Konfuse
  * @Date: 2019/12/8 1:56
  */

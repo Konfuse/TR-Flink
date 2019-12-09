@@ -13,6 +13,9 @@ import java.util.Comparator;
  * Point in geometric space extends DataObject and implements interface Serializable.
  * And attributes x, y are the coordinate of the point.
  *
+ * Point should also implements interface org.apache.flink.types.Key.
+ * It makes a point object as a key in KeySelector when divide partitions
+ *
  * @Author: Konfuse
  * @Date: 2019/11/28 21:13
  */
@@ -51,6 +54,10 @@ public class Point extends DataObject implements Key<Point>, Serializable {
                 '}';
     }
 
+    /**
+     * If two points are the same position in space, return 0,
+     * else return -1.
+     */
     @Override
     public int compareTo(Point point) {
         if (point.getX() == x && point.getY() == y)

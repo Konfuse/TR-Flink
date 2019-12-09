@@ -10,7 +10,13 @@ import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
- * Point to the actual r-tree. Four important attributes:
+ * Point to the actual r-tree's root node.
+ * r-tree includes three types: point r-tree, line r-tree and PartitionedMBR r-tree
+ * Class Point, Line and PartitionedMBR all extend from DataObject
+ * Need to specify generics when initializing the class:
+ * Point, Line or PartitionedMBR
+ *
+ * Four important attributes:
  * root: the root of r-tree
  * height: r-tree's height
  * maxNodeNb: the maximum children size of nodes
@@ -135,7 +141,7 @@ public class RTree<T extends DataObject> implements Serializable {
         return result;
     }
 
-    public ArrayList<PartitionedMBR> search(Point queryPoint, float radius) {
+    public ArrayList<PartitionedMBR> search(Point queryPoint, double radius) {
         ArrayList<PartitionedMBR> result = new ArrayList<>();
         Queue<TreeNode> queue = new LinkedList<>();
         queue.add(this.root);

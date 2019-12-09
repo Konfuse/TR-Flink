@@ -10,13 +10,18 @@ import org.apache.flink.api.common.functions.Partitioner;
 import java.util.List;
 
 /**
+ * The implementation of Partitioner overriding the partition method
+ * helps to decide which partition the line should be assigned to.
+ *
+ * The partition method returns partition number of the line.
+ *
  * @Author: Konfuse
  * @Date: 2019/12/9 2:19
  */
 public class LineSTRPartitioner implements Partitioner<Line> {
-    private RTree tree;
+    private RTree<PartitionedMBR> tree;
 
-    public LineSTRPartitioner(RTree tree){
+    public LineSTRPartitioner(RTree<PartitionedMBR> tree){
         this.tree = tree;
     }
 
@@ -30,6 +35,8 @@ public class LineSTRPartitioner implements Partitioner<Line> {
 
         PartitionedMBR mbrChosen = null;
         double minDistance = Double.MIN_VALUE;
+
+        // travel nodes to find the partitionedMbr that is closest to the line, then return its partition number.
         for (TreeNode node : nodes) {
             PartitionedLeafNode partitionedLeafNode = (PartitionedLeafNode) node;
             List<PartitionedMBR> partitions = partitionedLeafNode.getEntries();

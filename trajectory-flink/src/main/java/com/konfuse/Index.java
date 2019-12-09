@@ -5,15 +5,33 @@ import com.konfuse.geometry.MBR;
 import com.konfuse.geometry.PartitionedMBR;
 import com.konfuse.geometry.Point;
 import com.konfuse.internal.RTree;
-import org.apache.flink.api.common.functions.MapFunction;
-import org.apache.flink.api.common.functions.Partitioner;
-import org.apache.flink.api.common.functions.RichFlatMapFunction;
+import org.apache.flink.api.common.functions.*;
+import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.java.operators.CustomUnaryOperation;
+import org.apache.flink.api.java.utils.DataSetUtils;
 import org.apache.flink.util.Collector;
+import scala.Tuple2;
 
-import java.util.List;
+import java.util.*;
 
 /**
+ * Distributed index structure in the whole system.
+ *
+ * Index includes two types: point index and line index.
+ * Each type of two indexes contains a global r-tree which is a PartitionedMBR r-tree.
+ *
+ * Global r-tree maintains the information of flink partitions.
+ *
+ * Local r-trees maintain a data set of local trees. And partitioner
+ * is the corresponding partition method.
+ *
+ * data contains all the data records maintained in r-tree.
+ *
+ * Need to specify generics when initializing the class:
+ * either Point or Line.
+ *
  * @Author: Konfuse
  * @Date: 2019/12/6 15:31
  */
@@ -62,7 +80,13 @@ public class Index<T extends DataObject> {
         this.data = data;
     }
 
+    /**
+     * Get the data objects inside the query area.
+     * @param area query area.
+     * @return DataSet of data objects according to box range query.
+     */
     public DataSet<T> boxRangeQuery(final MBR area) {
+        // Get the partition number related to the query area
         DataSet<Integer> partitionFlags = this.globalTree
                 .flatMap(new RichFlatMapFunction<RTree<PartitionedMBR>, PartitionedMBR>() {
                     @Override
@@ -80,6 +104,8 @@ public class Index<T extends DataObject> {
                     }
                 });
 
+        // In partition, if partition number is in partitionFlags,
+        // do box range query in the corresponding  local tree.
         DataSet<T> result = this.localTrees
                 .flatMap(new RichFlatMapFunction<RTree<T>, T>() {
                     @Override
@@ -96,7 +122,14 @@ public class Index<T extends DataObject> {
         return result;
     }
 
-    public DataSet<T> circleRangeQuery(final Point queryPoint, final Float radius) {
+    /**
+     * Get the data objects inside the query circle.
+     * @param radius the radius of circle
+     * @param queryPoint circle center
+     * @return DataSet of data objects according to circle range query.
+     */
+    public DataSet<T> circleRangeQuery(final Point queryPoint, final double radius) {
+        // Get the partition number related to the query area
         DataSet<Integer> partitionFlags = this.globalTree
                 .flatMap(new RichFlatMapFunction<RTree<PartitionedMBR>, PartitionedMBR>() {
                     @Override
@@ -114,6 +147,8 @@ public class Index<T extends DataObject> {
                     }
                 });
 
+        // In partition, if partition number is in partitionFlags,
+        // do circle range query in the corresponding  local tree.
         DataSet<T> result = localTrees.flatMap(new RichFlatMapFunction<RTree<T>, T>() {
             @Override
             public void flatMap(RTree<T> rTree, Collector<T> collector) throws Exception {
@@ -127,6 +162,51 @@ public class Index<T extends DataObject> {
             }
         }).withBroadcastSet(partitionFlags, "partitionFlags");
 
+        return result;
+    }
+
+    public DataSet<T> knnQuery(final Point queryPoint, final int k) throws Exception {
+//        final DataSet<T> sampleData = DataSetUtils.sample(this.data, false, 0.3);
+//        DataSet<RTree<T>> trees = sampleData.reduceGroup(new RichGroupReduceFunction<T, RTree<T>>() {
+//            @Override
+//            public void reduce(Iterable<T> iterable, Collector<RTree<T>> collector) throws Exception {
+//                ArrayList<T> list = new ArrayList<>();
+//                for (T t : iterable) {
+//                    list.add(t);
+//                }
+//                RTree<T> tree = createLineLocalRTree(list, max, min);
+//                collector.collect(tree);
+//            }
+//        });
+        DataSet<Double> knnDistances = this.localTrees
+                .flatMap(new RichFlatMapFunction<RTree<T>, Double>() {
+                    @Override
+                    public void flatMap(RTree<T> rTree, Collector<Double> collector) throws Exception {
+                        List<Double> list = rTree.knnDistance(queryPoint, k);
+                        for (Double distance : list) {
+                            collector.collect(distance);
+                        }
+                    }
+                })
+                .sortPartition("value", Order.ASCENDING)
+                .first(k);
+
+        double refined_bound = knnDistances.collect().get(k - 1);
+        DataSet<T> result = circleRangeQuery(queryPoint, refined_bound)
+                .map(new MapFunction<T, Tuple2<Double, T>>() {
+                    @Override
+                    public Tuple2<Double, T> map(T t) throws Exception {
+                        return new Tuple2<>(t.calDistance(queryPoint), t);
+                    }
+                })
+                .sortPartition(0, Order.ASCENDING)
+                .first(k)
+                .map(new MapFunction<Tuple2<Double, T>, T>() {
+                    @Override
+                    public T map(Tuple2<Double, T> tuple2) throws Exception {
+                        return tuple2._2;
+                    }
+                });
         return result;
     }
 }

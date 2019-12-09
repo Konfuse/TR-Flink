@@ -1,24 +1,27 @@
 package com.konfuse.geopartitioner;
 
-import com.konfuse.geometry.DataObject;
 import com.konfuse.geometry.PartitionedMBR;
 import com.konfuse.geometry.Point;
 import com.konfuse.internal.PartitionedLeafNode;
 import com.konfuse.internal.RTree;
 import com.konfuse.internal.TreeNode;
 import org.apache.flink.api.common.functions.Partitioner;
-import org.apache.flink.api.java.tuple.Tuple2;
 
 import java.util.List;
 
 /**
+ * The implementation of Partitioner overriding the partition method
+ * helps to decide which partition the point should be assigned to.
+ *
+ * The partition method returns partition number of the point.
+ *
  * @Author: Konfuse
  * @Date: 2019/12/8 11:06
  */
 public class PointSTRPartitioner implements Partitioner<Point> {
-    private RTree tree;
+    private RTree<PartitionedMBR> tree;
 
-    public PointSTRPartitioner(RTree tree){
+    public PointSTRPartitioner(RTree<PartitionedMBR> tree){
         this.tree = tree;
     }
 
@@ -32,6 +35,8 @@ public class PointSTRPartitioner implements Partitioner<Point> {
 
         PartitionedMBR mbrChosen = null;
         double minDistance = Double.MIN_VALUE;
+
+        // travel nodes to find the partitionedMbr that is closest to the point, then return its partition number.
         for (TreeNode node : nodes) {
             PartitionedLeafNode partitionedLeafNode = (PartitionedLeafNode) node;
             List<PartitionedMBR> partitions = partitionedLeafNode.getEntries();

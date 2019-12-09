@@ -1,11 +1,15 @@
 package com.konfuse.geometry;
 
-import com.konfuse.geometry.MBR;
-
 import java.io.Serializable;
 import java.util.Comparator;
 
 /**
+ * Refers to the partition in the global index.
+ *
+ * mbr: is the minimum bound rectangle of partition.
+ * entryCount: is entries count contained in the partition.
+ * partitionNumber: partition number that partition owns helps to locate the sub-task where local r-tree execute.
+ *
  * @Author: Konfuse
  * @Date: 2019/12/6 15:23
  */
