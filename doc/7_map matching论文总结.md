@@ -50,6 +50,7 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 作者基于的观测事实是：（1）真实的路径一般都是直的（2）真实的路径会遵循道路的速度限制。本文路网匹配的主要步骤是：先根据路网索引，取得轨迹点附近的候选路段（点）（网格索引）。（2）根据轨迹的前后关系，对候选路段进行空间分析和时间分析构建一张图，图的节点是轨迹点的匹配候选点，图的边是相邻候选点之间的最短路径，图中的边和点都赋予一定的权重。（3）在得到的图中，找到一条评分最高的轨迹。
 
 空间分析：观测概率N：GPS坐标点p和投影点c之间的距离，计算该点与投影点相匹配的概率。作者使用的是$\mu$ = 0 和 $\sigma$ = 20正态分布。然而只考虑观测概率就忽略了GPS点的时空语义。因此作者还定义了转移概率V，其意义是GPS前后点之间的距离和其投影点之间的最短距离的比例。最终通过两个之积得到概率公式。
+
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/ST_matching_observation_probability.png)
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/ST_matching_transmission_probability.png)
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/ST_matching_function_probability.png)
@@ -76,6 +77,7 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 ## Effective map-matching on the most simplified road network[SIGSPATIAL 2012]
 
 这篇文章提出了一种Passby的路网匹配算法。主要针对问题是：由于路网数据占用很大的空间，如何在简化了路网信息的情况下进行路网匹配。这篇文章将路网信息中的每条路（可能包含多个路段）简化为{id，start，end}。在简化的路网信息会使得路网中的很多特征发生改变。如下图所示，实际道路变弄成简化道路后失去了曲线特征，因此处于$p_i$的点有更大概率匹配到另一条路上。
+
 
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/simplified_road_example.png)
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/Passby.png)
