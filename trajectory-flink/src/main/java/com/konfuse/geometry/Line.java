@@ -1,7 +1,10 @@
 package com.konfuse.geometry;
 
-import com.konfuse.internal.MBR;
+import org.apache.flink.core.memory.DataInputView;
+import org.apache.flink.core.memory.DataOutputView;
+import org.apache.flink.types.Key;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -12,14 +15,14 @@ import java.util.ArrayList;
  * @Author: Konfuse
  * @Date: 2019/11/27 12:17
  */
-public class Line extends DataObject implements Serializable {
+public class Line extends DataObject implements Key<Line>, Serializable {
     private double x1;
     private double y1;
     private double x2;
     private double y2;
 
-    public Line(long id, String name, double x1, double y1, double x2, double y2) {
-        super(id, name);
+    public Line(long id, double x1, double y1, double x2, double y2) {
+        super(id);
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;
@@ -92,10 +95,10 @@ public class Line extends DataObject implements Serializable {
     public Point[] getEndPoints() {
         Point[] points = new Point[2];
 
-        Point endPoint = new Point(0, "", x1, y1);
+        Point endPoint = new Point(0, x1, y1);
         points[0] = endPoint;
 
-        endPoint = new Point(0, "", x2, y2);
+        endPoint = new Point(0, x2, y2);
         points[1] = endPoint;
 
         return points;
@@ -121,12 +124,36 @@ public class Line extends DataObject implements Serializable {
     @Override
     public String toString() {
         return "Line{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", x1=" + x1 +
+                "x1=" + x1 +
                 ", y1=" + y1 +
                 ", x2=" + x2 +
                 ", y2=" + y2 +
+                ", id=" + id +
                 '}';
+    }
+
+    @Override
+    public int compareTo(Line line) {
+        if (line.x1 == x1 && line.y1 == y1 && line.x2 == x2 && line.y2 == y2)
+            return 0;
+        else return -1;
+    }
+
+    @Override
+    public void write(DataOutputView dataOutputView) throws IOException {
+        dataOutputView.writeLong(this.id);
+        dataOutputView.writeDouble(x1);
+        dataOutputView.writeDouble(y1);
+        dataOutputView.writeDouble(x2);
+        dataOutputView.writeDouble(y2);
+    }
+
+    @Override
+    public void read(DataInputView dataInputView) throws IOException {
+        this.id = dataInputView.readLong();
+        this.x1 = dataInputView.readDouble();
+        this.y1 = dataInputView.readDouble();
+        this.x2 = dataInputView.readDouble();
+        this.y2 = dataInputView.readDouble();
     }
 }

@@ -1,17 +1,715 @@
 package com.konfuse;
 
+import com.konfuse.geometry.Line;
+import com.konfuse.geometry.MBR;
+import com.konfuse.geometry.PartitionedMBR;
+import com.konfuse.geometry.Point;
+import com.konfuse.geopartitioner.LineSTRPartitioner;
+import com.konfuse.geopartitioner.PointSTRPartitioner;
+import com.konfuse.internal.*;
+import org.apache.flink.api.common.functions.*;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.utils.DataSetUtils;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.util.Collector;
+
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * @Author: Konfuse
  * @Date: 2019/12/6 15:33
  */
 public class IndexBuilder implements Serializable {
-    private int M = 40;
-    private int m = 16;
+    public Index<Line> createLineIndex(DataSet<Line> data, final double sampleRate, int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
+        // Step 1: create MBR and STRPartitioner based on sampled data
+        LineSTRPartitioner partitioner = this.createLineSTRPartitioner(data, sampleRate, parallelism, maxNodePerEntry, minNodePerEntry);
 
-    public IndexBuilder(int M, int m) {
-        this.M = M;
-        this.m = m;
+        // Partition data
+        DataSet<Line> partitionedData = data.partitionCustom(partitioner, new KeySelector<Line, Line>() {
+            @Override
+            public Line getKey(Line line) throws Exception {
+                return line;
+            }
+        });
+
+        // Step 2: build local RTree
+        DataSet<RTree<Line>> localRTree = partitionedData.mapPartition(new RichMapPartitionFunction<Line, RTree<Line>>() {
+            @Override
+            public void mapPartition(Iterable<Line> iterable, Collector<RTree<Line>> collector) throws Exception {
+                ArrayList<Line> lines = new ArrayList<>();
+                for (Line line : iterable) {
+                    lines.add(line);
+                }
+
+                if(!lines.isEmpty()){
+                    RTree<Line> rTree = createLineLocalRTree(lines, maxNodePerEntry, minNodePerEntry);
+                    collector.collect(rTree);
+                }
+            }
+        });
+
+        // Step 3: build global RTree
+        DataSet<RTree<PartitionedMBR>> globalRTree = localRTree
+                .map(new RichMapFunction<RTree<Line>, Tuple2<Integer, RTree<Line>>>() {
+                    @Override
+                    public Tuple2<Integer, RTree<Line>> map(RTree<Line> rTree) throws Exception {
+                        return new Tuple2<>(getRuntimeContext().getIndexOfThisSubtask(), rTree);
+                    }
+                })
+                .reduceGroup(new RichGroupReduceFunction<Tuple2<Integer, RTree<Line>>, RTree<PartitionedMBR>>() {
+                    @Override
+                    public void reduce(Iterable<Tuple2<Integer, RTree<Line>>> iterable, Collector<RTree<PartitionedMBR>> collector) throws Exception {
+                        Iterator<Tuple2<Integer, RTree<Line>>> iter = iterable.iterator();
+                        ArrayList<PartitionedMBR> partitionedMBRList = new ArrayList<>();
+                        while (iter.hasNext()) {
+                            Tuple2<Integer, RTree<Line>> tuple = iter.next();
+                            RTree<Line> rtree = tuple.f1;
+                            PartitionedMBR partitionedMBR = new PartitionedMBR(rtree.getRoot().getMBR(), tuple.f0, rtree.getEntryCount());
+                            partitionedMBRList.add(partitionedMBR);
+                        }
+                        RTree<PartitionedMBR> globalTree = createGlobalRTree(partitionedMBRList, maxNodePerEntry, minNodePerEntry);
+                        collector.collect(globalTree);
+                    }
+                });
+
+        return new Index<>(globalRTree, localRTree, partitioner, partitionedData);
+    }
+
+    public Index<Point> createPointIndex(DataSet<Point> data, final double sampleRate, int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
+        // Step 1: create MBR and STRPartitioner based on sampled data
+        PointSTRPartitioner partitioner = this.createPointSTRPartitioner(data, sampleRate, parallelism, maxNodePerEntry, minNodePerEntry);
+
+        // Partition data
+        DataSet<Point> partitionedData = data.partitionCustom(partitioner, new KeySelector<Point, Point>() {
+            @Override
+            public Point getKey(Point point) throws Exception {
+                return point;
+            }
+        });
+
+        // Step 2: build local RTree
+        DataSet<RTree<Point>> localRTree = partitionedData.mapPartition(new RichMapPartitionFunction<Point, RTree<Point>>() {
+            @Override
+            public void mapPartition(Iterable<Point> iterable, Collector<RTree<Point>> collector) throws Exception {
+                ArrayList<Point> points = new ArrayList<>();
+                for (Point point : iterable) {
+                    points.add(point);
+                }
+
+                if(!points.isEmpty()){
+                    RTree<Point> rTree = createPointLocalRTree(points, maxNodePerEntry, minNodePerEntry);
+                    collector.collect(rTree);
+                }
+            }
+        });
+
+        // Step 3: build global RTree
+        DataSet<RTree<PartitionedMBR>> globalRTree = localRTree
+                .map(new RichMapFunction<RTree<Point>, Tuple2<Integer, RTree<Point>>>() {
+                    @Override
+                    public Tuple2<Integer, RTree<Point>> map(RTree<Point> rTree) throws Exception {
+                        return new Tuple2<>(getRuntimeContext().getIndexOfThisSubtask(), rTree);
+                    }
+                })
+                .reduceGroup(new RichGroupReduceFunction<Tuple2<Integer, RTree<Point>>, RTree<PartitionedMBR>>() {
+                    @Override
+                    public void reduce(Iterable<Tuple2<Integer,  RTree<Point>>> iterable, Collector<RTree<PartitionedMBR>> collector) throws Exception {
+                        Iterator<Tuple2<Integer,  RTree<Point>>> iter = iterable.iterator();
+                        ArrayList<PartitionedMBR> partitionedMBRList = new ArrayList<>();
+                        while (iter.hasNext()) {
+                            Tuple2<Integer,  RTree<Point>> tuple = iter.next();
+                            RTree<Point> rtree = tuple.f1;
+                            PartitionedMBR partitionedMBR = new PartitionedMBR(rtree.getRoot().getMBR(), tuple.f0, rtree.getEntryCount());
+                            partitionedMBRList.add(partitionedMBR);
+                        }
+                        RTree<PartitionedMBR> globalTree = createGlobalRTree(partitionedMBRList, maxNodePerEntry, minNodePerEntry);
+                        collector.collect(globalTree);
+                    }
+                });
+
+        return new Index<>(globalRTree, localRTree, partitioner, partitionedData);
+    }
+
+    private LineSTRPartitioner createLineSTRPartitioner(DataSet<Line> data, double sampleRate, int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
+        // create boundary for whole dataset
+        // Tuple2<MBR, number of data object>
+        DataSet<Tuple2<MBR, Integer>> globalBoundDS = data
+                .map(new MapFunction<Line, Tuple2<MBR, Integer>>() {
+                    @Override
+                    public Tuple2<MBR, Integer> map(Line line) throws Exception {
+                        MBR mbr = line.mbr();
+                        return new Tuple2<>(mbr, 1);
+                    }
+                })
+                .reduce(new ReduceFunction<Tuple2<MBR, Integer>>() {
+                    @Override
+                    public Tuple2<MBR, Integer> reduce(Tuple2<MBR, Integer> mbrIntegerTuple2, Tuple2<MBR, Integer> t1) throws Exception {
+                        return new Tuple2<>(MBR.union(mbrIntegerTuple2.f0, t1.f0), mbrIntegerTuple2.f1 + t1.f1);
+                    }
+                });
+
+        // calculate number of MBRs on each dimension
+        // the idea is the total number of mbr over all dimensions will be equal to parallelism
+        // parallelism is p in the algorithm
+        // s is the due slice count of each dimension, i.e. s = Math.sqrt(p)
+        int s = (int) Math.ceil(Math.pow(Math.E, Math.log(parallelism) / 2));
+
+        // Sample data
+        final DataSet<Line> sampleData = DataSetUtils.sample(data, false, sampleRate);
+
+        DataSet<RTree<PartitionedMBR>> trees = sampleData.reduceGroup(new RichGroupReduceFunction<Line, RTree<PartitionedMBR>>() {
+            private MBR globalBound;
+
+            @Override
+            public void open(Configuration parameters) throws Exception {
+                super.open(parameters);
+                this.globalBound = ((Tuple2<MBR, Integer>)this.getRuntimeContext().getBroadcastVariable("globalBoundDS").get(0)).f0;
+            }
+
+            @Override
+            public void reduce(Iterable<Line> iterable, Collector<RTree<PartitionedMBR>> collector) throws Exception {
+                ArrayList<Line> sampleLines = new ArrayList<>();
+                for (Line line : iterable) {
+                    sampleLines.add(line);
+                }
+
+                // From MBR, create partition points (MBR, partition). The idea is to distribute each MBR to each partition
+                ArrayList<PartitionedMBR> partitionedMBRs = packLinesIntoMBR(sampleLines, s, this.globalBound);
+                for (int i = 0; i < partitionedMBRs.size(); i++) {
+                    // TODO: i% MBR to make sure, partitionnumber is not out of index bound
+                    partitionedMBRs.get(i).setPartitionNumber(i % parallelism);
+                }
+                RTree<PartitionedMBR> rTree = createGlobalRTree(partitionedMBRs, maxNodePerEntry, minNodePerEntry);
+                collector.collect(rTree);
+            }
+        }).withBroadcastSet(globalBoundDS, "globalBoundDS");
+
+        return new LineSTRPartitioner(trees.collect().get(0));
+    }
+
+    private PointSTRPartitioner createPointSTRPartitioner(DataSet<Point> data, double sampleRate, final int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
+        // create boundary for whole dataset
+        // Tuple2<MBR, number of data object>
+        DataSet<Tuple2<MBR, Integer>> globalBoundDS = data
+                .map(new MapFunction<Point, Tuple2<MBR, Integer>>() {
+                    @Override
+                    public Tuple2<MBR, Integer> map(Point point) throws Exception {
+                        MBR mbr = new MBR(point.getX(), point.getY(), point.getX(), point.getY());
+                        return new Tuple2<>(mbr, 1);
+                    }
+                })
+                .reduce(new ReduceFunction<Tuple2<MBR, Integer>>() {
+                    @Override
+                    public Tuple2<MBR, Integer> reduce(Tuple2<MBR, Integer> mbrIntegerTuple2, Tuple2<MBR, Integer> t1) throws Exception {
+                        return new Tuple2<>(MBR.union(mbrIntegerTuple2.f0, t1.f0), mbrIntegerTuple2.f1 + t1.f1);
+                    }
+                });
+
+        // calculate number of MBRs on each dimension
+        // the idea is the total number of mbr over all dimensions will be equal to parallelism
+        // parallelism is p in the algorithm
+        // s is the due slice count of each dimension, i.e. s = Math.sqrt(p)
+        int s = (int) Math.ceil(Math.pow(Math.E, Math.log(parallelism) / 2));
+
+        // Sample data
+        final DataSet<Point> sampleData = DataSetUtils.sample(data, false, sampleRate);
+
+        DataSet<RTree<PartitionedMBR>> trees = sampleData.reduceGroup(new RichGroupReduceFunction<Point, RTree<PartitionedMBR>>() {
+            private MBR globalBound;
+
+            @Override
+            public void open(Configuration parameters) throws Exception {
+                super.open(parameters);
+                this.globalBound = ((Tuple2<MBR,Integer>)this.getRuntimeContext().getBroadcastVariable("globalBoundDS").get(0)).f0;
+            }
+
+            @Override
+            public void reduce(Iterable<Point> iterable, Collector<RTree<PartitionedMBR>> collector) throws Exception {
+                ArrayList<Point> samplePoints = new ArrayList<>();
+                for (Point point : iterable) {
+                    samplePoints.add(point);
+                }
+
+                // From MBR, create partition points (MBR, partition). The idea is to distribute each MBR to each partition
+                ArrayList<PartitionedMBR> partitionedMBRs = packPointsIntoMBR(samplePoints, s, this.globalBound);
+                for (int i = 0; i < partitionedMBRs.size(); i++) {
+                    // TODO: i% MBR to make sure, partitionnumber is not out of index bound
+                    partitionedMBRs.get(i).setPartitionNumber(i % parallelism);
+                }
+                RTree<PartitionedMBR> rTree = createGlobalRTree(partitionedMBRs, maxNodePerEntry, minNodePerEntry);
+                collector.collect(rTree);
+            }
+        }).withBroadcastSet(globalBoundDS, "globalBoundDS");
+
+        return new PointSTRPartitioner(trees.collect().get(0));
+    }
+
+    private RTree<PartitionedMBR> createGlobalRTree(ArrayList<PartitionedMBR> mbrList, int maxNodePerEntry, int minNodePerEntry) {
+        //calculate leaf node num
+        double p = mbrList.size() * 1.0 / maxNodePerEntry;
+
+        //start building r-tree leaf node
+        mbrList.sort(new PartitionedMBR.PartitionedMBRComparator(1, true));
+
+        // get entry count
+        long entryCount = 0L;
+        MBR[] mbrs = new MBR[mbrList.size()];
+        for (int i = 0; i < mbrList.size(); i++) {
+            mbrs[i] = mbrList.get(i).getMBR();
+            entryCount += mbrList.get(i).getEntryCount();
+        }
+
+        // if size is less than M, then pack the root directly.
+        if (mbrList.size() <= maxNodePerEntry) {
+
+            TreeNode root = new LeafNode<>(mbrList, MBR.union(mbrs));
+            return new RTree<>(root, maxNodePerEntry, minNodePerEntry, entryCount);
+        }
+
+        int s = (int) Math.ceil(Math.pow(Math.E, Math.log(p) / 2));
+
+        ArrayList<PartitionedMBR> list = new ArrayList<>();
+        ArrayList<TreeNode> nextLevel = new ArrayList<>();
+
+        int ctr = 0;
+        for (PartitionedMBR partitionedMBR : mbrList) {
+            list.add(partitionedMBR);
+            ++ctr;
+            if (ctr == s * maxNodePerEntry) {
+                packPartitionedMBR(list, nextLevel, maxNodePerEntry, minNodePerEntry);
+                list.clear();
+                ctr = 0;
+            }
+        }
+        // the size of the last slide may be lower than s * M
+        if(list.size() > 0) {
+            packPartitionedMBR(list, nextLevel, maxNodePerEntry, minNodePerEntry);
+            list.clear();
+        }
+        TreeNode root = leafNodePacking(nextLevel, maxNodePerEntry, minNodePerEntry);
+        return new RTree<>(root, maxNodePerEntry, minNodePerEntry, entryCount);
+    }
+
+    private RTree<Line> createLineLocalRTree(ArrayList<Line> lines, int maxNodePerEntry, int minNodePerEntry) {
+        //calculate leaf node num
+        double p = lines.size() * 1.0 / maxNodePerEntry;
+
+        //start building r-tree leaf node
+        lines.sort(new MBR.MBRComparatorWithLine(1, true));
+
+        // get entry count
+        long entryCount = lines.size();
+
+        // if size is less than M, then pack the root directly.
+        if (lines.size() <= maxNodePerEntry) {
+            TreeNode root = new LeafNode<>(lines, Line.unionLines(lines));
+            return new RTree<>(root, maxNodePerEntry, minNodePerEntry, entryCount);
+        }
+
+        int s = (int) Math.ceil(Math.pow(Math.E, Math.log(p) / 2));
+        ArrayList<Line> list = new ArrayList<>();
+        ArrayList<TreeNode> nextLevel = new ArrayList<TreeNode>();
+
+        int ctr = 0;
+        for (Line line : lines) {
+            list.add(line);
+            ++ctr;
+            if (ctr == s * maxNodePerEntry) {
+                packLines(list, nextLevel, maxNodePerEntry, minNodePerEntry);
+                list.clear();
+                ctr = 0;
+            }
+        }
+        // the size of the last slide may be lower than s * M
+        if(list.size() > 0) {
+            packLines(list, nextLevel, maxNodePerEntry, minNodePerEntry);
+            list.clear();
+        }
+        TreeNode root = leafNodePacking(nextLevel, maxNodePerEntry, minNodePerEntry);
+        return new RTree<>(root, maxNodePerEntry, minNodePerEntry, entryCount);
+    }
+
+    private RTree<Point> createPointLocalRTree(ArrayList<Point> points, int maxNodePerEntry, int minNodePerEntry) {
+        //calculate leaf node num
+        double p = points.size() * 1.0 / maxNodePerEntry;
+
+        //start building r-tree leaf node
+        points.sort(new Point.PointComparator(1));
+
+        // get entry count
+        long entryCount = points.size();
+
+        // if size is less than M, then pack the root directly.
+        if (points.size() <= maxNodePerEntry) {
+            TreeNode root = new LeafNode<>(points, Point.unionPoints(points));
+            return new RTree<>(root, maxNodePerEntry, minNodePerEntry, entryCount);
+        }
+
+        int s = (int) Math.ceil(Math.pow(Math.E, Math.log(p) / 2));
+        ArrayList<Point> list = new ArrayList<>();
+        ArrayList<TreeNode> nextLevel = new ArrayList<TreeNode>();
+
+        int ctr = 0;
+        for (Point point : points) {
+            list.add(point);
+            ++ctr;
+            if (ctr == s * maxNodePerEntry) {
+                packPoints(list, nextLevel, maxNodePerEntry, minNodePerEntry);
+                list.clear();
+                ctr = 0;
+            }
+        }
+        // the size of the last slide may be lower than s * M
+        if(list.size() > 0) {
+            packPoints(list, nextLevel, maxNodePerEntry, minNodePerEntry);
+            list.clear();
+        }
+        TreeNode root = leafNodePacking(nextLevel, maxNodePerEntry, minNodePerEntry);
+        return new RTree<>(root, maxNodePerEntry, minNodePerEntry, entryCount);
+    }
+
+    private ArrayList<PartitionedMBR> packPointsIntoMBR(ArrayList<Point> data, int s, MBR globalBound) {
+        // sort data by x first
+        // s is the due slice count of each dimension, i.e. s = Math.sqrt(p)
+        // slideCapacity is the capacity of each slide
+        data.sort(new Point.PointComparator(0));
+        int slideCapacity = (int) Math.ceil(data.size() * 1.0 / s);
+        int nodeCapacity = (int) Math.ceil(data.size() * 1.0 / s / s);
+
+        ArrayList<Point> list = new ArrayList<>();
+        ArrayList<PartitionedMBR> partitionedMBRs = new ArrayList<>();
+
+        // ctr is the count of point data index
+        int ctr = 0;
+        for (Point point : data) {
+            list.add(point);
+            ++ctr;
+            if (ctr == slideCapacity) {
+                packSamplePoints(list, partitionedMBRs, globalBound, nodeCapacity);
+                list.clear();
+                ctr = 0;
+            }
+        }
+
+        // the size of the last slide may be lower than slide capacity
+        if(list.size() > 0) {
+            packSamplePoints(list, partitionedMBRs, globalBound, nodeCapacity);
+            list.clear();
+        }
+
+        return partitionedMBRs;
+    }
+
+    private ArrayList<PartitionedMBR> packLinesIntoMBR(ArrayList<Line> data, int s, MBR globalBound) {
+        // sort data by x first
+        // s is the due slice count of each dimension, i.e. s = Math.sqrt(p)
+        // slideCapacity is the capacity of each slide
+        data.sort(new MBR.MBRComparatorWithLine(1, true));
+        int slideCapacity = (int) Math.ceil(data.size() * 1.0 / s);
+        int nodeCapacity = (int) Math.ceil(data.size() * 1.0 / s / s);
+
+        ArrayList<Line> list = new ArrayList<>();
+        ArrayList<PartitionedMBR> partitionedMBRs = new ArrayList<>();
+
+        // ctr is the count of point data index
+        int ctr = 0;
+        for (Line line : data) {
+            list.add(line);
+            ++ctr;
+            if (ctr == slideCapacity) {
+                packSampleLines(list, partitionedMBRs, globalBound, nodeCapacity);
+                list.clear();
+                ctr = 0;
+            }
+        }
+
+        // the size of the last slide may be lower than slide capacity
+        if(list.size() > 0) {
+            packSampleLines(list, partitionedMBRs, globalBound, nodeCapacity);
+            list.clear();
+        }
+
+        return partitionedMBRs;
+    }
+
+    private void packLines(ArrayList<Line> lines, ArrayList<TreeNode> nextLevel, int maxNodePerEntry, int minNodePerEntry) {
+        // sort by the y dimension
+        lines.sort(new MBR.MBRComparatorWithLine(2, true));
+
+        // pack lines to leaf nodes
+        LeafNode<Line> leafNode = new LeafNode<>();
+        for (Line line : lines) {
+            leafNode.getEntries().add(line);
+            if (leafNode.getEntries().size() == maxNodePerEntry) {
+                leafNode.setMBR(Line.unionLines(leafNode.getEntries()));
+                nextLevel.add(leafNode);
+                leafNode = new LeafNode<>();
+            }
+        }
+
+        // the size of the last leaf node may be lower than m.
+        // add records into it from neighbor node until the last node no less than m.
+        if (leafNode.getEntries().size() > 0) {
+            if (leafNode.getEntries().size() < minNodePerEntry) {
+                LeafNode<Line> swapped = (LeafNode<Line>) nextLevel.get(nextLevel.size() - 1);
+                ArrayList<Line> swappedLines = swapped.getEntries();
+                ArrayList<Line> lastLines = leafNode.getEntries();
+                while (leafNode.getEntries().size() < minNodePerEntry) {
+                    lastLines.add(0, swappedLines.remove(swappedLines.size() - 1));
+                }
+            }
+            leafNode.setMBR(Line.unionLines(leafNode.getEntries()));
+            nextLevel.add(leafNode);
+        }
+    }
+
+    private void packPoints(ArrayList<Point> points, ArrayList<TreeNode> nextLevel, int maxNodePerEntry, int minNodePerEntry) {
+        // sort by the y dimension
+        points.sort(new Point.PointComparator(2));
+
+        // pack points to leaf nodes
+        LeafNode<Point> leafNode = new LeafNode<>();
+        for (Point point : points) {
+            leafNode.getEntries().add(point);
+            if (leafNode.getEntries().size() == maxNodePerEntry) {
+                leafNode.setMBR(Point.unionPoints(leafNode.getEntries()));
+                nextLevel.add(leafNode);
+                leafNode = new LeafNode<>();
+            }
+        }
+
+        // the size of the last leaf node may be lower than m.
+        // add records into it from neighbor node until the last node no less than m.
+        if (leafNode.getEntries().size() > 0) {
+            if (leafNode.getEntries().size() < minNodePerEntry) {
+                LeafNode<Point> swapped = (LeafNode<Point>) nextLevel.get(nextLevel.size() - 1);
+                ArrayList<Point> swappedPoints = swapped.getEntries();
+                ArrayList<Point> lastPoints = leafNode.getEntries();
+                while (leafNode.getEntries().size() < minNodePerEntry) {
+                    lastPoints.add(0, swappedPoints.remove(swappedPoints.size() - 1));
+                }
+            }
+            leafNode.setMBR(Point.unionPoints(leafNode.getEntries()));
+            nextLevel.add(leafNode);
+        }
+    }
+
+    private void packSampleLines(ArrayList<Line> data, ArrayList<PartitionedMBR> partitionedMBRs, MBR globalBound, int nodeCapacity) {
+        // sort by the y dimension
+        data.sort(new MBR.MBRComparatorWithLine(2, true));
+
+        // pack lines to mbrs
+        ArrayList<Line> lines = new ArrayList<>();
+        ArrayList<Line> lastLines = new ArrayList<>();
+
+        for (int i = 0; i < data.size(); i++) {
+            Line line = data.get(i);
+            lines.add(line);
+            if (lines.size() == nodeCapacity) {
+                if (i == 0) {
+                    // for group 0, lower bound = min bound of global data
+                    // upper bound = last element of group
+                    Line lowerBound = new Line(0, globalBound.getX1(), globalBound.getY1(), globalBound.getX1(), globalBound.getY1());
+                    lines.add(lowerBound);
+                }
+                MBR mbr = Line.unionLines(lines);
+                partitionedMBRs.add(new PartitionedMBR(mbr, 0, lines.size()));
+                lines = new ArrayList<>();
+                lastLines.clear();
+                lastLines = lines;
+            }
+        }
+
+        // the point size of the last mbr may be lower than m.
+        // add records into it from neighbor node until the last mbr no less than m.
+        if (lines.size() > 0) {
+            if (lines.size() < nodeCapacity / 2) {
+                while (lines.size() < nodeCapacity / 2) {
+                    lines.add(0, lastLines.remove(lastLines.size() - 1));
+                }
+            }
+            partitionedMBRs.remove(partitionedMBRs.size() - 1);
+            MBR mbr = Line.unionLines(lastLines);
+            partitionedMBRs.add(new PartitionedMBR(mbr, 0, lines.size()));
+        }
+
+        // for last group, lower bound = upper bound of previous group
+        // upper bound = max bound of global data
+        Line upperBound = new Line(0, globalBound.getX2(), globalBound.getY2(), globalBound.getX2(), globalBound.getY2());
+        lines.add(upperBound);
+        MBR mbr = Line.unionLines(lines);
+        partitionedMBRs.add(new PartitionedMBR(mbr, 0, lines.size()));
+    }
+
+    private void packSamplePoints(ArrayList<Point> data, ArrayList<PartitionedMBR> partitionedMBRs, MBR globalBound, int nodeCapacity) {
+        // sort by the y dimension
+        data.sort(new Point.PointComparator(2));
+
+        // pack points to mbrs
+        ArrayList<Point> points = new ArrayList<>();
+        ArrayList<Point> lastPoints = new ArrayList<>();
+
+        for (int i = 0; i < data.size(); i++) {
+            Point point = data.get(i);
+            points.add(point);
+            if (points.size() == nodeCapacity) {
+                if (i == 0) {
+                    // for group 0, lower bound = min bound of global data
+                    // upper bound = last element of group
+                    Point lowerBound = new Point(0, globalBound.getX1(), globalBound.getY1());
+                    points.add(lowerBound);
+                }
+                MBR mbr = Point.unionPoints(points);
+                partitionedMBRs.add(new PartitionedMBR(mbr, 0, points.size()));
+                points = new ArrayList<>();
+                lastPoints.clear();
+                lastPoints = points;
+            }
+        }
+
+        // the point size of the last mbr may be lower than m.
+        // add records into it from neighbor node until the last mbr no less than m.
+        if (points.size() > 0) {
+            if (points.size() < nodeCapacity / 2) {
+                while (points.size() < nodeCapacity / 2) {
+                    points.add(0, lastPoints.remove(lastPoints.size() - 1));
+                }
+            }
+            partitionedMBRs.remove(partitionedMBRs.size() - 1);
+            MBR mbr = Point.unionPoints(lastPoints);
+            partitionedMBRs.add(new PartitionedMBR(mbr, 0, points.size()));
+        }
+
+        // for last group, lower bound = upper bound of previous group
+        // upper bound = max bound of global data
+        Point upperBound = new Point(0, globalBound.getX2(), globalBound.getY2());
+        points.add(upperBound);
+        MBR mbr = Point.unionPoints(points);
+        partitionedMBRs.add(new PartitionedMBR(mbr, 0, points.size()));
+    }
+
+    private void packPartitionedMBR(ArrayList<PartitionedMBR> partitionedMBRs, ArrayList<TreeNode> nextLevel, int maxNodePerEntry, int minNodePerEntry) {
+        // sort by the y dimension
+        partitionedMBRs.sort(new PartitionedMBR.PartitionedMBRComparator(2, true));
+
+        // pack PartitionedMBR to leaf nodes
+        PartitionedLeafNode leafNode = new PartitionedLeafNode();
+        for (PartitionedMBR partitionedMBR : partitionedMBRs) {
+            leafNode.getEntries().add(partitionedMBR);
+            if (leafNode.getEntries().size() == maxNodePerEntry) {
+                ArrayList<PartitionedMBR> list = leafNode.getEntries();
+                MBR[] mbrs = new MBR[list.size()];
+                for (int i = 0; i < list.size(); i++) {
+                    mbrs[i] = list.get(i).getMBR();
+                }
+                leafNode.setMBR(MBR.union(mbrs));
+                nextLevel.add(leafNode);
+                leafNode = new PartitionedLeafNode();
+            }
+        }
+
+        // the size of the last leaf node may be lower than m.
+        // add records into it from neighbor node until the last node no less than m.
+        if (leafNode.getEntries().size() > 0) {
+            if (leafNode.getEntries().size() < minNodePerEntry) {
+                PartitionedLeafNode swapped = (PartitionedLeafNode) nextLevel.get(nextLevel.size() - 1);
+                ArrayList<PartitionedMBR> swappedPartitionedMBRs = swapped.getEntries();
+                ArrayList<PartitionedMBR> lastPartitionedMBR = leafNode.getEntries();
+                while (leafNode.getEntries().size() < minNodePerEntry) {
+                    lastPartitionedMBR.add(0, swappedPartitionedMBRs.remove(swappedPartitionedMBRs.size() - 1));
+                }
+            }
+            ArrayList<PartitionedMBR> list = leafNode.getEntries();
+            MBR[] mbrs = new MBR[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                mbrs[i] = list.get(i).getMBR();
+            }
+            leafNode.setMBR(MBR.union(mbrs));
+            nextLevel.add(leafNode);
+        }
+    }
+
+    private void packNodes(ArrayList<TreeNode> list, ArrayList<TreeNode> nextLevel, final int maxNodePerEntry, final int minNodePerEntry, int[] height) {
+        // sort by the y dimension
+        list.sort(new MBR.MBRComparatorWithTreeNode(2, true));
+
+        // pack nodes to non-leaf nodes
+        NonLeafNode nonLeafNode = new NonLeafNode(maxNodePerEntry, height[0] + 1);
+        for (TreeNode treeNode : list) {
+            nonLeafNode.getChildNodes().add(treeNode);
+            if (nonLeafNode.getChildNodes().size() == maxNodePerEntry) {
+                nonLeafNode.setMBR(MBR.union(nonLeafNode.getMBRs()));
+                nextLevel.add(nonLeafNode);
+                nonLeafNode = new NonLeafNode(maxNodePerEntry, height[0] + 1);
+            }
+        }
+
+        // the size of the last node may be lower than m.
+        // add records into it from neighbor node until the last node's size no less than m.
+        if (nonLeafNode.getChildNodes().size() > 0) {
+            if (nonLeafNode.getChildNodes().size() < minNodePerEntry) {
+                NonLeafNode swapped = (NonLeafNode) nextLevel.get(nextLevel.size() - 1);
+                ArrayList<TreeNode> lastTreeNodes = nonLeafNode.getChildNodes();
+                ArrayList<TreeNode> swappedTreeNodes = swapped.getChildNodes();
+                while (nonLeafNode.getChildNodes().size() < minNodePerEntry) {
+                    lastTreeNodes.add(0, swappedTreeNodes.remove(swappedTreeNodes.size() - 1));
+                }
+            }
+            nonLeafNode.setMBR(MBR.union(nonLeafNode.getMBRs()));
+            nextLevel.add(nonLeafNode);
+        }
+    }
+
+    private TreeNode leafNodePacking(ArrayList<TreeNode> treeNodes, final int maxNodePerEntry, final int minNodePerEntry) {
+        // calculate partition num
+        double p = treeNodes.size() * 1.0 / maxNodePerEntry;
+
+        // start build r-tree structure bottom-to-up recursively
+        treeNodes.sort(new MBR.MBRComparatorWithTreeNode(1, true));
+        int[] height = new int[]{1};
+        treeNodes = buildRecursivelyBySTR(p, treeNodes, maxNodePerEntry, minNodePerEntry, height);
+
+        // pack the root
+        NonLeafNode nonLeafNode = new NonLeafNode(maxNodePerEntry, height[0] + 1);
+        nonLeafNode.setChildNodes(treeNodes);
+        nonLeafNode.setMBR(MBR.union(nonLeafNode.getMBRs()));
+
+        return nonLeafNode;
+    }
+
+    private ArrayList<TreeNode> buildRecursivelyBySTR(double p, ArrayList<TreeNode> entries, final int maxNodePerEntry, final int minNodePerEntry, int[] height) {
+        // entries num in node should be no more than M, but if size <= M, return entries directly.
+        if (entries.size() <= maxNodePerEntry) {
+            return entries;
+        }
+
+        // calculate slides num
+        int s = (int) Math.ceil(Math.pow(Math.E, Math.log(p) / 2));
+        ArrayList<TreeNode> list = new ArrayList<>();
+        ArrayList<TreeNode> nextLevel = new ArrayList<>();
+
+        // start pack nodes
+        int ctr = 0;
+        for (TreeNode treeNode : entries) {
+            list.add(treeNode);
+            ++ctr;
+            if (ctr == s * maxNodePerEntry) {
+                packNodes(list, nextLevel, maxNodePerEntry, minNodePerEntry, height);
+                list.clear();
+                ctr = 0;
+            }
+        }
+
+        // the size of the last slide may be lower than s * M
+        if(list.size() > 0) {
+            packNodes(list, nextLevel, maxNodePerEntry, minNodePerEntry, height);
+            list.clear();
+        }
+        height[0]++;
+        return buildRecursivelyBySTR(nextLevel.size() * 1.0 / maxNodePerEntry, nextLevel, maxNodePerEntry, minNodePerEntry, height);
     }
 }

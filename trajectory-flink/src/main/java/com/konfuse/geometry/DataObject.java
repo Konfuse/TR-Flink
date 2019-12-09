@@ -13,11 +13,9 @@ import java.io.Serializable;
  */
 public abstract class DataObject implements Serializable {
     long id;
-    String name;
 
-    public DataObject(long id, String name) {
+    public DataObject(long id) {
         this.id = id;
-        this.name = name;
     }
 
     public long getId() {
@@ -26,14 +24,6 @@ public abstract class DataObject implements Serializable {
 
     public void setId(long id) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     /**

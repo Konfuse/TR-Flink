@@ -1,6 +1,7 @@
 package com.konfuse.internal;
 
 import com.konfuse.geometry.DataObject;
+import com.konfuse.geometry.MBR;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -15,9 +16,9 @@ import java.util.ArrayList;
  */
 public class LeafNode<T extends DataObject> extends TreeNode implements Serializable {
     private ArrayList<T> entries;
-    public LeafNode(int M) {
+    public LeafNode() {
         super(new MBR(), 1);
-        entries = new ArrayList<>(M);
+        entries = new ArrayList<>();
     }
 
     public LeafNode(ArrayList<T> entries, MBR mbr) {

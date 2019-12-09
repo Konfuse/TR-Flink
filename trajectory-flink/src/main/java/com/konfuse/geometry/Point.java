@@ -1,7 +1,10 @@
 package com.konfuse.geometry;
 
-import com.konfuse.internal.MBR;
+import org.apache.flink.core.memory.DataInputView;
+import org.apache.flink.core.memory.DataOutputView;
+import org.apache.flink.types.Key;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,12 +16,12 @@ import java.util.Comparator;
  * @Author: Konfuse
  * @Date: 2019/11/28 21:13
  */
-public class Point extends DataObject implements Serializable {
+public class Point extends DataObject implements Key<Point>, Serializable {
     private double x;
     private double y;
 
-    public Point(long id, String name, double x, double y) {
-        super(id, name);
+    public Point(long id, double x, double y) {
+        super(id);
         this.x = x;
         this.y = y;
     }
@@ -37,6 +40,36 @@ public class Point extends DataObject implements Serializable {
     @Override
     public double calDistance(Point point) {
         return Math.sqrt((x - point.x) * (x - point.x) + (y - point.y) * (y - point.y));
+    }
+
+    @Override
+    public String toString() {
+        return "Point{" +
+                "x=" + x +
+                ", y=" + y +
+                ", id=" + id +
+                '}';
+    }
+
+    @Override
+    public int compareTo(Point point) {
+        if (point.getX() == x && point.getY() == y)
+            return 0;
+        else return -1;
+    }
+
+    @Override
+    public void write(DataOutputView dataOutputView) throws IOException {
+        dataOutputView.writeLong(this.id);
+        dataOutputView.writeDouble(x);
+        dataOutputView.writeDouble(y);
+    }
+
+    @Override
+    public void read(DataInputView dataInputView) throws IOException {
+        this.id = dataInputView.readLong();
+        this.x = dataInputView.readDouble();
+        this.y = dataInputView.readDouble();
     }
 
     /**

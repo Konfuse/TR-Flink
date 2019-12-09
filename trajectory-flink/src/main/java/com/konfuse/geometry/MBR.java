@@ -1,8 +1,6 @@
-package com.konfuse.internal;
+package com.konfuse.geometry;
 
-import com.konfuse.geometry.DataObject;
-import com.konfuse.geometry.Line;
-import com.konfuse.geometry.Point;
+import com.konfuse.internal.TreeNode;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -93,6 +91,52 @@ public class MBR implements Serializable {
     }
 
     /**
+     * Distance between the center of mbr and the query line
+     * @param line the query line
+     */
+    public double calculateDistance(Line line) {
+        Point point = new Point(0, (x2 + x1) / 2.0, (y1 + y2) / 2.0);
+        return line.calDistance(point);
+    }
+
+    /**
+     * Distance between the center of mbr and center of the query mbr
+     * @param mbr the query mbr
+     */
+    public double calculateDistance(MBR mbr) {
+        double distance = 0L;
+
+        // distance on x
+        double centerThis = (x2 + x1) / 2.0;
+        double centerQuery = (mbr.x2 + mbr.x1) / 2.0;
+        double distanceDim = centerThis - centerQuery;
+        distance += distanceDim * distanceDim;
+
+        // distance on y
+        centerThis = (y1 + y2) / 2.0;
+        centerQuery = (mbr.y2 + mbr.y1) / 2.0;
+        distanceDim = centerThis - centerQuery;
+        distance += distanceDim * distanceDim;
+
+        return Math.sqrt(distance);
+    }
+
+    /**
+     * Distance between the center of mbr and the query point
+     * @param dataObject the query data object
+     */
+    public double calculateDistance(DataObject dataObject) {
+        // data object has two potential type
+        if (dataObject instanceof Point)
+            return calculateDistance((Point) dataObject);
+        else if (dataObject instanceof Line)
+            return calculateDistance((Line) dataObject);
+        else if (dataObject instanceof PartitionedMBR)
+            return calculateDistance(((PartitionedMBR)dataObject).getMBR());
+        return Double.MAX_VALUE;
+    }
+
+    /**
      * The minimum distance between the border of mbr and the query point
      * @param point the query point
      */
@@ -163,8 +207,8 @@ public class MBR implements Serializable {
         }
 
         // if the line segment intersects any of the diagonals of mbr, return true
-        Line diagonal1 = new Line(0, "", x1, y1, x2, y2);
-        Line diagonal2 = new Line(0, "", x1, y2, x2, y1);
+        Line diagonal1 = new Line(0, x1, y1, x2, y2);
+        Line diagonal2 = new Line(0, x1, y2, x2, y1);
         if (Line.intersects(line, diagonal1) || Line.intersects(line, diagonal2))
             return true;
         return false;
@@ -179,6 +223,8 @@ public class MBR implements Serializable {
             return contains((Point) dataObject);
         else if (dataObject instanceof Line)
             return contains((Line) dataObject);
+        else if (dataObject instanceof PartitionedMBR)
+            return contains(((PartitionedMBR)dataObject).getMBR());
         return false;
     }
 
@@ -203,15 +249,15 @@ public class MBR implements Serializable {
         public int compare(TreeNode e1, TreeNode e2) {
             if (dimension == 1) {
                 if (low) {
-                    return Double.compare(e1.mbr.x1, e2.mbr.x1);
+                    return Double.compare(e1.getMBR().x1, e2.getMBR().x1);
                 } else {
-                    return Double.compare(e1.mbr.x2, e2.mbr.x2);
+                    return Double.compare(e1.getMBR().x2, e2.getMBR().x2);
                 }
             } else {
                 if (low) {
-                    return Double.compare(e1.mbr.y1, e2.mbr.y1);
+                    return Double.compare(e1.getMBR().y1, e2.getMBR().y1);
                 } else {
-                    return Double.compare(e1.mbr.y2, e2.mbr.y2);
+                    return Double.compare(e1.getMBR().y2, e2.getMBR().y2);
                 }
             }
         }
