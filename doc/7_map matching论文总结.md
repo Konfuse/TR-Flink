@@ -50,12 +50,12 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 作者基于的观测事实是：（1）真实的路径一般都是直的（2）真实的路径会遵循道路的速度限制。本文路网匹配的主要步骤是：先根据路网索引，取得轨迹点附近的候选路段（点）（网格索引）。（2）根据轨迹的前后关系，对候选路段进行空间分析和时间分析构建一张图，图的节点是轨迹点的匹配候选点，图的边是相邻候选点之间的最短路径，图中的边和点都赋予一定的权重。（3）在得到的图中，找到一条评分最高的轨迹。
 
 空间分析：观测概率N：GPS坐标点p和投影点c之间的距离，计算该点与投影点相匹配的概率。作者使用的是$\mu$ = 0 和 $\sigma$ = 20正态分布。然而只考虑观测概率就忽略了GPS点的时空语义。因此作者还定义了转移概率V，其意义是GPS前后点之间的距离和其投影点之间的最短距离的比例。最终通过两个之积得到概率公式。
-![](/pic/ST_matching_observation_probability.png)
-![](/pic/ST_matching_transmission_probability.png)
-![](/pic/ST_matching_function_probability.png)
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/ST_matching_observation_probability.png)
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/ST_matching_transmission_probability.png)
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/ST_matching_function_probability.png)
 
 时间分析：计算候选点之间的可能的速度与路径允许的速度作比较，判断其是在高速路上还是普通的路径上。
-![](/pic/temporal_analysis_function.png)
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/temporal_analysis_function.png)
 
 最终得到的概率权重，用类似Viterbi算法，在全局找到一条评分最高的路径（初始概率设置为每个点的观测概率）。当一条轨迹太长时，可以使用滑动窗口的方式，对部分候选图进行匹配。
 
@@ -65,7 +65,7 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 
 在这篇文章中，作者的主要思想是结合已有的深度学习方法，充分利用历史轨迹数据的运动规律信息，来对轨迹的数据进行路网匹配，并减弱轨迹中噪声的影响。本篇文章中，通过embedding技术来表示地点和路段是为了减少敏感噪音的影响，而使用注意力增强的seq2seq模型是为了学习历史的轨迹数据特征。
 
-![](/pic/deepMM_framework.png)
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/deepMM_framework.png)
 
 这个框架的左半部分是对轨迹数据量进行拓展的方法，右半部分是深度学习模型。通过训练的模型来对新来的轨迹进行预测，最后通过路网匹配算法来得到匹配的路网轨迹。
 
@@ -75,17 +75,58 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 
 ## Effective map-matching on the most simplified road network[SIGSPATIAL 2012]
 
+这篇文章提出了一种Passby的路网匹配算法。主要针对问题是：由于路网数据占用很大的空间，如何在简化了路网信息的情况下进行路网匹配。这篇文章将路网信息中的每条路（可能包含多个路段）简化为{id，start，end}。在简化的路网信息会使得路网中的很多特征发生改变。如下图所示，实际道路变弄成简化道路后失去了曲线特征，因此处于$p_i$的点有更大概率匹配到另一条路上。
 
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/simplified_road_example.png)
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/Passby.png)
 
-这篇文章提出了一种Passby的路网匹配算法。主要针对问题是：由于路网数据占用很大的空间，如何在简化了路网信息的情况下进行路网匹配。这篇文章将路网信息中的每条路简化为（id，start，end）的集合。Passby考虑了轨迹中的前后点的关联，对每个点依次进行了匹配。该方法可以进行并行化计算，每个线程负责一部分地图数据的匹配。
+作者基于主要发现是：一辆车的行驶轨迹是否能够匹配到一个路段上，可以通过其是否通过了这段路的路口来判断。因此，如果轨迹中的点$p_{i-1}$和$p_{i}$（当前查询点是$p_{i}$）匹配的点的路径通过一段路的起点e.start，并且其后的点$p_{j-1}$和$p_{j}$通过了这一段路的e.end，此时可以将{$p_{i}$,...,$p_{j}$}匹配到该路段上。如果其后的点不满足情况，就将$p_{i}$匹配给概率最大的一段路中。
+
+如何判断两个点的路径是否通过一个路口呢？在下图中，作者标出了四个变量，四个变量的加权和（大于一个阈值）可以作为其是否通过路口的指标。一般而言更小的距离（$d_t和d_p$）和更小的角度（$\theta_t和\theta_i$）更好。
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/passing_by.png)
+
+对于其后的点不满足通过路段的末点的情况，首先根据其欧式范围(r)和拓扑范围(r+|$e_1$|)来将相应范围内的路段添加到候选路段中。拓扑范围的确定依据车辆先前行驶过的节点，将一定范围内的路段取做候选路段。（有待进一步探究）。
+
+---
+## Fast Viterbi map matching with tunable weight functions. SIGSPATIAL \[GIS 2012]:
+
+该方法的全局路网匹配算法使用了Viterbi动态规划方法，该方法综合了其他几种路网匹配算法的权重计算函数，并使用了一些优化方法。
 
 ---
  
-Fast Viterbi map matching with tunable weight functions. SIGSPATIAL[[GIS 2012]]:该方法的全局路网匹配算法使用了Viterbi动态规划方法，该方法综合了其他几种路网匹配算法的权重计算函数，并使用了一些优化方法。
+## Quick map matching using multi-core CPUs[SIGSPATIALGIS 2012]
 
- 
-Quick map matching using multi-core CPUs[SIGSPATIALGIS 2012]：本文使用了网格索引，并将路段和相交的网格相对应，最后设置一定的距离限制，来取得查询轨迹中某个查询点一定范围内的在候选网格中的候选轨迹段。最后对每条轨迹进行隐式马尔科夫路网匹配（HMM）。该方法还考虑了对主路和辅路的匹配问题，辅路上的车辆车速比主路上的慢，因此在转移概率上加上了速度限制。这个方法用于多线程的地方主要是在：（1）将查询轨迹进行分段进行查找候选轨迹段。（2）轨迹间并行匹配。
+本文考虑到现有的方法如HMM，已经可以取得较高的准确率。因此本文重点关注方向是减少路网匹配的时间。这篇文章的方法充分利用了多核cpu的多线程，多线程可以应用到索引的构建、搜索和路网的匹配上。本文对上面的HMM方法进行了一点改进，将路段的速度信息进行了考虑，避免轨迹匹配到主路旁的辅路上。
 
- 
-An efficient algorithm for mapping vehicle trajectories onto road networks[SIGSPATIALGIS 2012]： 这篇文章首先对路网数据构建网格索引，基于构建的索引，根据轨迹的前后点的联系和一定的规则筛选符合要求的轨迹段进行路网匹配。
+索引的构建：本文首先将地图划分成网格，每个网格记录在内的或与其相交的路段。因此现将所有轨迹段分成N组，每组可以在多线程中进行索引的构建。
 
+索引的搜索：对于一个查询点，首先取得该点所在的区域。之后得到该区域附近的8个相邻区域，如果这个区域与查询点之间的距离小于50m，就将其纳入到候选区域中，再对所有候选区域中的所有路段再判断其与查询点的距离是不是大于50m，将这些不符合条件的路段排除。最终得到所有的候选路段。
+
+路网匹配：本文对所有轨迹按照进行分组（并行度个数），对每个组进行并行路网匹配。路网匹配的算法使用的是HMM。
+
+该方法还考虑了对主路和辅路的匹配问题，辅路上的车辆车速比主路上的慢，因此在转移概率上加上了速度限制。
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/HMM_speed_limitation.png)
+
+---
+
+## An efficient algorithm for mapping vehicle trajectories onto road networks[SIGSPATIALGIS 2012]
+
+这篇论文的主要思路是：（1）索引的构建：首先根据路网中的所有节点（mini-vertices）构建网格索引。
+
+（2）候选路段集的获取：对于一个轨迹点，首先搜索与查询点$q_i$最近的50个路网节点（mini-vertices），得到查询点的候选路网节点集，判断路网节点在哪个路段上，根据这些候选轨迹段得到候选路段集S（目标是得到$q_i$的精确候选路段集$C_i$，$C_i \in S$ ）。
+
+由于两个相邻的点更可能被匹配到同一条路段上。假若已经得到了前一个点的确候选路段集$C_{i-1}$，首先将同时出现在S中和$C_{i-1}$中的边加入到集合S'中，其次找到S中的某些边的起点等于$C_{i-1}$中某些边的终点的边，将这些边也放到集合S'中。
+
+再对集合S'进行进一步细化，首先剔除与轨迹点p之间距离大于18m的路段。其次对每个路段（有很多小路段组成）连接其首尾点得到线段L，计算线段L与e={$q_{i-1}$,$q_i$}之间所成的角度$\alpha$，如果$\alpha$大于90度，将该路段剔除出S'。如果S'不为空，将$C_i$设置为S'。
+
+如果S'为空，重新考虑集合S，对集合中每个路段e，计算如下所示分数。其中下式中的各种参数是人为指定的，作者已在论文中给出。其意图是，路段与查询点越接近，L与e={$q_{i-1}$,$q_i$}所成的角度越小，就有更大概率进行匹配。得到所有分区中最大的score，剔除分数小于0.8*score的边，最后得到$C_i$。
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/map_matching_scores.png)
+
+（3）假若$P_i$是点$q_i$的候选轨迹段上的匹配点集，首先构造两个虚拟点s和t，分别指向所有的$P_1$（起始点的匹配点）和$P_m$（某点的匹配点），设置所有的权重为0，计算从s到t的最短路径，需要满足如下两个条件（1）每个点集中至少有一个点要出现在路径中（2）必须依次通过所有的点集。经过这些步骤之后，得到的候选点{p_i'}所在的边{e_i}作为最佳匹配。
+
+论文中的批处理思想还是对不同轨迹段在不同线程中进行匹配。
+
+---
