@@ -5,16 +5,15 @@ import com.konfuse.geometry.MBR;
 import com.konfuse.geometry.PartitionedMBR;
 import com.konfuse.geometry.Point;
 import com.konfuse.internal.RTree;
-import org.apache.flink.api.common.functions.*;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.Partitioner;
+import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.operators.CustomUnaryOperation;
-import org.apache.flink.api.java.utils.DataSetUtils;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
-import scala.Tuple2;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * Distributed index structure in the whole system.
@@ -165,6 +164,12 @@ public class Index<T extends DataObject> {
         return result;
     }
 
+    /**
+     * Get the nearest k data objects from query point.
+     * @param queryPoint the point to query
+     * @param k the size of result set
+     * @return DataSet of data objects according of knn query
+     */
     public DataSet<T> knnQuery(final Point queryPoint, final int k) throws Exception {
 //        final DataSet<T> sampleData = DataSetUtils.sample(this.data, false, 0.3);
 //        DataSet<RTree<T>> trees = sampleData.reduceGroup(new RichGroupReduceFunction<T, RTree<T>>() {
@@ -178,6 +183,8 @@ public class Index<T extends DataObject> {
 //                collector.collect(tree);
 //            }
 //        });
+
+        // find the distance of k nearest nodes from the query point.
         DataSet<Double> knnDistances = this.localTrees
                 .flatMap(new RichFlatMapFunction<RTree<T>, Double>() {
                     @Override
@@ -191,7 +198,9 @@ public class Index<T extends DataObject> {
                 .sortPartition("value", Order.ASCENDING)
                 .first(k);
 
+        // circle range query using the furthest distance as radius
         double refined_bound = knnDistances.collect().get(k - 1);
+        // sort data objects by distance
         DataSet<T> result = circleRangeQuery(queryPoint, refined_bound)
                 .map(new MapFunction<T, Tuple2<Double, T>>() {
                     @Override
@@ -204,7 +213,7 @@ public class Index<T extends DataObject> {
                 .map(new MapFunction<Tuple2<Double, T>, T>() {
                     @Override
                     public T map(Tuple2<Double, T> tuple2) throws Exception {
-                        return tuple2._2;
+                        return tuple2.f1;
                     }
                 });
         return result;

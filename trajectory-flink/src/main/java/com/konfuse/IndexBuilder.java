@@ -20,10 +20,32 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
+ * Helps to build an r-tree in flink, using global-local structure.
+ * Using two main methods to build r-tree: createLineIndex and createPointIndex
+ * which return a index for point and a index for line, respectively.
+ *
  * @Author: Konfuse
  * @Date: 2019/12/6 15:33
  */
 public class IndexBuilder implements Serializable {
+    /**
+     * Building method for line.
+     *
+     * First use the specified partition method to set up a global index based on the sampled data
+     * for this data. This step is to set up a partition for the global index.
+     *
+     * Secondly allocate partitions for each input data and create
+     * local indexes in the corresponding partition.
+     *
+     * Finally create a global index for all local indexes.
+     *
+     * @param data data set of input lines
+     * @param sampleRate sample rate for input data to build a global index for partition
+     * @param parallelism is the number of parallel programs specified
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index
+     * @param minNodePerEntry minimum number of entities for each node of the completed index
+     * @return completed index for line
+     */
     public Index<Line> createLineIndex(DataSet<Line> data, final double sampleRate, int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
         // Step 1: create MBR and STRPartitioner based on sampled data
         LineSTRPartitioner partitioner = this.createLineSTRPartitioner(data, sampleRate, parallelism, maxNodePerEntry, minNodePerEntry);
@@ -36,7 +58,7 @@ public class IndexBuilder implements Serializable {
             }
         });
 
-        // Step 2: build local RTree
+        // Step 2: build local RTrees
         DataSet<RTree<Line>> localRTree = partitionedData.mapPartition(new RichMapPartitionFunction<Line, RTree<Line>>() {
             @Override
             public void mapPartition(Iterable<Line> iterable, Collector<RTree<Line>> collector) throws Exception {
@@ -57,6 +79,7 @@ public class IndexBuilder implements Serializable {
                 .map(new RichMapFunction<RTree<Line>, Tuple2<Integer, RTree<Line>>>() {
                     @Override
                     public Tuple2<Integer, RTree<Line>> map(RTree<Line> rTree) throws Exception {
+                        //get the partition number where local r-tree belongs to
                         return new Tuple2<>(getRuntimeContext().getIndexOfThisSubtask(), rTree);
                     }
                 })
@@ -68,9 +91,11 @@ public class IndexBuilder implements Serializable {
                         while (iter.hasNext()) {
                             Tuple2<Integer, RTree<Line>> tuple = iter.next();
                             RTree<Line> rtree = tuple.f1;
+                            // create partitioned mbr for each local r-tree
                             PartitionedMBR partitionedMBR = new PartitionedMBR(rtree.getRoot().getMBR(), tuple.f0, rtree.getEntryCount());
                             partitionedMBRList.add(partitionedMBR);
                         }
+                        // organize the information of the partition where each r-tree is located to create a global index
                         RTree<PartitionedMBR> globalTree = createGlobalRTree(partitionedMBRList, maxNodePerEntry, minNodePerEntry);
                         collector.collect(globalTree);
                     }
@@ -79,6 +104,24 @@ public class IndexBuilder implements Serializable {
         return new Index<>(globalRTree, localRTree, partitioner, partitionedData);
     }
 
+    /**
+     * Building method for point.
+     *
+     * First use the specified partition method to set up a global index based on the sampled data
+     * for this data. This step is to set up a partition for the global index.
+     *
+     * Secondly allocate partitions for each input data and create
+     * local indexes in the corresponding partition.
+     *
+     * Finally create a global index for all local indexes.
+     *
+     * @param data data set of input points
+     * @param sampleRate sample rate for input data to build a global index for partition
+     * @param parallelism is the number of parallel programs specified
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index
+     * @param minNodePerEntry minimum number of entities for each node of the completed index
+     * @return completed index for point
+     */
     public Index<Point> createPointIndex(DataSet<Point> data, final double sampleRate, int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
         // Step 1: create MBR and STRPartitioner based on sampled data
         PointSTRPartitioner partitioner = this.createPointSTRPartitioner(data, sampleRate, parallelism, maxNodePerEntry, minNodePerEntry);
@@ -112,6 +155,7 @@ public class IndexBuilder implements Serializable {
                 .map(new RichMapFunction<RTree<Point>, Tuple2<Integer, RTree<Point>>>() {
                     @Override
                     public Tuple2<Integer, RTree<Point>> map(RTree<Point> rTree) throws Exception {
+                        //get the partition number where local r-tree belongs to
                         return new Tuple2<>(getRuntimeContext().getIndexOfThisSubtask(), rTree);
                     }
                 })
@@ -123,9 +167,11 @@ public class IndexBuilder implements Serializable {
                         while (iter.hasNext()) {
                             Tuple2<Integer,  RTree<Point>> tuple = iter.next();
                             RTree<Point> rtree = tuple.f1;
+                            // create partitioned mbr for each local r-tree
                             PartitionedMBR partitionedMBR = new PartitionedMBR(rtree.getRoot().getMBR(), tuple.f0, rtree.getEntryCount());
                             partitionedMBRList.add(partitionedMBR);
                         }
+                        // organize the information of the partition where each r-tree is located to create a global index
                         RTree<PartitionedMBR> globalTree = createGlobalRTree(partitionedMBRList, maxNodePerEntry, minNodePerEntry);
                         collector.collect(globalTree);
                     }
@@ -134,6 +180,17 @@ public class IndexBuilder implements Serializable {
         return new Index<>(globalRTree, localRTree, partitioner, partitionedData);
     }
 
+    /**
+     * Create a corresponding partition method based on the sampled data.
+     * Assign data to the nearest partition in space.
+     *
+     * @param data data set of input lines
+     * @param sampleRate sample rate for input data to build a global index for partition
+     * @param parallelism is the number of parallel programs specified
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index
+     * @param minNodePerEntry minimum number of entities for each node of the completed index
+     * @return partition method based on the sampled data.
+     */
     private LineSTRPartitioner createLineSTRPartitioner(DataSet<Line> data, double sampleRate, int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
         // create boundary for whole dataset
         // Tuple2<MBR, number of data object>
@@ -161,6 +218,7 @@ public class IndexBuilder implements Serializable {
         // Sample data
         final DataSet<Line> sampleData = DataSetUtils.sample(data, false, sampleRate);
 
+        // create r-tree containing mbr information for sampled data
         DataSet<RTree<PartitionedMBR>> trees = sampleData.reduceGroup(new RichGroupReduceFunction<Line, RTree<PartitionedMBR>>() {
             private MBR globalBound;
 
@@ -191,6 +249,17 @@ public class IndexBuilder implements Serializable {
         return new LineSTRPartitioner(trees.collect().get(0));
     }
 
+    /**
+     * Create a corresponding partition method based on the sampled data.
+     * Assign data to the nearest partition in space.
+     *
+     * @param data data set of input points
+     * @param sampleRate sample rate for input data to build a global index for partition
+     * @param parallelism is the number of parallel programs specified
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index
+     * @param minNodePerEntry minimum number of entities for each node of the completed index
+     * @return partition method based on the sampled data.
+     */
     private PointSTRPartitioner createPointSTRPartitioner(DataSet<Point> data, double sampleRate, final int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
         // create boundary for whole dataset
         // Tuple2<MBR, number of data object>
@@ -218,6 +287,7 @@ public class IndexBuilder implements Serializable {
         // Sample data
         final DataSet<Point> sampleData = DataSetUtils.sample(data, false, sampleRate);
 
+        // create r-tree containing mbr information for sampled data
         DataSet<RTree<PartitionedMBR>> trees = sampleData.reduceGroup(new RichGroupReduceFunction<Point, RTree<PartitionedMBR>>() {
             private MBR globalBound;
 
@@ -248,6 +318,20 @@ public class IndexBuilder implements Serializable {
         return new PointSTRPartitioner(trees.collect().get(0));
     }
 
+    /**
+     * Build global r-tree that contains partitioned mbr information using STR method.
+     *
+     * r is the total count of records, i.e. entries.size()
+     * M is the maximum capacity of each partition
+     * p is the total count of partitions, i.e. p = r / M
+     * s is the due slice count of each dimension, i.e. s = Math.sqrt(r / M)
+     * ctr is records traveling count
+     *
+     * @param mbrList the partitioned mbrs list
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index, i.e. M
+     * @param minNodePerEntry minimum number of entities for each node of the completed index, i.e. m
+     * @return global r-tree index for partitioned mbrs
+     */
     private RTree<PartitionedMBR> createGlobalRTree(ArrayList<PartitionedMBR> mbrList, int maxNodePerEntry, int minNodePerEntry) {
         //calculate leaf node num
         double p = mbrList.size() * 1.0 / maxNodePerEntry;
@@ -294,6 +378,20 @@ public class IndexBuilder implements Serializable {
         return new RTree<>(root, maxNodePerEntry, minNodePerEntry, entryCount);
     }
 
+    /**
+     * Build local r-tree that contains lines information using STR method.
+     *
+     * r is the total count of records, i.e. data.size()
+     * M is the maximum capacity of each partition
+     * p is the total count of partitions, i.e. p = r / M
+     * s is the due slice count of each dimension, i.e. s = Math.sqrt(r / M)
+     * ctr is records traveling count
+     *
+     * @param lines the input lines list
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index, i.e. M
+     * @param minNodePerEntry minimum number of entities for each node of the completed index, i.e. m
+     * @return local r-tree index for lines
+     */
     private RTree<Line> createLineLocalRTree(ArrayList<Line> lines, int maxNodePerEntry, int minNodePerEntry) {
         //calculate leaf node num
         double p = lines.size() * 1.0 / maxNodePerEntry;
@@ -333,6 +431,20 @@ public class IndexBuilder implements Serializable {
         return new RTree<>(root, maxNodePerEntry, minNodePerEntry, entryCount);
     }
 
+    /**
+     * Build local r-tree that contains points information using STR method.
+     *
+     * r is the total count of records, i.e. data.size()
+     * M is the maximum capacity of each partition
+     * p is the total count of partitions, i.e. p = r / M
+     * s is the due slice count of each dimension, i.e. s = Math.sqrt(r / M)
+     * ctr is records traveling count
+     *
+     * @param points the input points list
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index, i.e. M
+     * @param minNodePerEntry minimum number of entities for each node of the completed index, i.e. m
+     * @return local r-tree index for points
+     */
     private RTree<Point> createPointLocalRTree(ArrayList<Point> points, int maxNodePerEntry, int minNodePerEntry) {
         //calculate leaf node num
         double p = points.size() * 1.0 / maxNodePerEntry;
@@ -372,38 +484,20 @@ public class IndexBuilder implements Serializable {
         return new RTree<>(root, maxNodePerEntry, minNodePerEntry, entryCount);
     }
 
-    private ArrayList<PartitionedMBR> packPointsIntoMBR(ArrayList<Point> data, int s, MBR globalBound) {
-        // sort data by x first
-        // s is the due slice count of each dimension, i.e. s = Math.sqrt(p)
-        // slideCapacity is the capacity of each slide
-        data.sort(new Point.PointComparator(0));
-        int slideCapacity = (int) Math.ceil(data.size() * 1.0 / s);
-        int nodeCapacity = (int) Math.ceil(data.size() * 1.0 / s / s);
-
-        ArrayList<Point> list = new ArrayList<>();
-        ArrayList<PartitionedMBR> partitionedMBRs = new ArrayList<>();
-
-        // ctr is the count of point data index
-        int ctr = 0;
-        for (Point point : data) {
-            list.add(point);
-            ++ctr;
-            if (ctr == slideCapacity) {
-                packSamplePoints(list, partitionedMBRs, globalBound, nodeCapacity);
-                list.clear();
-                ctr = 0;
-            }
-        }
-
-        // the size of the last slide may be lower than slide capacity
-        if(list.size() > 0) {
-            packSamplePoints(list, partitionedMBRs, globalBound, nodeCapacity);
-            list.clear();
-        }
-
-        return partitionedMBRs;
-    }
-
+    /**
+     * Pack the sampled lines to partitioned mbrs to be used for partitioning.
+     *
+     * r is the total count of records, i.e. data.size()
+     * p is the total count of partitions, i.e. parallelism.
+     * M here is determined by parallelism, i.e. M = r / parallelism.
+     * s is the due slice count of each dimension, i.e. s = Math.sqrt(parallelism)
+     * ctr is records traveling count
+     *
+     * @param data list of lines
+     * @param s the due slice count of each dimension
+     * @param globalBound global boundary
+     * @return the partitioned mbrs
+     */
     private ArrayList<PartitionedMBR> packLinesIntoMBR(ArrayList<Line> data, int s, MBR globalBound) {
         // sort data by x first
         // s is the due slice count of each dimension, i.e. s = Math.sqrt(p)
@@ -436,6 +530,60 @@ public class IndexBuilder implements Serializable {
         return partitionedMBRs;
     }
 
+    /**
+     * Pack the sampled points to partitioned mbrs to be used for partitioning.
+     *
+     * r is the total count of records, i.e. data.size()
+     * p is the total count of partitions, i.e. parallelism.
+     * M here is determined by parallelism, i.e. M = r / parallelism.
+     * s is the due slice count of each dimension, i.e. s = Math.sqrt(parallelism)
+     * ctr is records traveling count
+     *
+     * @param data list of points
+     * @param s the due slice count of each dimension
+     * @param globalBound global boundary
+     * @return the partitioned mbrs
+     */
+    private ArrayList<PartitionedMBR> packPointsIntoMBR(ArrayList<Point> data, int s, MBR globalBound) {
+        // sort data by x first
+        // s is the due slice count of each dimension, i.e. s = Math.sqrt(p)
+        // slideCapacity is the capacity of each slide
+        data.sort(new Point.PointComparator(0));
+        int slideCapacity = (int) Math.ceil(data.size() * 1.0 / s);
+        int nodeCapacity = (int) Math.ceil(data.size() * 1.0 / s / s);
+
+        ArrayList<Point> list = new ArrayList<>();
+        ArrayList<PartitionedMBR> partitionedMBRs = new ArrayList<>();
+
+        // ctr is the count of point data index
+        int ctr = 0;
+        for (Point point : data) {
+            list.add(point);
+            ++ctr;
+            if (ctr == slideCapacity) {
+                packSamplePoints(list, partitionedMBRs, globalBound, nodeCapacity);
+                list.clear();
+                ctr = 0;
+            }
+        }
+
+        // the size of the last slide may be lower than slide capacity
+        if(list.size() > 0) {
+            packSamplePoints(list, partitionedMBRs, globalBound, nodeCapacity);
+            list.clear();
+        }
+
+        return partitionedMBRs;
+    }
+
+    /**
+     * Pack lines to leaf nodes.
+     *
+     * @param lines the sorted lines by x dimension in a slide.
+     * @param nextLevel the list to load leaf nodes.
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index
+     * @param minNodePerEntry minimum number of entities for each node of the completed index
+     */
     private void packLines(ArrayList<Line> lines, ArrayList<TreeNode> nextLevel, int maxNodePerEntry, int minNodePerEntry) {
         // sort by the y dimension
         lines.sort(new MBR.MBRComparatorWithLine(2, true));
@@ -467,6 +615,14 @@ public class IndexBuilder implements Serializable {
         }
     }
 
+    /**
+     * Pack points to leaf nodes.
+     *
+     * @param points the sorted points by x dimension in a slide.
+     * @param nextLevel the list to load leaf nodes.
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index
+     * @param minNodePerEntry minimum number of entities for each node of the completed index
+     */
     private void packPoints(ArrayList<Point> points, ArrayList<TreeNode> nextLevel, int maxNodePerEntry, int minNodePerEntry) {
         // sort by the y dimension
         points.sort(new Point.PointComparator(2));
@@ -498,6 +654,14 @@ public class IndexBuilder implements Serializable {
         }
     }
 
+    /**
+     * Pack lines to partitioned mbrs.
+     *
+     * @param data the sorted lines by x dimension in a slide.
+     * @param partitionedMBRs the list to load partitioned mbrs.
+     * @param globalBound global bound of the completed index
+     * @param nodeCapacity capacity of each node in the completed index
+     */
     private void packSampleLines(ArrayList<Line> data, ArrayList<PartitionedMBR> partitionedMBRs, MBR globalBound, int nodeCapacity) {
         // sort by the y dimension
         data.sort(new MBR.MBRComparatorWithLine(2, true));
@@ -545,6 +709,14 @@ public class IndexBuilder implements Serializable {
         partitionedMBRs.add(new PartitionedMBR(mbr, 0, lines.size()));
     }
 
+    /**
+     * Pack points to partitioned mbrs.
+     *
+     * @param data the sorted points by x dimension in a slide.
+     * @param partitionedMBRs the list to load partitioned mbrs.
+     * @param globalBound global bound of the completed index
+     * @param nodeCapacity capacity of each node in the completed index
+     */
     private void packSamplePoints(ArrayList<Point> data, ArrayList<PartitionedMBR> partitionedMBRs, MBR globalBound, int nodeCapacity) {
         // sort by the y dimension
         data.sort(new Point.PointComparator(2));
@@ -592,6 +764,14 @@ public class IndexBuilder implements Serializable {
         partitionedMBRs.add(new PartitionedMBR(mbr, 0, points.size()));
     }
 
+    /**
+     * Pack partitioned mbrs to leaf nodes.
+     *
+     * @param partitionedMBRs the sorted partitioned mbrs by x dimension in a slide.
+     * @param nextLevel the list to load leaf nodes.
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index
+     * @param minNodePerEntry minimum number of entities for each node of the completed index
+     */
     private void packPartitionedMBR(ArrayList<PartitionedMBR> partitionedMBRs, ArrayList<TreeNode> nextLevel, int maxNodePerEntry, int minNodePerEntry) {
         // sort by the y dimension
         partitionedMBRs.sort(new PartitionedMBR.PartitionedMBRComparator(2, true));
@@ -633,6 +813,15 @@ public class IndexBuilder implements Serializable {
         }
     }
 
+    /**
+     * Pack nodes to non-leaf nodes.
+     *
+     * @param height current height of the building tree, stored as height[0].
+     * @param list the sorted nodes by x dimension in a slide.
+     * @param nextLevel the list to load non-leaf nodes.
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index
+     * @param minNodePerEntry minimum number of entities for each node of the completed index
+     */
     private void packNodes(ArrayList<TreeNode> list, ArrayList<TreeNode> nextLevel, final int maxNodePerEntry, final int minNodePerEntry, int[] height) {
         // sort by the y dimension
         list.sort(new MBR.MBRComparatorWithTreeNode(2, true));
@@ -664,6 +853,14 @@ public class IndexBuilder implements Serializable {
         }
     }
 
+    /**
+     * Pack the leaf nodes that have been packed from data objects in the last step.
+     *
+     * @param treeNodes list of leaf nodes
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index
+     * @param minNodePerEntry minimum number of entities for each node of the completed index
+     * @return a non-leaf node as root
+     */
     private TreeNode leafNodePacking(ArrayList<TreeNode> treeNodes, final int maxNodePerEntry, final int minNodePerEntry) {
         // calculate partition num
         double p = treeNodes.size() * 1.0 / maxNodePerEntry;
@@ -681,6 +878,17 @@ public class IndexBuilder implements Serializable {
         return nonLeafNode;
     }
 
+
+    /**
+     * Build r-tree bottom-to-up recursively
+     *
+     * @param p partition num.
+     * @param entries list of tree nodes.
+     * @param height current height of building tree, stored as height[0].
+     * @param maxNodePerEntry maximum number of entities for each node of the completed index
+     * @param minNodePerEntry minimum number of entities for each node of the completed index
+     * @return list of tree nodes that have been packed
+     */
     private ArrayList<TreeNode> buildRecursivelyBySTR(double p, ArrayList<TreeNode> entries, final int maxNodePerEntry, final int minNodePerEntry, int[] height) {
         // entries num in node should be no more than M, but if size <= M, return entries directly.
         if (entries.size() <= maxNodePerEntry) {
