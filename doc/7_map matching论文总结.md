@@ -40,11 +40,17 @@
 
 **在这篇论文中，作者通过经验和一定的数学推导最后得到的观测概率矩阵是$\mu$ = 0 和 $\sigma$ = 4.07的正态分布。$\sigma$使用绝对中位差进行鲁棒估计。状态转移矩阵是用指数函数来拟合前后两个相邻GPS观测点的距离与两个候选点距离之差的绝对值。在初始时刻使用观测概率矩阵。**
 
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/HMM_observation.png)
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/HMM_transition.png)
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/HMM_beta.png)
+
 **在这篇论文中提出，可以使用滑动窗口的模式来处理实时数据的路网匹配（批处理模式）**
 
 ---
 
-## Map-matching for low-sampling-rate GPS trajectories[GIS 2009]
+## 2. Map-matching for low-sampling-rate GPS trajectories[GIS 2009]
 ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该算法是一种全局算法，能综合几何信息（GPS点与道路的距离）、道路拓扑信息（最短路径）、道路属性信息（每条道路的限速），具有精度高，稳定性好等优点。
 
 作者基于的观测事实是：（1）真实的路径一般都是直的（2）真实的路径会遵循道路的速度限制。本文路网匹配的主要步骤是：先根据路网索引，取得轨迹点附近的候选路段（点）（网格索引）。（2）根据轨迹的前后关系，对候选路段进行空间分析和时间分析构建一张图，图的节点是轨迹点的匹配候选点，图的边是相邻候选点之间的最短路径，图中的边和点都赋予一定的权重。（3）在得到的图中，找到一条评分最高的轨迹。
@@ -52,7 +58,9 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 空间分析：观测概率N：GPS坐标点p和投影点c之间的距离，计算该点与投影点相匹配的概率。作者使用的是$\mu$ = 0 和 $\sigma$ = 20正态分布。然而只考虑观测概率就忽略了GPS点的时空语义。因此作者还定义了转移概率V，其意义是GPS前后点之间的距离和其投影点之间的最短距离的比例。最终通过两个之积得到概率公式。
 
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/ST_matching_observation_probability.png)
+
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/ST_matching_transmission_probability.png)
+
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/ST_matching_function_probability.png)
 
 时间分析：计算候选点之间的可能的速度与路径允许的速度作比较，判断其是在高速路上还是普通的路径上。
@@ -62,7 +70,7 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 
 ---
 
-## DeepMM Deep Learning Based Map Matching with Data Augmentation \[SIGSPATIALGIS 2019]
+## 3. DeepMM Deep Learning Based Map Matching with Data Augmentation \[SIGSPATIALGIS 2019]
 
 在这篇文章中，作者的主要思想是结合已有的深度学习方法，充分利用历史轨迹数据的运动规律信息，来对轨迹的数据进行路网匹配，并减弱轨迹中噪声的影响。本篇文章中，通过embedding技术来表示地点和路段是为了减少敏感噪音的影响，而使用注意力增强的seq2seq模型是为了学习历史的轨迹数据特征。
 
@@ -74,12 +82,13 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 
 ---
 
-## Effective map-matching on the most simplified road network[SIGSPATIAL 2012]
+## 4. Effective map-matching on the most simplified road network[SIGSPATIAL 2012]
 
 这篇文章提出了一种Passby的路网匹配算法。主要针对问题是：由于路网数据占用很大的空间，如何在简化了路网信息的情况下进行路网匹配。这篇文章将路网信息中的每条路（可能包含多个路段）简化为{id，start，end}。在简化的路网信息会使得路网中的很多特征发生改变。如下图所示，实际道路变弄成简化道路后失去了曲线特征，因此处于$p_i$的点有更大概率匹配到另一条路上。
 
 
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/simplified_road_example.png)
+
 ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/Passby.png)
 
 作者基于主要发现是：一辆车的行驶轨迹是否能够匹配到一个路段上，可以通过其是否通过了这段路的路口来判断。因此，如果轨迹中的点$p_{i-1}$和$p_{i}$（当前查询点是$p_{i}$）匹配的点的路径通过一段路的起点e.start，并且其后的点$p_{j-1}$和$p_{j}$通过了这一段路的e.end，此时可以将{$p_{i}$,...,$p_{j}$}匹配到该路段上。如果其后的点不满足情况，就将$p_{i}$匹配给概率最大的一段路中。
@@ -92,13 +101,30 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 
 ---
 
-## Fast Viterbi map matching with tunable weight functions. SIGSPATIAL \[GIS 2012]:
+## 5. Fast Viterbi map matching with tunable weight functions. SIGSPATIAL \[GIS 2012]:
 
-该方法的全局路网匹配算法使用了Viterbi动态规划方法，该方法综合了其他几种路网匹配算法的权重计算函数，并使用了一些优化方法。
+这篇论文作者首先总结了当时所有的map-matching算法，分析了算法的特点。
+
+这篇论文的方法基于前面提到的HMM算法，综合了当时存在的路网匹配算法，选择了两个最好的权重，并对路网匹配算法做了很多优化措施。
+
+作者首先给出HMM公式：
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/Fast_viterbi_HMM.png)
+
+这里$\beta$和$\sigma$都是根据数特征据得出的公式，$l_i$是两个GPS点对应的匹配点之间的真实最短距离，$l_{i,0}$是两个GPS点之间的直接距离。如果两个距离之间大小越相近，就说明越是可能的匹配。可以将如上公式取log得到如下的公式。
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/Fast_viterbi_HMM2.png)
+
+上面公式中，$\alpha = 2 \sigma^2/\beta$。作者比较了HMM和lou09中使用的方法，改进的lou09中使用的公式中将HMM中的$l_i - l_{i,0}$替换成了$- l_i / l_{i,0}$（原始是整个转移概率为$l_{i,0}/l_i$）。作者对方法进行了比较，发现lou09在采样率较高的情况下效果较好，HMM在采样率较低的时候效果较好。于是自己设计了一个计算公式：
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/Fast_viterbi_author.png)
+
+其中，$t_i$是$z_i$和$z_{i-1}$之间的采样间隔，$l_i$直接取的是最短距离。
+
+作者之后改进了算法，维特比映射匹配的瓶颈是每个连续匹配候选对的最短路径计算。在Dijkstra算法中添加了sample_interval * 50m/s的搜索范围限制。为了减少候选集的大小，将搜索半径限制在30米以内，因为对于训练数据集来说，样本与其匹配的道路之间的最大距离约为25米。
 
 ---
 
-## Quick map matching using multi-core CPUs \[SIGSPATIALGIS 2012]
+## 6. Quick map matching using multi-core CPUs \[SIGSPATIALGIS 2012]
 
 本文考虑到现有的方法如HMM，已经可以取得较高的准确率。因此本文重点关注方向是减少路网匹配的时间。这篇文章的方法充分利用了多核cpu的多线程，多线程可以应用到索引的构建、搜索和路网的匹配上。本文对上面的HMM方法进行了一点改进，将路段的速度信息进行了考虑，避免轨迹匹配到主路旁的辅路上。
 
@@ -114,7 +140,7 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 
 ---
 
-## An efficient algorithm for mapping vehicle trajectories onto road networks \[SIGSPATIALGIS 2012]
+## 7. An efficient algorithm for mapping vehicle trajectories onto road networks \[SIGSPATIALGIS 2012]
 
 这篇论文的主要思路是：（1）索引的构建：首先根据路网中的所有节点（mini-vertices）构建网格索引。
 
