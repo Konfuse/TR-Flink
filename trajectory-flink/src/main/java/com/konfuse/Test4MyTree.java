@@ -38,30 +38,30 @@ public class Test4MyTree {
 
         PointIndex index = new IndexBuilder().createPointIndex(points, 0.3, 4, 40, 16);
 
-        System.out.println("After partitioning partitioner ");
-
-        List<TreeNode> leafNodes = index.getPartitioner().getTree().getLeafNodes();
-        for (TreeNode node : leafNodes) {
-            PartitionedLeafNode leaf = (PartitionedLeafNode) node;
-            List<PartitionedMBR> entries = leaf.getEntries();
-            for (PartitionedMBR mbr : entries) {
-                System.out.println(mbr.getMBR().toString());
-            }
-        }
-
-        System.out.println("RTree in partitioner: ");
-        System.out.println(index.getPartitioner().getTree());
+//        System.out.println("After partitioning partitioner ");
+//
+//        List<TreeNode> leafNodes = index.getPartitioner().getTree().getLeafNodes();
+//        for (TreeNode node : leafNodes) {
+//            PartitionedLeafNode leaf = (PartitionedLeafNode) node;
+//            List<PartitionedMBR> entries = leaf.getEntries();
+//            for (PartitionedMBR mbr : entries) {
+//                System.out.println(mbr.getMBR().toString());
+//            }
+//        }
+//
+//        System.out.println("RTree in partitioner: ");
+//        System.out.println(index.getPartitioner().getTree());
 
         String areaQueryPath = "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_knn_to_query.txt";
 
-//        knnQueryTest(index, areaQueryPath, "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_knn_query_result_flink.txt");
+        knnQueryTest(index, areaQueryPath, "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_knn_query_result_flink.txt");
 
-        index.getGlobalTree().map(new MapFunction<RTree<PartitionedMBR>, Tuple3<Integer, Long, MBR>>() {
-            @Override
-            public Tuple3<Integer, Long, MBR> map(RTree<PartitionedMBR> rTree) throws Exception {
-                return new Tuple3<>(((PartitionedLeafNode)rTree.getRoot()).getEntries().size(), rTree.getEntryCount(), rTree.getRoot().getMBR());
-            }
-        }).print();
+//        index.getGlobalTree().map(new MapFunction<RTree<PartitionedMBR>, Tuple3<Integer, Long, MBR>>() {
+//            @Override
+//            public Tuple3<Integer, Long, MBR> map(RTree<PartitionedMBR> rTree) throws Exception {
+//                return new Tuple3<>(((PartitionedLeafNode)rTree.getRoot()).getEntries().size(), rTree.getEntryCount(), rTree.getRoot().getMBR());
+//            }
+//        }).print();
 
 //        index.getLocalTrees().map(new MapFunction<RTree<Point>, Tuple3<Integer, Long, MBR>>() {
 //            @Override

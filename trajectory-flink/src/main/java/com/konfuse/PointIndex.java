@@ -145,18 +145,18 @@ public class PointIndex extends Index<Point> implements Serializable {
                     }
                 })
                 .sortPartition(0, Order.ASCENDING)
-                .mapPartition(new RichMapPartitionFunction<Tuple2<Double, Point>, Tuple2<Double, Point>>() {
-                    @Override
-                    public void mapPartition(Iterable<Tuple2<Double, Point>> iterable, Collector<Tuple2<Double, Point>> collector) throws Exception {
-                        int count = 0;
-                        for (Tuple2<Double, Point> tuple : iterable) {
-                            if (count >= k)
-                                break;
-                            collector.collect(tuple);
-                            ++count;
-                        }
-                    }
-                })
+//                .mapPartition(new RichMapPartitionFunction<Tuple2<Double, Point>, Tuple2<Double, Point>>() {
+//                    @Override
+//                    public void mapPartition(Iterable<Tuple2<Double, Point>> iterable, Collector<Tuple2<Double, Point>> collector) throws Exception {
+//                        int count = 0;
+//                        for (Tuple2<Double, Point> tuple : iterable) {
+//                            if (count >= k)
+//                                break;
+//                            collector.collect(tuple);
+//                            ++count;
+//                        }
+//                    }
+//                })
                 .reduceGroup(new RichGroupReduceFunction<Tuple2<Double, Point>, Point>() {
                     @Override
                     public void reduce(Iterable<Tuple2<Double, Point>> iterable, Collector<Point> collector) throws Exception {
