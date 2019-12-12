@@ -24,7 +24,7 @@ public class Test4MyTree {
 //        ArrayList<Line> lines = getLines();
 //        int size = lines.size();
 
-        ArrayList<Point> points = getPoints("data_points.txt", 1000000);
+        ArrayList<Point> points = getPoints("C:/Users/Konfuse/Desktop/FlinkResearch/data_set/data_points.txt", 1000000);
         int size = points.size();
         System.out.println("total data size: " + size + " lines...");
 
@@ -48,7 +48,7 @@ public class Test4MyTree {
 //        visualizationTest(myTree);
 //        travelRangeQuery(myTree, areaQueryPath, output);
 
-        String areaQueryPath = "points_knn_to_query.txt";
+        String areaQueryPath = "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_knn_to_query.txt";
         String output = "points_knn_query_result.txt";
         knnQueryTest(myTree, areaQueryPath, output);
     }
@@ -78,41 +78,52 @@ public class Test4MyTree {
             e.printStackTrace();
         }
 
-        BufferedWriter writer = null;
-        try {
-            writer = new BufferedWriter(new FileWriter(output));
-            for (Point point : list) {
-                long startTime = System.currentTimeMillis();
-
-                ArrayList<DataObject> dataObjects = tree.knnQuery(point, 100);
-
-                long endTime = System.currentTimeMillis();
-                System.out.println("query time: " + (endTime - startTime) + "ms");
-                System.out.println("query result is: ");
-                boolean flag = false;
-                writer.write((endTime - startTime) + ":");
-                for (DataObject dataObject : dataObjects) {
-                    if (!flag) {
-                        writer.write(String.valueOf(dataObject.getId()));
-                        System.out.print(dataObject.getId());
-                        flag = true;
-                    } else {
-                        writer.write( "," + dataObject.getId());
-                        System.out.print("," + dataObject.getId());
-                    }
-                }
-                writer.newLine();
-                System.out.println();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+        ArrayList<DataObject> dataObjects = tree.knnQuery(list.get(1), 100);
+        boolean flag = false;
+        for (DataObject dataObject : dataObjects) {
+            if (!flag) {
+                System.out.print(dataObject.calDistance(list.get(1)));
+                flag = true;
+            } else {
+                System.out.print(", " + dataObject.calDistance(list.get(1)));
             }
         }
+
+//        BufferedWriter writer = null;
+//        try {
+//            writer = new BufferedWriter(new FileWriter(output));
+//            for (Point point : list) {
+//                long startTime = System.currentTimeMillis();
+//
+//                ArrayList<DataObject> dataObjects = tree.knnQuery(point, 100);
+//
+//                long endTime = System.currentTimeMillis();
+//                System.out.println("query time: " + (endTime - startTime) + "ms");
+//                System.out.println("query result is: ");
+//                boolean flag = false;
+//                writer.write((endTime - startTime) + ":");
+//                for (DataObject dataObject : dataObjects) {
+//                    if (!flag) {
+//                        writer.write(String.valueOf(dataObject.getId()));
+//                        System.out.print(dataObject.getId());
+//                        flag = true;
+//                    } else {
+//                        writer.write( "," + dataObject.getId());
+//                        System.out.print("," + dataObject.getId());
+//                    }
+//                }
+//                writer.newLine();
+//                System.out.println();
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } finally {
+//            try {
+//                writer.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 
     public static void travelRangeQuery(RTree tree, String areaQueryPath, String output) {

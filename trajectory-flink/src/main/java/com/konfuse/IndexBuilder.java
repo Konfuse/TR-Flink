@@ -462,7 +462,7 @@ public class IndexBuilder implements Serializable {
 
         int s = (int) Math.ceil(Math.pow(Math.E, Math.log(p) / 2));
         ArrayList<Point> list = new ArrayList<>();
-        ArrayList<TreeNode> nextLevel = new ArrayList<TreeNode>();
+        ArrayList<TreeNode> nextLevel = new ArrayList<>();
 
         int ctr = 0;
         for (Point point : points) {
