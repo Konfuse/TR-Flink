@@ -23,9 +23,21 @@ public class Point extends DataObject implements Key<Point>, Serializable {
     private double x;
     private double y;
 
+    public Point() {
+        super(0);
+    }
+
     public Point(long id, double x, double y) {
         super(id);
         this.x = x;
+        this.y = y;
+    }
+
+    public void setX(double x) {
+        this.x = x;
+    }
+
+    public void setY(double y) {
         this.y = y;
     }
 

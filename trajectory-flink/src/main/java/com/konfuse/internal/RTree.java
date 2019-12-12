@@ -80,23 +80,26 @@ public class RTree<T extends DataObject> implements Serializable {
      * @param dataObject query data object
      * @return list of leaf nodes
      */
-    public ArrayList<TreeNode> search(DataObject dataObject) {
-        Queue<TreeNode> queue = new LinkedBlockingQueue<>();
+    public ArrayList<PartitionedMBR> search(DataObject dataObject) {
         TreeNode node;
+        ArrayList<PartitionedMBR> result = new ArrayList<>();
+
+        Queue<TreeNode> queue = new LinkedBlockingQueue<>();
         queue.add(this.root);
 
         // fetch data objects by bfs
-        ArrayList<TreeNode> result = new ArrayList<>();
+
         while (!queue.isEmpty()) {
             node = queue.poll();
-            ArrayList<TreeNode> nodes = ((NonLeafNode) node).getChildNodes();
-            if (node.getHeight() == 2) {
-                for (TreeNode treeNode : nodes) {
-                    if (treeNode.getMBR().contains(dataObject))
-                        result.add(treeNode);
+            if (node.getHeight() == 1) {
+                ArrayList<PartitionedMBR> partitionedMBRs = ((PartitionedLeafNode) node).getEntries();
+                for (PartitionedMBR partitionedMBR : partitionedMBRs) {
+                    if (partitionedMBR.getMBR().contains(dataObject))
+                        result.add(partitionedMBR);
                 }
             } else {
                 // if non-leaf node, push the intersects nodes into queue
+                ArrayList<TreeNode> nodes = ((NonLeafNode) node).getChildNodes();
                 for (TreeNode treeNode : nodes) {
                     if (treeNode.getMBR().contains(dataObject)) {
                         queue.add(treeNode);
@@ -104,6 +107,14 @@ public class RTree<T extends DataObject> implements Serializable {
                 }
             }
         }
+
+        if (result.size() == 0) {
+            ArrayList<TreeNode> leafNodes = getLeafNodes();
+            for (TreeNode leafNode : leafNodes) {
+                result.addAll(((PartitionedLeafNode)leafNode).getEntries());
+            }
+        }
+
         return result;
     }
 
@@ -125,7 +136,7 @@ public class RTree<T extends DataObject> implements Serializable {
             if (node.getHeight() == 1) {
                 ArrayList<PartitionedMBR> partitionedMBRs = ((PartitionedLeafNode) node).getEntries();
                 for (PartitionedMBR partitionedMBR : partitionedMBRs) {
-                    if (area.contains(partitionedMBR))
+                    if (MBR.intersects(partitionedMBR.getMBR(), area))
                         result.add(partitionedMBR);
                 }
             } else {
@@ -154,7 +165,7 @@ public class RTree<T extends DataObject> implements Serializable {
                 if(curNode.getHeight() == 1) {
                     ArrayList<PartitionedMBR> partitionedMBRs = ((PartitionedLeafNode) curNode).getEntries();
                     for (PartitionedMBR partitionedMBR: partitionedMBRs) {
-                        if(partitionedMBR.calDistance(queryPoint) <= radius * radius){
+                        if(partitionedMBR.getMBR().intersects(queryPoint, radius)){
                             result.add(partitionedMBR);
                         }
                     }

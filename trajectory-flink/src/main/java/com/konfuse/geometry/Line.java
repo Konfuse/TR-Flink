@@ -7,6 +7,7 @@ import org.apache.flink.types.Key;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 /**
  * Class representing the road segment extends DataObject and implements interface Serializable.
@@ -24,11 +25,47 @@ public class Line extends DataObject implements Key<Line>, Serializable {
     private double x2;
     private double y2;
 
+    public Line() {
+        super(0);
+    }
+
     public Line(long id, double x1, double y1, double x2, double y2) {
         super(id);
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;
+        this.y2 = y2;
+    }
+
+    public double getX1() {
+        return x1;
+    }
+
+    public void setX1(double x1) {
+        this.x1 = x1;
+    }
+
+    public double getY1() {
+        return y1;
+    }
+
+    public void setY1(double y1) {
+        this.y1 = y1;
+    }
+
+    public double getX2() {
+        return x2;
+    }
+
+    public void setX2(double x2) {
+        this.x2 = x2;
+    }
+
+    public double getY2() {
+        return y2;
+    }
+
+    public void setY2(double y2) {
         this.y2 = y2;
     }
 
@@ -105,6 +142,38 @@ public class Line extends DataObject implements Key<Line>, Serializable {
         points[1] = endPoint;
 
         return points;
+    }
+
+    /**
+     * Get the center point of a road segment.
+     * @return point[] a 2-size array containing two end points
+     */
+    public Point getCenterPoint() {
+        return new Point(0, (x1 + x2) / 2, (y1 + y2) / 2);
+    }
+
+    /**
+     * Inner class LineComparatorByCenter.
+     * A comparator of Line, compare lines by specified dimensions.
+     */
+    public static class LineComparatorByCenter implements Comparator<Line> {
+        private int dimension;
+
+        /**
+         * @param dimension if 1, then compare lines by x, else if 2, compare lines by y.
+         */
+        public LineComparatorByCenter(int dimension) {
+            this.dimension = dimension;
+        }
+
+        @Override
+        public int compare(Line line1, Line line2) {
+            if (dimension == 1) {
+                return Double.compare(line1.getCenterPoint().getX(), line2.getCenterPoint().getX());
+            } else {
+                return Double.compare(line1.getCenterPoint().getY(), line2.getCenterPoint().getY());
+            }
+        }
     }
 
     /**

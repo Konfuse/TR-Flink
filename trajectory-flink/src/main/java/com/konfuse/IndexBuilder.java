@@ -46,7 +46,7 @@ public class IndexBuilder implements Serializable {
      * @param minNodePerEntry minimum number of entities for each node of the completed index
      * @return completed index for line
      */
-    public Index<Line> createLineIndex(DataSet<Line> data, final double sampleRate, int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
+    public LineIndex createLineIndex(DataSet<Line> data, final double sampleRate, int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
         // Step 1: create MBR and STRPartitioner based on sampled data
         LineSTRPartitioner partitioner = this.createLineSTRPartitioner(data, sampleRate, parallelism, maxNodePerEntry, minNodePerEntry);
 
@@ -101,7 +101,7 @@ public class IndexBuilder implements Serializable {
                     }
                 });
 
-        return new Index<>(globalRTree, localRTree, partitioner, partitionedData);
+        return new LineIndex(globalRTree, localRTree, partitioner, partitionedData);
     }
 
     /**
@@ -122,7 +122,7 @@ public class IndexBuilder implements Serializable {
      * @param minNodePerEntry minimum number of entities for each node of the completed index
      * @return completed index for point
      */
-    public Index<Point> createPointIndex(DataSet<Point> data, final double sampleRate, int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
+    public PointIndex createPointIndex(DataSet<Point> data, final double sampleRate, int parallelism, final int maxNodePerEntry, final int minNodePerEntry) throws Exception {
         // Step 1: create MBR and STRPartitioner based on sampled data
         PointSTRPartitioner partitioner = this.createPointSTRPartitioner(data, sampleRate, parallelism, maxNodePerEntry, minNodePerEntry);
 
@@ -177,7 +177,7 @@ public class IndexBuilder implements Serializable {
                     }
                 });
 
-        return new Index<>(globalRTree, localRTree, partitioner, partitionedData);
+        return new PointIndex(globalRTree, localRTree, partitioner, partitionedData);
     }
 
     /**
@@ -349,8 +349,7 @@ public class IndexBuilder implements Serializable {
 
         // if size is less than M, then pack the root directly.
         if (mbrList.size() <= maxNodePerEntry) {
-
-            TreeNode root = new LeafNode<>(mbrList, MBR.union(mbrs));
+            TreeNode root = new PartitionedLeafNode(mbrList, MBR.union(mbrs));
             return new RTree<>(root, maxNodePerEntry, minNodePerEntry, entryCount);
         }
 
@@ -502,29 +501,43 @@ public class IndexBuilder implements Serializable {
         // sort data by x first
         // s is the due slice count of each dimension, i.e. s = Math.sqrt(p)
         // slideCapacity is the capacity of each slide
-        data.sort(new MBR.MBRComparatorWithLine(1, true));
+        data.sort(new Line.LineComparatorByCenter(1));
         int slideCapacity = (int) Math.ceil(data.size() * 1.0 / s);
         int nodeCapacity = (int) Math.ceil(data.size() * 1.0 / s / s);
 
-        ArrayList<Line> list = new ArrayList<>();
         ArrayList<PartitionedMBR> partitionedMBRs = new ArrayList<>();
 
-        // ctr is the count of point data index
-        int ctr = 0;
-        for (Line line : data) {
-            list.add(line);
-            ++ctr;
-            if (ctr == slideCapacity) {
-                packSampleLines(list, partitionedMBRs, globalBound, nodeCapacity);
-                list.clear();
-                ctr = 0;
-            }
-        }
+        // sliceBound is the record of bound of slice
+        MBR sliceBound = new MBR();
+        sliceBound.setY1(globalBound.getY1());
+        sliceBound.setY2(globalBound.getY2());
 
-        // the size of the last slide may be lower than slide capacity
-        if(list.size() > 0) {
-            packSampleLines(list, partitionedMBRs, globalBound, nodeCapacity);
-            list.clear();
+        for (int i = 0; i < s; i++) {
+            // calculate index of group in data
+            int startIndex = i * slideCapacity;
+            int endIndex = (i + 1) * slideCapacity - 1;
+
+            if (i == s - 1) {
+                endIndex = data.size() - 1;
+            }
+
+            sliceBound.setX1(sliceBound.getX2());
+            sliceBound.setX2(data.get(endIndex).getCenterPoint().getX());
+
+            if (i == 0) {
+                // for group 0, lower bound = min bound of global data
+                // upper bound = last element of group
+                sliceBound.setX1(globalBound.getX1());
+            }
+
+            if (i == s - 1) {
+                // for last group, lower bound = upper bound of previous group
+                // upper bound = max bound of global data
+                sliceBound.setX2(globalBound.getX2());
+            }
+
+            ArrayList<Line> list = new ArrayList<>(data.subList(startIndex, endIndex + 1));
+            packSampleLines(list, partitionedMBRs, sliceBound, s, nodeCapacity);
         }
 
         return partitionedMBRs;
@@ -548,29 +561,43 @@ public class IndexBuilder implements Serializable {
         // sort data by x first
         // s is the due slice count of each dimension, i.e. s = Math.sqrt(p)
         // slideCapacity is the capacity of each slide
-        data.sort(new Point.PointComparator(0));
+        data.sort(new Point.PointComparator(1));
         int slideCapacity = (int) Math.ceil(data.size() * 1.0 / s);
         int nodeCapacity = (int) Math.ceil(data.size() * 1.0 / s / s);
 
-        ArrayList<Point> list = new ArrayList<>();
         ArrayList<PartitionedMBR> partitionedMBRs = new ArrayList<>();
 
-        // ctr is the count of point data index
-        int ctr = 0;
-        for (Point point : data) {
-            list.add(point);
-            ++ctr;
-            if (ctr == slideCapacity) {
-                packSamplePoints(list, partitionedMBRs, globalBound, nodeCapacity);
-                list.clear();
-                ctr = 0;
-            }
-        }
+        // sliceBound is the record of bound of slice
+        MBR sliceBound = new MBR();
+        sliceBound.setY1(globalBound.getY1());
+        sliceBound.setY2(globalBound.getY2());
 
-        // the size of the last slide may be lower than slide capacity
-        if(list.size() > 0) {
-            packSamplePoints(list, partitionedMBRs, globalBound, nodeCapacity);
-            list.clear();
+        for (int i = 0; i < s; i++) {
+            // calculate index of group in data
+            int startIndex = i * slideCapacity;
+            int endIndex = (i + 1) * slideCapacity - 1;
+
+            if (i == s - 1) {
+                endIndex = data.size() - 1;
+            }
+
+            sliceBound.setX1(sliceBound.getX2());
+            sliceBound.setX2(data.get(endIndex).getX());
+
+            if (i == 0) {
+                // for group 0, lower bound = min bound of global data
+                // upper bound = last element of group
+                sliceBound.setX1(globalBound.getX1());
+            }
+
+            if (i == s - 1) {
+                // for last group, lower bound = upper bound of previous group
+                // upper bound = max bound of global data
+                sliceBound.setX2(globalBound.getX2());
+            }
+
+            ArrayList<Point> list = new ArrayList<>(data.subList(startIndex, endIndex + 1));
+            packSamplePoints(list, partitionedMBRs, sliceBound, s, nodeCapacity);
         }
 
         return partitionedMBRs;
@@ -659,54 +686,44 @@ public class IndexBuilder implements Serializable {
      *
      * @param data the sorted lines by x dimension in a slide.
      * @param partitionedMBRs the list to load partitioned mbrs.
-     * @param globalBound global bound of the completed index
+     * @param sliceBound slice bound of the completed index.
+     * @param s slice count
      * @param nodeCapacity capacity of each node in the completed index
      */
-    private void packSampleLines(ArrayList<Line> data, ArrayList<PartitionedMBR> partitionedMBRs, MBR globalBound, int nodeCapacity) {
+    private void packSampleLines(ArrayList<Line> data, ArrayList<PartitionedMBR> partitionedMBRs, MBR sliceBound, int s, int nodeCapacity) {
         // sort by the y dimension
-        data.sort(new MBR.MBRComparatorWithLine(2, true));
+        data.sort(new Line.LineComparatorByCenter(2));
 
-        // pack lines to mbrs
-        ArrayList<Line> lines = new ArrayList<>();
-        ArrayList<Line> lastLines = new ArrayList<>();
+        // nodeBound is the record of bound of node
+        MBR nodeBound = new MBR();
+        nodeBound.setX1(sliceBound.getX1());
+        nodeBound.setX2(sliceBound.getX2());
 
-        for (int i = 0; i < data.size(); i++) {
-            Line line = data.get(i);
-            lines.add(line);
-            if (lines.size() == nodeCapacity) {
-                if (i == 0) {
-                    // for group 0, lower bound = min bound of global data
-                    // upper bound = last element of group
-                    Line lowerBound = new Line(0, globalBound.getX1(), globalBound.getY1(), globalBound.getX1(), globalBound.getY1());
-                    lines.add(lowerBound);
-                }
-                MBR mbr = Line.unionLines(lines);
-                partitionedMBRs.add(new PartitionedMBR(mbr, 0, lines.size()));
-                lines = new ArrayList<>();
-                lastLines.clear();
-                lastLines = lines;
+        for (int i = 0; i < s; i++) {
+            // calculate index of node in data
+            int startIndex = i * nodeCapacity;
+            int endIndex = (i + 1) * nodeCapacity - 1;
+
+            if (i == s - 1) {
+                endIndex = data.size() - 1;
             }
-        }
 
-        // the point size of the last mbr may be lower than m.
-        // add records into it from neighbor node until the last mbr no less than m.
-        if (lines.size() > 0) {
-            if (lines.size() < nodeCapacity / 2) {
-                while (lines.size() < nodeCapacity / 2) {
-                    lines.add(0, lastLines.remove(lastLines.size() - 1));
-                }
+            nodeBound.setY1(nodeBound.getY2());
+            nodeBound.setY2(data.get(endIndex).getCenterPoint().getY());
+
+            if (i == 0) {
+                // for group 0, lower bound = min bound of global data
+                // upper bound = last element of group
+                nodeBound.setY1(sliceBound.getY1());
             }
-            partitionedMBRs.remove(partitionedMBRs.size() - 1);
-            MBR mbr = Line.unionLines(lastLines);
-            partitionedMBRs.add(new PartitionedMBR(mbr, 0, lines.size()));
-        }
 
-        // for last group, lower bound = upper bound of previous group
-        // upper bound = max bound of global data
-        Line upperBound = new Line(0, globalBound.getX2(), globalBound.getY2(), globalBound.getX2(), globalBound.getY2());
-        lines.add(upperBound);
-        MBR mbr = Line.unionLines(lines);
-        partitionedMBRs.add(new PartitionedMBR(mbr, 0, lines.size()));
+            if (i == s - 1) {
+                // for last group, lower bound = upper bound of previous group
+                // upper bound = max bound of global data
+                nodeBound.setY2(sliceBound.getY2());
+            }
+            partitionedMBRs.add(new PartitionedMBR(new MBR(nodeBound), 0, endIndex - startIndex + 1));
+        }
     }
 
     /**
@@ -714,54 +731,43 @@ public class IndexBuilder implements Serializable {
      *
      * @param data the sorted points by x dimension in a slide.
      * @param partitionedMBRs the list to load partitioned mbrs.
-     * @param globalBound global bound of the completed index
+     * @param sliceBound slice bound of the completed index
+     * @param s slice count
      * @param nodeCapacity capacity of each node in the completed index
      */
-    private void packSamplePoints(ArrayList<Point> data, ArrayList<PartitionedMBR> partitionedMBRs, MBR globalBound, int nodeCapacity) {
+    private void packSamplePoints(ArrayList<Point> data, ArrayList<PartitionedMBR> partitionedMBRs, MBR sliceBound, int s, int nodeCapacity) {
         // sort by the y dimension
         data.sort(new Point.PointComparator(2));
 
-        // pack points to mbrs
-        ArrayList<Point> points = new ArrayList<>();
-        ArrayList<Point> lastPoints = new ArrayList<>();
+        // nodeBound is the record of bound of node
+        MBR nodeBound = new MBR();
+        nodeBound.setX1(sliceBound.getX1());
+        nodeBound.setX2(sliceBound.getX2());
+        for (int i = 0; i < s; i++) {
+            // calculate index of node in data
+            int startIndex = i * nodeCapacity;
+            int endIndex = (i + 1) * nodeCapacity - 1;
 
-        for (int i = 0; i < data.size(); i++) {
-            Point point = data.get(i);
-            points.add(point);
-            if (points.size() == nodeCapacity) {
-                if (i == 0) {
-                    // for group 0, lower bound = min bound of global data
-                    // upper bound = last element of group
-                    Point lowerBound = new Point(0, globalBound.getX1(), globalBound.getY1());
-                    points.add(lowerBound);
-                }
-                MBR mbr = Point.unionPoints(points);
-                partitionedMBRs.add(new PartitionedMBR(mbr, 0, points.size()));
-                points = new ArrayList<>();
-                lastPoints.clear();
-                lastPoints = points;
+            if (i == s - 1) {
+                endIndex = data.size() - 1;
             }
-        }
 
-        // the point size of the last mbr may be lower than m.
-        // add records into it from neighbor node until the last mbr no less than m.
-        if (points.size() > 0) {
-            if (points.size() < nodeCapacity / 2) {
-                while (points.size() < nodeCapacity / 2) {
-                    points.add(0, lastPoints.remove(lastPoints.size() - 1));
-                }
+            nodeBound.setY1(nodeBound.getY2());
+            nodeBound.setY2(data.get(endIndex).getY());
+
+            if (i == 0) {
+                // for group 0, lower bound = min bound of global data
+                // upper bound = last element of group
+                nodeBound.setY1(sliceBound.getY1());
             }
-            partitionedMBRs.remove(partitionedMBRs.size() - 1);
-            MBR mbr = Point.unionPoints(lastPoints);
-            partitionedMBRs.add(new PartitionedMBR(mbr, 0, points.size()));
-        }
 
-        // for last group, lower bound = upper bound of previous group
-        // upper bound = max bound of global data
-        Point upperBound = new Point(0, globalBound.getX2(), globalBound.getY2());
-        points.add(upperBound);
-        MBR mbr = Point.unionPoints(points);
-        partitionedMBRs.add(new PartitionedMBR(mbr, 0, points.size()));
+            if (i == s - 1) {
+                // for last group, lower bound = upper bound of previous group
+                // upper bound = max bound of global data
+                nodeBound.setY2(sliceBound.getY2());
+            }
+            partitionedMBRs.add(new PartitionedMBR(new MBR(nodeBound), 0, endIndex - startIndex + 1));
+        }
     }
 
     /**
