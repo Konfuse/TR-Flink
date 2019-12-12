@@ -78,10 +78,13 @@ public class Test4MyTree {
 //        String areaQueryPath = "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_areas_to_query.txt";
 //        areaQueryTest(index, areaQueryPath, "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_areas_query_result_flink.txt");
 
+//        String circleQueryPath = "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_knn_to_query.txt";
+//        circleQueryTest(index, circleQueryPath, "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_circle_query_result_flink.txt");
+
 //        environment.execute();
     }
 
-    public static void knnQueryTest(PointIndex index, String areaQueryPath, String output) throws Exception {
+    public static void knnQueryTest(PointIndex index, String knnQueryPath, String output) throws Exception {
         System.out.println("************************point query test*************************");
 
         BufferedReader reader = null;
@@ -90,7 +93,7 @@ public class Test4MyTree {
         ArrayList<Point> list = new ArrayList<>(100);
 
         try {
-            reader = new BufferedReader(new FileReader(areaQueryPath));
+            reader = new BufferedReader(new FileReader(knnQueryPath));
             Point point;
             while ((line = reader.readLine()) != null) {
                 data = line.split(",");
@@ -205,6 +208,79 @@ public class Test4MyTree {
                                     list.add(point.getId());
                                 }
                                 collector.collect(list);
+                            }
+                        }).collect().get(0);
+
+                long endTime = System.currentTimeMillis();
+//                System.out.println("query time: " + (endTime - startTime) + "ms");
+//                System.out.println("query result is: ");
+                boolean flag = false;
+                writer.write((endTime - startTime) + ":");
+
+                for (Long id : ids) {
+                    if (!flag) {
+                        writer.write(String.valueOf(id));
+//                        System.out.print(id);
+                        flag = true;
+                    } else {
+                        writer.write( "," + id);
+//                        System.out.print("," + id);
+                    }
+                }
+                writer.newLine();
+                System.out.println();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void circleQueryTest(PointIndex index, String circleQueryPath, String output) throws Exception {
+        System.out.println("************************point query test*************************");
+
+        BufferedReader reader = null;
+        String line;
+        String[] data;
+        ArrayList<Point> list = new ArrayList<>(100);
+
+        try {
+            reader = new BufferedReader(new FileReader(circleQueryPath));
+            Point point;
+            while ((line = reader.readLine()) != null) {
+                data = line.split(",");
+                point = new Point(
+                        0,
+                        Double.parseDouble(data[0]),
+                        Double.parseDouble(data[1])
+                );
+                list.add(point);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(output));
+            for (Point point : list) {
+                long startTime = System.currentTimeMillis();
+
+                List<Long> ids = index.circleRangeQuery(point, 5)
+                        .reduceGroup(new RichGroupReduceFunction<Point, List<Long>>() {
+                            @Override
+                            public void reduce(Iterable<Point> iterable, Collector<List<Long>> collector) throws Exception {
+                                List<Long> longList = new ArrayList<>();
+                                for (Point point : iterable) {
+                                    longList.add(point.getId());
+                                }
+                                collector.collect(longList);
                             }
                         }).collect().get(0);
 

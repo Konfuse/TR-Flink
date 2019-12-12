@@ -48,9 +48,75 @@ public class Test4MyTree {
 //        visualizationTest(myTree);
 //        travelRangeQuery(myTree, areaQueryPath, output);
 
+//        String areaQueryPath = "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_knn_to_query.txt";
+//        String output = "points_knn_query_result.txt";
+//        knnQueryTest(myTree, areaQueryPath, output);
+
         String areaQueryPath = "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_knn_to_query.txt";
-        String output = "points_knn_query_result.txt";
-        knnQueryTest(myTree, areaQueryPath, output);
+        String output = "C:/Users/Konfuse/Desktop/FlinkResearch/data_set/points_circle_query_result.txt";
+        circleQueryTest(myTree, areaQueryPath, output);
+    }
+
+    public static void circleQueryTest(RTree tree, String pointQueryPath, String output) {
+        System.out.println("************************point query test*************************");
+
+        BufferedReader reader = null;
+        String line;
+        String[] data;
+        ArrayList<Point> list = new ArrayList<>(100);
+
+        try {
+            reader = new BufferedReader(new FileReader(pointQueryPath));
+            Point point;
+            while ((line = reader.readLine()) != null) {
+                data = line.split(",");
+                point = new Point(
+                        0,
+                        "",
+                        Double.parseDouble(data[0]),
+                        Double.parseDouble(data[1])
+                );
+                list.add(point);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(output));
+            for (Point point : list) {
+                long startTime = System.currentTimeMillis();
+
+                ArrayList<DataObject> dataObjects = tree.circleRangeQuery(point, 5);
+
+                long endTime = System.currentTimeMillis();
+                System.out.println("query time: " + (endTime - startTime) + "ms");
+                System.out.println("query result is: ");
+                boolean flag = false;
+                writer.write((endTime - startTime) + ":");
+                for (DataObject dataObject : dataObjects) {
+                    if (!flag) {
+                        writer.write(String.valueOf(dataObject.getId()));
+                        System.out.print(dataObject.getId());
+                        flag = true;
+                    } else {
+                        writer.write( "," + dataObject.getId());
+                        System.out.print("," + dataObject.getId());
+                    }
+                }
+                writer.newLine();
+                System.out.println();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void knnQueryTest(RTree tree, String pointQueryPath, String output) {
@@ -78,52 +144,52 @@ public class Test4MyTree {
             e.printStackTrace();
         }
 
-        ArrayList<DataObject> dataObjects = tree.knnQuery(list.get(1), 100);
-        boolean flag = false;
-        for (DataObject dataObject : dataObjects) {
-            if (!flag) {
-                System.out.print(dataObject.calDistance(list.get(1)));
-                flag = true;
-            } else {
-                System.out.print(", " + dataObject.calDistance(list.get(1)));
-            }
-        }
-
-//        BufferedWriter writer = null;
-//        try {
-//            writer = new BufferedWriter(new FileWriter(output));
-//            for (Point point : list) {
-//                long startTime = System.currentTimeMillis();
-//
-//                ArrayList<DataObject> dataObjects = tree.knnQuery(point, 100);
-//
-//                long endTime = System.currentTimeMillis();
-//                System.out.println("query time: " + (endTime - startTime) + "ms");
-//                System.out.println("query result is: ");
-//                boolean flag = false;
-//                writer.write((endTime - startTime) + ":");
-//                for (DataObject dataObject : dataObjects) {
-//                    if (!flag) {
-//                        writer.write(String.valueOf(dataObject.getId()));
-//                        System.out.print(dataObject.getId());
-//                        flag = true;
-//                    } else {
-//                        writer.write( "," + dataObject.getId());
-//                        System.out.print("," + dataObject.getId());
-//                    }
-//                }
-//                writer.newLine();
-//                System.out.println();
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } finally {
-//            try {
-//                writer.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
+//        ArrayList<DataObject> dataObjects = tree.knnQuery(list.get(1), 100);
+//        boolean flag = false;
+//        for (DataObject dataObject : dataObjects) {
+//            if (!flag) {
+//                System.out.print(dataObject.calDistance(list.get(1)));
+//                flag = true;
+//            } else {
+//                System.out.print(", " + dataObject.calDistance(list.get(1)));
 //            }
 //        }
+
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(output));
+            for (Point point : list) {
+                long startTime = System.currentTimeMillis();
+
+                ArrayList<DataObject> dataObjects = tree.knnQuery(point, 100);
+
+                long endTime = System.currentTimeMillis();
+                System.out.println("query time: " + (endTime - startTime) + "ms");
+                System.out.println("query result is: ");
+                boolean flag = false;
+                writer.write((endTime - startTime) + ":");
+                for (DataObject dataObject : dataObjects) {
+                    if (!flag) {
+                        writer.write(String.valueOf(dataObject.getId()));
+                        System.out.print(dataObject.getId());
+                        flag = true;
+                    } else {
+                        writer.write( "," + dataObject.getId());
+                        System.out.print("," + dataObject.getId());
+                    }
+                }
+                writer.newLine();
+                System.out.println();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void travelRangeQuery(RTree tree, String areaQueryPath, String output) {

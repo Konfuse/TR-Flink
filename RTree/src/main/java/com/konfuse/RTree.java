@@ -118,7 +118,7 @@ public class RTree implements Serializable {
                 if(curNode.getHeight() == 1) {
                     ArrayList<DataObject> entries = ((LeafNode<DataObject>) curNode).getEntries();
                     for (DataObject dataObject: entries) {
-                        if(dataObject.calDistance(queryPoint) <= radius * radius){
+                        if(dataObject.calDistance(queryPoint) <= radius){
                             result.add(dataObject);
                         }
                     }

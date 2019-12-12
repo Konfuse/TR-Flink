@@ -12,9 +12,7 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 /**
  * @Author: Konfuse
@@ -140,39 +138,32 @@ public class LineIndex extends Index<Line> implements Serializable {
                         }
                     }
                 })
-                .map(new MapFunction<Line, Tuple2<Double, Line>>() {
+                .map(new MapFunction<Line, Tuple2<Line, Double>>() {
                     @Override
-                    public Tuple2<Double, Line> map(Line line) throws Exception {
-                        return new Tuple2<>(line.calDistance(queryPoint), line);
+                    public Tuple2<Line, Double> map(Line line) throws Exception {
+                        return new Tuple2<>(line, line.calDistance(queryPoint));
                     }
                 })
-                .sortPartition(0, Order.ASCENDING)
-                .mapPartition(new RichMapPartitionFunction<Tuple2<Double, Line>, Tuple2<Double, Line>>() {
+                .reduceGroup(new RichGroupReduceFunction<Tuple2<Line, Double>, Line>() {
                     @Override
-                    public void mapPartition(Iterable<Tuple2<Double, Line>> iterable, Collector<Tuple2<Double, Line>> collector) throws Exception {
-                        int count = 0;
-                        for (Tuple2<Double, Line> tuple : iterable) {
-                            if (count >= k)
-                                break;
-                            collector.collect(tuple);
-                            ++count;
-                        }
-                    }
-                })
-                .reduceGroup(new RichGroupReduceFunction<Tuple2<Double, Line>, Line>() {
-                    @Override
-                    public void reduce(Iterable<Tuple2<Double, Line>> iterable, Collector<Line> collector) throws Exception {
-                        List<Tuple2<Double, Line>> tupleList = new ArrayList<>();
+                    public void reduce(Iterable<Tuple2<Line, Double>> iterable, Collector<Line> collector) throws Exception {
+                        Iterator<Tuple2<Line, Double>> iter = iterable.iterator();
+                        List<Tuple2<Line, Double>> tupleList = new ArrayList<>();
                         int count = 0;
 
-                        for (Tuple2<Double, Line> tuple : iterable) {
-                            tupleList.add(tuple);
+                        while (iter.hasNext()) {
+                            tupleList.add(iter.next());
                         }
-                        tupleList.sort(Comparator.comparing(o -> o.f0));
 
+                        Collections.sort(tupleList, new Comparator<Tuple2<Line, Double>>() {
+                            @Override
+                            public int compare(Tuple2<Line, Double> o1, Tuple2<Line, Double> o2) {
+                                return o1.f1.compareTo(o2.f1);
+                            }
+                        });
                         while (count < k) {
-                            collector.collect(tupleList.get(count).f1);
-                            ++count;
+                            collector.collect(tupleList.get(count).f0);
+                            count++;
                         }
                     }
                 });

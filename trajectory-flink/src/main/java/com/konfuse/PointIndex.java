@@ -162,64 +162,20 @@ public class PointIndex extends Index<Point> implements Serializable {
 //                    }
 //                });
 
-//        DataSet<Point> result = getLocalTrees()
-//                .flatMap(new FlatMapFunction<RTree<Point>, Point>() {
-//                    @Override
-//                    public void flatMap(RTree<Point> pointRTree, Collector<Point> collector) throws Exception {
-//                        List<Point> list = pointRTree.knnQuery(queryPoint, k);
-//                        for (Point point : list) {
-//                            collector.collect(point);
-//                        }
-//                    }
-//                })
-//                .map(new MapFunction<Point, Tuple2<Point, Double>>() {
-//                    @Override
-//                    public Tuple2<Point, Double> map(Point point) throws Exception {
-//                        return new Tuple2<>(point, point.calDistance(queryPoint));
-//                    }
-//                })
-//                .reduceGroup(new RichGroupReduceFunction<Tuple2<Point, Double>, Point>() {
-//                    @Override
-//                    public void reduce(Iterable<Tuple2<Point, Double>> iterable, Collector<Point> collector) throws Exception {
-//                        Iterator<Tuple2<Point, Double>> iter = iterable.iterator();
-//                        List<Tuple2<Point, Double>> tupleList = new ArrayList<>();
-//                        int count = 0;
-//
-//                        while (iter.hasNext()) {
-//                            tupleList.add(iter.next());
-//                        }
-//
-//                        Collections.sort(tupleList, new Comparator<Tuple2<Point, Double>>() {
-//                            @Override
-//                            public int compare(Tuple2<Point, Double> o1, Tuple2<Point, Double> o2) {
-//                                return o1.f1.compareTo(o2.f1);
-//                            }
-//                        });
-//                        while (count < k) {
-//                            collector.collect(tupleList.get(count).f0);
-//                            count++;
-//                        }
-//                    }
-//                });
-
-        DataSet<Point> result = getData()
+        DataSet<Point> result = getLocalTrees()
+                .flatMap(new FlatMapFunction<RTree<Point>, Point>() {
+                    @Override
+                    public void flatMap(RTree<Point> pointRTree, Collector<Point> collector) throws Exception {
+                        List<Point> list = pointRTree.knnQuery(queryPoint, k);
+                        for (Point point : list) {
+                            collector.collect(point);
+                        }
+                    }
+                })
                 .map(new MapFunction<Point, Tuple2<Point, Double>>() {
                     @Override
                     public Tuple2<Point, Double> map(Point point) throws Exception {
                         return new Tuple2<>(point, point.calDistance(queryPoint));
-                    }
-                })
-                .sortPartition(1, Order.ASCENDING)
-                .mapPartition(new RichMapPartitionFunction<Tuple2<Point, Double>, Tuple2<Point, Double>>() {
-                    @Override
-                    public void mapPartition(Iterable<Tuple2<Point, Double>> iterable, Collector<Tuple2<Point, Double>> collector) throws Exception {
-                        int count = 0;
-                        for (Tuple2<Point, Double> pointDoubleTuple2 : iterable) {
-                            if (count >= k)
-                                break;
-                            collector.collect(pointDoubleTuple2);
-                            count++;
-                        }
                     }
                 })
                 .reduceGroup(new RichGroupReduceFunction<Tuple2<Point, Double>, Point>() {
@@ -245,6 +201,50 @@ public class PointIndex extends Index<Point> implements Serializable {
                         }
                     }
                 });
+
+//        DataSet<Point> result = getData()
+//                .map(new MapFunction<Point, Tuple2<Point, Double>>() {
+//                    @Override
+//                    public Tuple2<Point, Double> map(Point point) throws Exception {
+//                        return new Tuple2<>(point, point.calDistance(queryPoint));
+//                    }
+//                })
+//                .sortPartition(1, Order.ASCENDING)
+//                .mapPartition(new RichMapPartitionFunction<Tuple2<Point, Double>, Tuple2<Point, Double>>() {
+//                    @Override
+//                    public void mapPartition(Iterable<Tuple2<Point, Double>> iterable, Collector<Tuple2<Point, Double>> collector) throws Exception {
+//                        int count = 0;
+//                        for (Tuple2<Point, Double> pointDoubleTuple2 : iterable) {
+//                            if (count >= k)
+//                                break;
+//                            collector.collect(pointDoubleTuple2);
+//                            count++;
+//                        }
+//                    }
+//                })
+//                .reduceGroup(new RichGroupReduceFunction<Tuple2<Point, Double>, Point>() {
+//                    @Override
+//                    public void reduce(Iterable<Tuple2<Point, Double>> iterable, Collector<Point> collector) throws Exception {
+//                        Iterator<Tuple2<Point, Double>> iter = iterable.iterator();
+//                        List<Tuple2<Point, Double>> tupleList = new ArrayList<>();
+//                        int count = 0;
+//
+//                        while (iter.hasNext()) {
+//                            tupleList.add(iter.next());
+//                        }
+//
+//                        Collections.sort(tupleList, new Comparator<Tuple2<Point, Double>>() {
+//                            @Override
+//                            public int compare(Tuple2<Point, Double> o1, Tuple2<Point, Double> o2) {
+//                                return o1.f1.compareTo(o2.f1);
+//                            }
+//                        });
+//                        while (count < k) {
+//                            collector.collect(tupleList.get(count).f0);
+//                            count++;
+//                        }
+//                    }
+//                });
 
         return result;
     }
