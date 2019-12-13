@@ -104,11 +104,11 @@
 
 - 使用分区数据全局查询的方法，结果和正确结果一致，本系统的方法和正确的实验结果集的相似度对比如图所示：
 
-![]https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/points_knn_query_flink.png)
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/points_knn_query_flink.png)
 
 可以看出结果一致。
 
-##### 2. circle range query：
+##### 3. circle range query：
 
 使用circle range query查询的结果和正确结果一致，本系统的方法和正确的实验结果集的相似度对比如图所示：
 
