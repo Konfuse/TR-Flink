@@ -159,3 +159,31 @@ ST-Matching 算法是一种处理低频采样数据的路网匹配算法。该�
 论文中的批处理思想还是对不同轨迹段在不同线程中进行匹配。
 
 ---
+## 8. Fast map matching, an algorithm integrating hidden Markov model with precomputation \[IJGIS 2018]
+![](pic/FMM.png)
+算法包含两个部分：预计算部分和隐式马尔科夫过程部分。
+1. 预计算部分、
+  
+   最短路径的计算：论文中的方法是遍历图中的每一个点，将该点到其他点小于一个阈值$\delta$的最短路径信息(SP)存储到一张表Upper Bounded Origin Destination Table(UBODT)中。其每一条信息的存储方式如下：$R(n_o, n_d) = (n_o, n_d, next_n, next_e, prev_n, dist)$。在这里$n_o, n_d$指代起始点和末点的id号，$next_n, next_e, prev_n$指代在这个路径中(way)起始点的下一个的点的id、起始点指向的边的id和路径中末点之前点的id。SP信息由Dijkstra算法生成。最终UBODT存储成hash table形式，其对应关系是：$h = (n_o*M + n_d) mod H$。因此任意两点之间的最短径可以通过之前存储的信息以递归的方式获得。如果没有找到最短路径，此时才调用Dijkstra算法进行查找(对于长度大于阈值的情况，作者列出了4种情况去计算)。
+
+2. 隐式马尔科夫过程
+
+    (1) 候选投影点(候选路段)的查找：文中使用的是在R-tree中查找一个GPS点的r范围内的k最近邻(KNN)候选。每条信息存储成$C = (p,e,dist,\lambda)$，分别代表投影点，候选边，GPS点到线距离，投影点到起始点的距离。在实际中，作者搜索时首先构建一个以GPS点为中心，以2r为边长的正方形，找到所有与正方形相交的路段（或内部），再将点投影到路段上，筛除GPS点到线的距离大于r的路段，对剩下的候选按距离进行排序。
+
+    (2) 最佳路径的选取：投影点之间的路径可能存在的4种情况如下图所示。这里考虑到的是行驶方向的问题，这样可以使得真实GPS点的距离和最短路径距离的比值更加准确。
+   ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/FMM_OPI.png)
+   ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/FMM_OPI_FORMULA.png)
+
+   (3) GPS点可能投影的位置有如下三种情况可能出现问题。第一种情况是GPS之间距离大于路径距离，其转移概率大于1。第二，三种情况是两个点投影到同一个点使得分母为0。
+   ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/FMM_GPS_candidate.png)
+
+   文章中转移概率如下，使得第一种情况小于1，第二三种情况等于0。
+   ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/FMM_TRANSITION.png)
+
+   论文中的观测概率依旧如HMM中的标准正太分布一样。最终可以通过viterbi算法得到最优的匹配路径OPI。
+
+   (4) 在找到最优的匹配路径后OPI，作者希望找到一整条完整的路径CPI（通过OPI）。作者整个查询的过程中只在这里才使用最短路径的计算。前面的最短路径都是通过预计算得到的，这样就节省了时间。
+
+   (5) 惩罚机制：如下图所示，GPS点$p_n$匹配后可能在计算最短距离时经历了一个反向运动。因此文中在投影点之间的最短距离计算之上添加了一个惩罚距离。pf为惩罚因子。在施加惩罚后，包含反向运动的路径很可能被赋以较低的转移概率，并在OPI步骤中被消除。
+   ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/FMM_PENALTY.png)
+   ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/FMM_PENALTY_FORMULA.png)
