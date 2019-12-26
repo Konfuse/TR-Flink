@@ -10,6 +10,8 @@ Kubernetes 是一个目前非常流行的容器编排系统，在其之上可以
 
 本教程目前主要采用Windows作为系统环境，分别介绍会话集群和脚本集群的搭建方法，整体按照Docker for Windows的安装，会话集群搭建的方法以及脚本集群的搭建方法的顺序来介绍。
 
+**注：**Docker for Windows略有一些heavy，也可以使用其它轻量级的工具搭建Kubernetes集群，特别是使用单节点本地测试时，可以使用Minikube，它是 k8s官方为了开发者能在个人电脑上运行 k8s而提供的一套工具，通过 Go 语言编写，通过调用虚拟化管理程序，创建出一个运行在虚拟机内的单节点集群。具体的搭建方法可以参考一篇[阿里云的文章](https://yq.aliyun.com/articles/221687)，但是因为网络的原因，Minikube的搭建过程以及构建Flink 集群时，会受到很多约束，不是特别推荐，使用过程中遇到的一些问题稍后更新。
+
 ## 1. Docker for Windows的安装
 
 Docker是用于创建Docker应用程序的完整开发平台，Docker for Windows是在Windows系统上开始使用Docker的最佳方式。
@@ -178,7 +180,7 @@ echo $TOKEN
 
 #### 2.4.1 搭建
 
-按照官网的 [Appendix](https://link.zhihu.com/?target=https%3A//ci.apache.org/projects/flink/flink-docs-stable/ops/deployment/kubernetes.html%23appendix)将集群的配置文件拷贝到本地。或者在****中找到。
+按照官网的 [Appendix](https://link.zhihu.com/?target=https%3A//ci.apache.org/projects/flink/flink-docs-stable/ops/deployment/kubernetes.html%23appendix)将集群的配置文件拷贝到本地。或者在[flink session cluster config](https://github.com/Konfuse/TR-Flink/tree/master/flink-config-yaml/session-cluster)中找到。
 
 **配置flink的版本号，注意在每个文件中，将flink的docker tag设置为对应版本的标签号，默认为最新的flink docker标签号：latest。**
 
