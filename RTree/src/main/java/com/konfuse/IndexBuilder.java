@@ -2,6 +2,7 @@ package com.konfuse;
 
 import com.konfuse.geometry.Line;
 import com.konfuse.geometry.Point;
+import com.konfuse.geometry.Rectangle;
 import com.konfuse.internal.TreeNode;
 import com.konfuse.internal.MBR;
 import com.konfuse.internal.NonLeafNode;
@@ -139,6 +140,49 @@ public class IndexBuilder implements Serializable {
         return leafNodePacking(nextLevel);
     }
 
+    public RTree createRTreeBySTR(Rectangle... rectangles) {
+        ArrayList<Rectangle> rectangleList = new ArrayList<>(Arrays.stream(rectangles).collect(Collectors.toList()));
+        this.entryCount = rectangleList.size();
+
+        //calculate leaf node num
+        double p = rectangleList.size() * 1.0 / M;
+
+        //start building r-tree leaf node
+        rectangleList.sort(new Rectangle.RectangleComparator(1, true));
+
+        // if size of lines <= M, then return RTree directly
+        if (rectangleList.size() <= M) {
+            this.height = 1;
+            MBR[] mbrs = new MBR[rectangleList.size()];
+            for (int i = 0; i < rectangleList.size(); i++) {
+                mbrs[i] = rectangleList.get(i).getMBR();
+            }
+            this.root = new LeafNode<>(rectangleList, MBR.union(mbrs));
+            return new RTree(root, M, m);
+        }
+
+        int s = (int) Math.ceil(Math.pow(Math.E, Math.log(p) / 2));
+        ArrayList<Rectangle> list = new ArrayList<>();
+        ArrayList<TreeNode> nextLevel = new ArrayList<TreeNode>();
+
+        int ctr = 0;
+        for (Rectangle rectangle : rectangleList) {
+            list.add(rectangle);
+            ++ctr;
+            if (ctr == s * M) {
+                packRectangles(list, nextLevel);
+                list.clear();
+                ctr = 0;
+            }
+        }
+        // the size of the last slide may be lower than s * M
+        if(list.size() > 0) {
+            packRectangles(list, nextLevel);
+            list.clear();
+        }
+        return leafNodePacking(nextLevel);
+    }
+
     /**
      * Pack the leaf nodes that have been packed from data objects in the last step.
      * @param treeNodes list of leaf nodes
@@ -267,6 +311,52 @@ public class IndexBuilder implements Serializable {
                 }
             }
             leafNode.setMBR(Line.unionLines(leafNode.getEntries()));
+            nextLevel.add(leafNode);
+        }
+    }
+
+    /**
+     * Pack rectangles to leaf nodes.
+     * @param rectangles the sorted rectangles by x dimension in a slide.
+     * @param nextLevel the list to load leaf nodes.
+     */
+    private void packRectangles(ArrayList<Rectangle> rectangles, ArrayList<TreeNode> nextLevel) {
+        // sort by the y dimension
+        rectangles.sort(new Rectangle.RectangleComparator(2, true));
+
+        // pack rectangles to leaf nodes
+        LeafNode<Rectangle> leafNode = new LeafNode<>(M);
+        for (Rectangle rectangle : rectangles) {
+            leafNode.getEntries().add(rectangle);
+            if (leafNode.getEntries().size() == M) {
+                ArrayList<Rectangle> list = leafNode.getEntries();
+                MBR[] mbrs = new MBR[list.size()];
+                for (int i = 0; i < list.size(); i++) {
+                    mbrs[i] = list.get(i).getMBR();
+                }
+                leafNode.setMBR(MBR.union(mbrs));
+                nextLevel.add(leafNode);
+                leafNode = new LeafNode<>(M);
+            }
+        }
+
+        // the size of the last leaf node may be lower than m.
+        // add records into it from neighbor node until the last node no less than m.
+        if (leafNode.getEntries().size() > 0) {
+            if (leafNode.getEntries().size() < m) {
+                LeafNode<Rectangle> swapped = (LeafNode<Rectangle>) nextLevel.get(nextLevel.size() - 1);
+                ArrayList<Rectangle> swappedRectangles = swapped.getEntries();
+                ArrayList<Rectangle> lastRectangles = leafNode.getEntries();
+                while (leafNode.getEntries().size() < m) {
+                    lastRectangles.add(0, swappedRectangles.remove(swappedRectangles.size() - 1));
+                }
+            }
+            ArrayList<Rectangle> list = leafNode.getEntries();
+            MBR[] mbrs = new MBR[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                mbrs[i] = list.get(i).getMBR();
+            }
+            leafNode.setMBR(MBR.union(mbrs));
             nextLevel.add(leafNode);
         }
     }
