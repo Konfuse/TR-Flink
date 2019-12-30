@@ -1,6 +1,8 @@
-package com.konfuse.geometry;
+package com.konfuse.internal;
 
-import com.konfuse.internal.TreeNode;
+import com.konfuse.geometry.DataObject;
+import com.konfuse.geometry.Line;
+import com.konfuse.geometry.Point;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -37,22 +39,6 @@ public class MBR implements Serializable {
         this.x1 = x1;
         this.y1 = y1;
         this.x2 = x2;
-        this.y2 = y2;
-    }
-
-    public void setX1(double x1) {
-        this.x1 = x1;
-    }
-
-    public void setY1(double y1) {
-        this.y1 = y1;
-    }
-
-    public void setX2(double x2) {
-        this.x2 = x2;
-    }
-
-    public void setY2(double y2) {
         this.y2 = y2;
     }
 
@@ -104,52 +90,6 @@ public class MBR implements Serializable {
         distance += distanceDim * distanceDim;
 
         return Math.sqrt(distance);
-    }
-
-    /**
-     * Distance between the center of mbr and the query line
-     * @param line the query line
-     */
-    public double calculateDistance(Line line) {
-        Point point = new Point(0, (x2 + x1) / 2.0, (y1 + y2) / 2.0);
-        return line.calDistance(point);
-    }
-
-    /**
-     * Distance between the center of mbr and center of the query mbr
-     * @param mbr the query mbr
-     */
-    public double calculateDistance(MBR mbr) {
-        double distance = 0L;
-
-        // distance on x
-        double centerThis = (x2 + x1) / 2.0;
-        double centerQuery = (mbr.x2 + mbr.x1) / 2.0;
-        double distanceDim = centerThis - centerQuery;
-        distance += distanceDim * distanceDim;
-
-        // distance on y
-        centerThis = (y1 + y2) / 2.0;
-        centerQuery = (mbr.y2 + mbr.y1) / 2.0;
-        distanceDim = centerThis - centerQuery;
-        distance += distanceDim * distanceDim;
-
-        return Math.sqrt(distance);
-    }
-
-    /**
-     * Distance between the center of mbr and the query point
-     * @param dataObject the query data object
-     */
-    public double calculateDistance(DataObject dataObject) {
-        // data object has two potential type
-        if (dataObject instanceof Point)
-            return calculateDistance((Point) dataObject);
-        else if (dataObject instanceof Line)
-            return calculateDistance((Line) dataObject);
-        else if (dataObject instanceof PartitionedMBR)
-            return calculateDistance(((PartitionedMBR)dataObject).getMBR());
-        return Double.MAX_VALUE;
     }
 
     /**
@@ -239,8 +179,6 @@ public class MBR implements Serializable {
             return contains((Point) dataObject);
         else if (dataObject instanceof Line)
             return contains((Line) dataObject);
-        else if (dataObject instanceof PartitionedMBR)
-            return contains(((PartitionedMBR)dataObject).getMBR());
         return false;
     }
 
@@ -265,15 +203,15 @@ public class MBR implements Serializable {
         public int compare(TreeNode e1, TreeNode e2) {
             if (dimension == 1) {
                 if (low) {
-                    return Double.compare(e1.getMBR().x1, e2.getMBR().x1);
+                    return Double.compare(e1.mbr.x1, e2.mbr.x1);
                 } else {
-                    return Double.compare(e1.getMBR().x2, e2.getMBR().x2);
+                    return Double.compare(e1.mbr.x2, e2.mbr.x2);
                 }
             } else {
                 if (low) {
-                    return Double.compare(e1.getMBR().y1, e2.getMBR().y1);
+                    return Double.compare(e1.mbr.y1, e2.mbr.y1);
                 } else {
-                    return Double.compare(e1.getMBR().y2, e2.getMBR().y2);
+                    return Double.compare(e1.mbr.y2, e2.mbr.y2);
                 }
             }
         }

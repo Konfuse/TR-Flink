@@ -21,7 +21,7 @@ under the License.
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.konfuse</groupId>
-	<artifactId>trajectory-flink</artifactId>
+	<artifactId>map-matching</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
