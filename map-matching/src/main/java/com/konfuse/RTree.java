@@ -61,6 +61,13 @@ public class RTree implements Serializable {
         return minNodeNb;
     }
 
+    public void clear() {
+        root = null;
+        height = 0;
+        maxNodeNb = 0;
+        minNodeNb = 0;
+    }
+
     /**
      * Get the data objects inside the query area.
      * @param area query area.

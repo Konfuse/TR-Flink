@@ -28,6 +28,12 @@ public class Point extends DataObject implements Key<Point>, Serializable {
         super(0);
     }
 
+    public Point(double x, double y) {
+        super(0);
+        this.x = x;
+        this.y = y;
+    }
+
     public Point(long id, double x, double y) {
         super(id);
         this.x = x;
