@@ -20,7 +20,7 @@ import java.util.*;
 public class RoadMap extends Graph<Road> {
     private transient Index index = null;
 
-    private class Index implements Serializable {
+    public class Index implements Serializable {
         private RTree tree;
 
         public void put(ArrayList<Road> roadList) {
@@ -160,5 +160,11 @@ public class RoadMap extends Graph<Road> {
         super.deconstruct();
         index.clear();
         index = null;
+    }
+
+    public Index spatial() {
+        if (index == null)
+            throw new RuntimeException("index not constructed");
+        return index;
     }
 }

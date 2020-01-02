@@ -32,8 +32,7 @@ public class Dijkstra<E extends AbstractLink<E>, P extends LocationOnEdge<E>> {
         return msmt(sources, targets, cost, null, null);
     }
 
-    public Map<P, Tuple<P, List<E>>> route(Set<P> sources, Set<P> targets, Cost<E> cost,
-                                           Cost<E> bound, Double max) {
+    public Map<P, Tuple<P, List<E>>> route(Set<P> sources, Set<P> targets, Cost<E> cost, Cost<E> bound, Double max) {
         return msmt(sources, targets, cost, bound, max);
     }
 

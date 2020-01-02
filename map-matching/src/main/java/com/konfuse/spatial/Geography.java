@@ -95,6 +95,16 @@ public class Geography {
         return d;
     }
 
+    /**
+     * Gets interception point of a {@link Polyline} intercepted by {@link Point} <i>c</i>. This is
+     * analog to {@link Geography#intercept(Point, Point, Point)}. The fraction <i>f</i>
+     * refers to the full length of the {@link Polyline}.
+     *
+     * @param p {@link Polyline} to be intercepted.
+     * @param c {@link Point} that intercepts straight line <i>a</i> to <i>b</i>.
+     * @return Interception point described as the linearly interpolated fraction <i>f</i> in the
+     *         interval <i>[0,1]</i> of the {@link Polyline}.
+     */
     public double intercept(Polyline p, Point c) {
         double d = Double.MAX_VALUE;
         Point a = p.getPoint(0);
@@ -122,10 +132,33 @@ public class Geography {
         return s == 0 ? 0 : sf / s;
     }
 
+    /**
+     * Gets {@link Point} from linear interpolation of a fraction <i>f</i>, in the interval
+     * <i>[0,1]</i>, on a {@link Polyline}. This is analog to
+     * {@link Geography#interpolate(Point, Point, double)}.The fraction refers to the full
+     * length of the {@link Polyline}.
+     *
+     * @param path {@link Polyline} of interpolation.
+     * @param f Fraction <i>f</i>, in the interval <i>[0,1]</i>, to be linearly interpolated on
+     *        {@link Polyline}.
+     * @return {@link Point} linearly interpolated from fraction <i>f</i> on a {@link Polyline}.
+     */
     public Point interpolate(Polyline path, double f) {
         return interpolate(path, length(path), f);
     }
 
+    /**
+     * Gets {@link Point} from linear interpolation of a fraction <i>f</i>, in the interval
+     * <i>[0,1]</i>, on a {@link Polyline}. This is an extension of
+     * {@link Geography#interpolate(Polyline, double)} and takes the length of the
+     * {@link Polyline} as parameter reduce computational effort.
+     *
+     * @param p {@link Polyline} of interpolation.
+     * @param l Length of the {@link Polyline} in meters.
+     * @param f Fraction <i>f</i>, in the interval <i>[0,1]</i>, to be linearly interpolated on
+     *        {@link Polyline}.
+     * @return {@link Point} linearly interpolated from fraction <i>f</i> on a {@link Polyline}.
+     */
     public Point interpolate(Polyline p, double l, double f) {
         assert (f >= 0 && f <= 1);
 

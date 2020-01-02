@@ -16,8 +16,6 @@ import java.util.List;
  */
 public class TestRoadMap {
     public static void main(String[] args) throws Exception{
-        RoadReader roadReader = new RoadReader();
-        roadReader.open();
         RoadMap map = RoadMap.Load(new RoadReader());
         map.construct();
         HashMap<Long, Road> roads = map.getRoads();
