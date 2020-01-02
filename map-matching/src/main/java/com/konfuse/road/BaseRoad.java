@@ -9,10 +9,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * Road data structure for a road segment.
+ * Road data structure for a edge segment.
  *
  * Provides topological information, i.e. {@link BaseRoad#source()} and {@link BaseRoad#target()}),
- * road type information, i.e. {@link BaseRoad#oneway()},
+ * edge type information, i.e. {@link BaseRoad#oneway()},
  * {@link BaseRoad#priority()} and {@link BaseRoad#maxspeed(Heading)}), and geometrical information
  * (e.g. {@link BaseRoad#length()} and {@link BaseRoad#geometry()}).
  *
@@ -34,15 +34,15 @@ public class BaseRoad {
     /**
      * Constructs {@link BaseRoad} object.
      *
-     * @param id Unique road identifier.
-     * @param source Source vertex identifier (in road topology representation).
-     * @param target Target vertex identifier (in road topology representation).
-     * @param refId Identifier of road referring to some source data.
-     * @param oneway Indicator if this road is a one-way road.
+     * @param id Unique edge identifier.
+     * @param source Source vertex identifier (in edge topology representation).
+     * @param target Target vertex identifier (in edge topology representation).
+     * @param refId Identifier of edge referring to some source data.
+     * @param oneway Indicator if this edge is a one-way edge.
      * @param priority BaseRoad priority factor, which is greater or equal than one.
-     * @param maxSpeedForward Maximum speed limit for passing this road from source to target.
-     * @param maxSpeedBackward Maximum speed limit for passing this road from target to source.
-     * @param length Length of road geometry in meters.
+     * @param maxSpeedForward Maximum speed limit for passing this edge from source to target.
+     * @param maxSpeedBackward Maximum speed limit for passing this edge from target to source.
+     * @param length Length of edge geometry in meters.
      * @param geometry BaseRoad's geometry from source to target as {@link Polyline} object.
      */
     public BaseRoad(long id, long source, long target, long refId, boolean oneway,
@@ -64,15 +64,15 @@ public class BaseRoad {
     /**
      * Constructs {@link BaseRoad} object.
      *
-     * @param id Unique road identifier.
-     * @param source Source vertex identifier (in road topology representation).
-     * @param target Target vertex identifier (in road topology representation).
-     * @param osmId Identifier of corresponding OpenStreetMap road.
-     * @param oneway Indicator if this road is a one-way road.
+     * @param id Unique edge identifier.
+     * @param source Source vertex identifier (in edge topology representation).
+     * @param target Target vertex identifier (in edge topology representation).
+     * @param osmId Identifier of corresponding OpenStreetMap edge.
+     * @param oneway Indicator if this edge is a one-way edge.
      * @param priority BaseRoad priority factor, which is greater or equal than one.
-     * @param maxSpeedForward Maximum speed limit for passing this road from source to target.
-     * @param maxSpeedBackward Maximum speed limit for passing this road from target to source.
-     * @param length Length of road geometry in meters.
+     * @param maxSpeedForward Maximum speed limit for passing this edge from source to target.
+     * @param maxSpeedBackward Maximum speed limit for passing this edge from target to source.
+     * @param length Length of edge geometry in meters.
      * @param wkb BaseRoad's geometry in WKB format from source to target.
      */
     public BaseRoad(long id, long source, long target, long osmId, boolean oneway,
@@ -91,9 +91,9 @@ public class BaseRoad {
     }
 
     /**
-     * Gets unique road identifier.
+     * Gets unique edge identifier.
      *
-     * @return Unique road identifier.
+     * @return Unique edge identifier.
      */
     public long id() {
         return id;
@@ -118,13 +118,13 @@ public class BaseRoad {
     }
 
     /**
-     * Gets identifier of road reference from the source.
+     * Gets identifier of edge reference from the source.
      * <p>
-     * <b>Note:</b> A routable road map requires splitting of roads into segments to build a road
+     * <b>Note:</b> A routable edge map requires splitting of roads into segments to build a edge
      * topology (graph). Since OpenStreetMap roads span often roads over multiple intersections,
-     * they must be split into multiple road segments. Hence, it is a one-to-many relationship.
+     * they must be split into multiple edge segments. Hence, it is a one-to-many relationship.
      *
-     * @return Identifier of referred OpenStreetMap road.
+     * @return Identifier of referred OpenStreetMap edge.
      */
     public long refid() {
         return refId;
@@ -133,14 +133,14 @@ public class BaseRoad {
     /**
      * Gets a boolean if this is a one-way.
      *
-     * @return True if this road is a one-way road, false otherwise.
+     * @return True if this edge is a one-way edge, false otherwise.
      */
     public boolean oneway() {
         return oneway;
     }
 
     /**
-     * Gets road's priority factor, i.e. an additional cost factor for routing, and must be greater
+     * Gets edge's priority factor, i.e. an additional cost factor for routing, and must be greater
      * or equal to one. Higher priority factor means higher costs.
      *
      * @return BaseRoad's priority factor.
@@ -150,7 +150,7 @@ public class BaseRoad {
     }
 
     /**
-     * Gets road's maximum speed for respective heading in kilometers per hour.
+     * Gets edge's maximum speed for respective heading in kilometers per hour.
      *
      * @param heading {@link Heading} for which maximum speed must be returned.
      * @return Maximum speed in kilometers per hour.
@@ -160,7 +160,7 @@ public class BaseRoad {
     }
 
     /**
-     * Gets road length in meters.
+     * Gets edge length in meters.
      *
      * @return BaseRoad length in meters.
      */
@@ -169,7 +169,7 @@ public class BaseRoad {
     }
 
     /**
-     * Gets road's geometry as a {@link Polyline} from the road's source to its target.
+     * Gets edge's geometry as a {@link Polyline} from the edge's source to its target.
      *
      * @return BaseRoad's geometry as {@link Polyline} from source to target.
      */
@@ -179,10 +179,10 @@ public class BaseRoad {
     }
 
     /**
-     * Gets road's geometry as a {@link ByteBuffer} in WKB format from the road's source to its
+     * Gets edge's geometry as a {@link ByteBuffer} in WKB format from the edge's source to its
      * target.
      *
-     * @return BaseRoad's geometry as a {@link ByteBuffer} in WKB format from the road's source to its
+     * @return BaseRoad's geometry as a {@link ByteBuffer} in WKB format from the edge's source to its
      *         target.
      */
     public byte[] wkb() {

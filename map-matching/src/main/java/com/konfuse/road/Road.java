@@ -4,7 +4,7 @@ import com.esri.core.geometry.Polyline;
 import com.konfuse.topology.AbstractLink;
 
 /**
- * Directed road wrapper of {@link BaseRoad} objects in a directed road map ({@link RoadMap}). *
+ * Directed edge wrapper of {@link BaseRoad} objects in a directed edge map ({@link RoadMap}). *
  * <p>
  * <b>Note:</b> Since {@link Road} objects are directional representations of {@link BaseRoad}
  * objects, each {@link BaseRoad} is split into two {@link Road} objects. For that purpose, it uses
@@ -52,7 +52,7 @@ public class Road extends AbstractLink<Road> {
     }
 
     /**
-     * Gets road's priority factor, i.e. an additional cost factor for routing, and must be greater
+     * Gets edge's priority factor, i.e. an additional cost factor for routing, and must be greater
      * or equal to one. Higher priority factor means higher costs.
      *
      * @return Road's priority factor.
@@ -62,7 +62,7 @@ public class Road extends AbstractLink<Road> {
     }
 
     /**
-     * Gets road's maximum speed in kilometers per hour.
+     * Gets edge's maximum speed in kilometers per hour.
      *
      * @return Maximum speed in kilometers per hour.
      */
@@ -71,7 +71,7 @@ public class Road extends AbstractLink<Road> {
     }
 
     /**
-     * Gets road length in meters.
+     * Gets edge length in meters.
      *
      * @return Road length in meters.
      */
@@ -80,7 +80,7 @@ public class Road extends AbstractLink<Road> {
     }
 
     /**
-     * Gets road {@link Heading} relative to its {@link BaseRoad}.
+     * Gets edge {@link Heading} relative to its {@link BaseRoad}.
      *
      * @return Road's {@link Heading} relative to its {@link BaseRoad}.
      */
@@ -89,7 +89,7 @@ public class Road extends AbstractLink<Road> {
     }
 
     /**
-     * Gets road's geometry as a {@link Polyline} from the road's source to its target.
+     * Gets edge's geometry as a {@link Polyline} from the edge's source to its target.
      *
      * @return Road's geometry as {@link Polyline} from source to target.
      */

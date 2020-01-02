@@ -8,6 +8,7 @@ import com.konfuse.tools.GenerateTestGPSPoint;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @Author: Konfuse
@@ -21,11 +22,11 @@ public class TestRoadMap {
         map.construct();
         HashMap<Long, Road> roads = map.getRoads();
 //        for(Long id : roads.keySet()){
-//            Road road = roads.get(id);
-//            LinkedList<Point> points = (LinkedList)road.base().getPoints();
-//            System.out.println(id + ": " + road.source() + " " + road.target());
+//            Road edge = roads.get(id);
+//            LinkedList<Point> points = (LinkedList)edge.base().getPoints();
+//            System.out.println(id + ": " + edge.source() + " " + edge.target());
 //            System.out.println(id + ": " + points.getFirst() + " " + points.getLast());
-//            Iterator<Road> nextRoad = road.successors();
+//            Iterator<Road> nextRoad = edge.successors();
 //            System.out.println("************successor************");
 //            while (nextRoad.hasNext()) {
 //                Road successor = nextRoad.next();
@@ -35,19 +36,19 @@ public class TestRoadMap {
 //        }
 
         GenerateTestGPSPoint test = new GenerateTestGPSPoint();
-        LinkedList<GPSPoint> testRoads = (LinkedList)test.generateTestGPSPoint(map);
-        LinkedList<GPSPoint> testGPSPoint = (LinkedList)test.generateTestCase(testRoads);
-        System.out.println("************road***********");
+        List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
+        List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
+        System.out.println("************edge***********");
         for(GPSPoint point1 : testRoads){
-            Double x1 = new Double(point1.getPosition().getX());
-            Double y1 = new Double(point1.getPosition().getY());
+            double x1 = point1.getPosition().getX();
+            double y1 = point1.getPosition().getY();
             System.out.println(x1 + ";" + y1);
         }
         System.out.println("***************************");
         System.out.println("************test***********");
         for(GPSPoint point2 : testGPSPoint){
-            Double x2 = new Double(point2.getPosition().getX());
-            Double y2 = new Double(point2.getPosition().getY());
+            double x2 = point2.getPosition().getX();
+            double y2 = point2.getPosition().getY();
             System.out.println(x2 + ";" + y2);
         }
         System.out.println("***************************");

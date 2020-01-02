@@ -1,6 +1,7 @@
 package com.konfuse.road;
 
 import com.konfuse.topology.AbstractLink;
+import com.konfuse.topology.LocationOnEdge;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -14,20 +15,20 @@ import java.util.List;
  * @Date: 2020/1/1 15:08
  */
 public class Path<R extends AbstractLink<R>> {
-    private final LocationOnRoad<R> source;
-    private LocationOnRoad<R> target;
+    private final LocationOnEdge<R> source;
+    private LocationOnEdge<R> target;
     private final LinkedList<R> roads;
 
-    public Path(LocationOnRoad<R> single) {
+    public Path(LocationOnEdge<R> single) {
         this.source = single;
         this.target = single;
-        this.roads = new LinkedList<>(Arrays.asList(single.road()));
+        this.roads = new LinkedList<>(Arrays.asList(single.edge()));
         if (!valid()) {
             throw new RuntimeException("unvalid path");
         }
     }
 
-    public Path(LocationOnRoad<R> source, LocationOnRoad<R> target, List<R> roads) {
+    public Path(LocationOnEdge<R> source, LocationOnEdge<R> target, List<R> roads) {
         this.source = source;
         this.target = target;
         this.roads = new LinkedList<>(roads);
@@ -41,15 +42,15 @@ public class Path<R extends AbstractLink<R>> {
      * @return True if the path is valid, false otherwise.
      */
     private boolean valid() {
-        if (roads.getFirst().id() != source.road().id()) {
+        if (roads.getFirst().id() != source.edge().id()) {
             return false;
         }
 
-        if (roads.getLast().id() != target.road().id()) {
+        if (roads.getLast().id() != target.edge().id()) {
             return false;
         }
 
-        if (source.road().id() == target.road().id() && source.fraction() > target.fraction()
+        if (source.edge().id() == target.edge().id() && source.fraction() > target.fraction()
                 && roads.size() == 1) {
             return false;
         }
@@ -81,20 +82,20 @@ public class Path<R extends AbstractLink<R>> {
     }
 
     /**
-     * Gets the start/source {@link LocationOnRoad} of the path.
+     * Gets the start/source {@link LocationOnEdge} of the path.
      *
-     * @return Start/source {@link LocationOnRoad} of the path.
+     * @return Start/source {@link LocationOnEdge} of the path.
      */
-    public LocationOnRoad<R> source() {
+    public LocationOnEdge<R> source() {
         return source;
     }
 
     /**
-     * Gets end/target {@link LocationOnRoad} of the path.
+     * Gets end/target {@link LocationOnEdge} of the path.
      *
-     * @return End/target {@link LocationOnRoad} of the path.
+     * @return End/target {@link LocationOnEdge} of the path.
      */
-    public LocationOnRoad<R> target() {
+    public LocationOnEdge<R> target() {
         return target;
     }
 
@@ -105,22 +106,22 @@ public class Path<R extends AbstractLink<R>> {
      * @return True if path can be added, i.e. result is a valid path, false otherwise.
      */
     public boolean add(Path<R> other) {
-        if (target.road().id() != other.source.road().id()
-                && target.road().target() != other.source.road().source()) {
+        if (target.edge().id() != other.source.edge().id()
+                && target.edge().target() != other.source.edge().source()) {
             return false;
         }
 
-        if (target.road().id() == other.source.road().id()
+        if (target.edge().id() == other.source.edge().id()
                 && target.fraction() != other.source.fraction()) {
             return false;
         }
 
-        if (target.road().id() != other.source.road().id()
+        if (target.edge().id() != other.source.edge().id()
                 && (target.fraction() != 1 || other.source.fraction() != 0)) {
             return false;
         }
 
-        if (target.road().id() != other.source.road().id()) {
+        if (target.edge().id() != other.source.edge().id()) {
             roads.add(other.roads.getFirst());
         }
 

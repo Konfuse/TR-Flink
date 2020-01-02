@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 
 /**
- * Class representing the road segment extends DataObject and implements interface Serializable.
+ * Class representing the edge segment extends DataObject and implements interface Serializable.
  * x1, y1 is an end point of the line, x2, y2 is the other end point of the line.
  *
  *  Line should also implements interface org.apache.flink.types.Key.
@@ -130,7 +130,7 @@ public class Line extends DataObject implements Key<Line>, Serializable {
     }
 
     /**
-     * Get the endpoint of a road segment.
+     * Get the endpoint of a edge segment.
      * @return point[] a 2-size array containing two end points
      */
     public Point[] getEndPoints() {
@@ -146,7 +146,7 @@ public class Line extends DataObject implements Key<Line>, Serializable {
     }
 
     /**
-     * Get the center point of a road segment.
+     * Get the center point of a edge segment.
      * @return point[] a 2-size array containing two end points
      */
     public Point getCenterPoint() {

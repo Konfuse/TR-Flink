@@ -1,9 +1,7 @@
 package com.konfuse.tools;
 
-import com.konfuse.road.GPSPoint;
-import com.konfuse.road.LocationOnRoad;
-import com.konfuse.road.Road;
-import com.konfuse.road.RoadMap;
+import com.konfuse.road.*;
+import com.konfuse.topology.LocationOnEdge;
 import com.konfuse.topology.Cost;
 import com.konfuse.topology.Dijkstra;
 import net.sf.geographiclib.Geodesic;
@@ -22,11 +20,11 @@ public class GenerateTestGPSPoint {
     public List<GPSPoint> generateTestGPSPoint(RoadMap map){
         HashMap<Long, Road> roads = map.getRoads();
         Long[] keys = roads.keySet().toArray(new Long[0]);
-        Dijkstra dijkstra = new Dijkstra();
-        Cost cost = new Cost();
-        List<Road> path = new LinkedList<>();
+        Dijkstra<Road, RoadPoint> dijkstra = new Dijkstra<>();
+        Cost<Road> cost = new DistanceCost();
+        List<Road> path;
 
-        do{
+        do {
             Random random = new Random();
             Long sourceKey = keys[random.nextInt(keys.length)];
             Long targetKey = keys[random.nextInt(keys.length)];
@@ -34,9 +32,9 @@ public class GenerateTestGPSPoint {
             Road targetRoad = roads.get(targetKey);
             System.out.println(sourceRoad.source() + "->" + targetRoad.target());
             System.out.println(sourceRoad.id() + "->" + targetRoad.id());
-            LocationOnRoad<Road> sourceLocation = new LocationOnRoad<>(sourceRoad, 0);
-            LocationOnRoad<Road> targetLocation = new LocationOnRoad<>(targetRoad, 1);
-            path = dijkstra.shortestPath(sourceLocation, targetLocation, cost, 10000000000.0);
+            RoadPoint sourceLocation = new RoadPoint(sourceRoad, 0);
+            RoadPoint targetLocation = new RoadPoint(targetRoad, 1);
+            path = dijkstra.route(sourceLocation, targetLocation, cost);
             System.out.println("path size: "+ path.size());
         } while(path == null);
 

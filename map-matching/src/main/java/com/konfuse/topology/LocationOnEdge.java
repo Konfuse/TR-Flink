@@ -1,6 +1,4 @@
-package com.konfuse.road;
-
-import com.konfuse.topology.AbstractLink;
+package com.konfuse.topology;
 
 /**
  * Point in a directed {@link com.konfuse.topology.Graph} which is a point on an {@link AbstractLink} with a fraction in
@@ -10,19 +8,19 @@ import com.konfuse.topology.AbstractLink;
  * @Author: todd
  * @Date: 2019/12/31 14:15
  */
-public class LocationOnRoad<E extends AbstractLink<E>> {
-    private final E road;
+public class LocationOnEdge<E extends AbstractLink<E>> {
+    private final E edge;
     private final double fraction;
 
     /**
-     * Creates a {@link LocationOnRoad} object by reference to an {@link AbstractLink} and an exact position
+     * Creates a {@link LocationOnEdge} object by reference to an {@link AbstractLink} and an exact position
      * defined by a fraction.
      *
-     * @param road {@link AbstractLink} of the point in the graph.
+     * @param edge {@link AbstractLink} of the point in the graph.
      * @param fraction Fraction that defines the exact position on the {@link AbstractLink}.
      */
-    public LocationOnRoad(E road, double fraction) {
-        this.road = road;
+    public LocationOnEdge(E edge, double fraction) {
+        this.edge = edge;
         this.fraction = fraction;
     }
 
@@ -31,8 +29,8 @@ public class LocationOnRoad<E extends AbstractLink<E>> {
      *
      * @return {@link AbstractLink} of the point.
      */
-    public E road() {
-        return road;
+    public E edge() {
+        return edge;
     }
 
     /**

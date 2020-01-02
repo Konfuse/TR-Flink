@@ -6,12 +6,10 @@ import com.konfuse.road.Road;
  * @Author: Konfuse
  * @Date: 2020/1/2 14:09
  */
-public class Cost {
-    public double cost(Road road){
-        return road.length();
-    }
+public abstract class Cost<E extends AbstractLink<E>> {
+    public abstract double cost(E edge);
 
-    public double cost(Road road, double fraction) {
-        return cost(road) * fraction;
+    public double cost(E edge, double fraction) {
+        return cost(edge) * fraction;
     }
 }

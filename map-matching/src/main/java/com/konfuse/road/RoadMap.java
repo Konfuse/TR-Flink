@@ -48,28 +48,28 @@ public class RoadMap extends Graph<Road> {
             tree.clear();
         }
 
-        private Set<LocationOnRoad<Road>> split(Set<Tuple<Long, Double>> points) {
-            Set<LocationOnRoad<Road>> neighbors = new HashSet<>();
+        private Set<RoadPoint> split(Set<Tuple<Long, Double>> points) {
+            Set<RoadPoint> neighbors = new HashSet<>();
 
             for (Tuple<Long, Double> point : points) {
-                neighbors.add(new LocationOnRoad<Road>(getRoads().get(point.f0 * 2), point.f1));
+                neighbors.add(new RoadPoint(getRoads().get(point.f0 * 2), point.f1));
 
                 if (getRoads().containsKey(point.f0 * 2 + 1)) {
-                    neighbors.add(new LocationOnRoad<Road>(getRoads().get(point.f0 * 2 + 1), 1.0 - point.f1));
+                    neighbors.add(new RoadPoint(getRoads().get(point.f0 * 2 + 1), 1.0 - point.f1));
                 }
             }
 
             return neighbors;
         }
 
-        public Set<LocationOnRoad<Road>> radiusMatch(GPSPoint p, double r) {
+        public Set<RoadPoint> radiusMatch(GPSPoint p, double r) {
             Geography spatial = new Geography();
             ArrayList<DataObject> candidateObject = tree.circleRangeQuery(p.getPosition(), 25);
             if(candidateObject.isEmpty()){
                 System.out.println("No Candidate Road!");
                 return null;
             }
-            Set<LocationOnRoad<Road>> candidateRoads = new HashSet<>();
+            Set<RoadPoint> candidateRoads = new HashSet<>();
             Point q = new Point(p.getPosition().getX(), p.getPosition().getY());
             for (DataObject candidate : candidateObject){
                 Long id = candidate.getId();
@@ -80,7 +80,7 @@ public class RoadMap extends Graph<Road> {
                 double d = spatial.distance(e, q);
 
                 if (d < r) {
-                    candidateRoads.add(new LocationOnRoad<Road>(getRoads().get(id),fraction));
+                    candidateRoads.add(new RoadPoint(getRoads().get(id),fraction));
                 }
             }
             return candidateRoads;
@@ -121,13 +121,13 @@ public class RoadMap extends Graph<Road> {
 
         System.gc();
         memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) - memory;
-        System.out.println(Math.max(0, Math.round(memory / 1E6)) + " megabytes used for road data (estimate)");
+        System.out.println(Math.max(0, Math.round(memory / 1E6)) + " megabytes used for edge data (estimate)");
 
         return roadmap;
     }
 
     /**
-     * Constructs road network topology and spatial index.
+     * Constructs edge network topology and spatial index.
      */
     public RoadMap construct() {
         long memory = 0;
@@ -153,8 +153,8 @@ public class RoadMap extends Graph<Road> {
     }
 
     /**
-     * Destroys road network topology and spatial index. (Necessary if roads have been added and
-     * road network topology and spatial index must be reconstructed.)
+     * Destroys edge network topology and spatial index. (Necessary if roads have been added and
+     * edge network topology and spatial index must be reconstructed.)
      */
     public void deconstruct() {
         super.deconstruct();
