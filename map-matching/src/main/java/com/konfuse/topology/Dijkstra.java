@@ -63,6 +63,7 @@ public class Dijkstra {
         if(shortestPath == null){
             return Double.MAX_VALUE;
         }
+
         double pathDistance = 0.0;
         for(int i = 1; i < shortestPath.size() - 1; i++){
             pathDistance += shortestPath.get(i).length();
