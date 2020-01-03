@@ -11,7 +11,7 @@ import java.util.*;
  * @Date: 2019/12/31 16:10
  */
 public class Graph <E extends AbstractLink<E>>{
-    private final HashMap<Long, E> roads = new HashMap<>();
+    private final HashMap<Long, E> edges = new HashMap<>();
 
     /**
      * Adds an {@link AbstractLink} to the graph. (Requires construction.)
@@ -20,7 +20,7 @@ public class Graph <E extends AbstractLink<E>>{
      * @return Returns a self reference to this graph.
      */
     public Graph<E> add(E edge) {
-        roads.put(edge.id(), edge);
+        edges.put(edge.id(), edge);
         return this;
     }
 
@@ -30,7 +30,7 @@ public class Graph <E extends AbstractLink<E>>{
      * @param edge Edge to be removed.
      */
     public void remove(E edge) {
-        roads.remove(edge.id());
+        edges.remove(edge.id());
     }
 
     /**
@@ -40,7 +40,7 @@ public class Graph <E extends AbstractLink<E>>{
      * @return {@link AbstractLink} object if it is contained in the graph, otherwise returns null.
      */
     public E get(long id) {
-        return roads.get(id);
+        return edges.get(id);
     }
 
     /**
@@ -49,7 +49,7 @@ public class Graph <E extends AbstractLink<E>>{
      * @return Size of the graph, i.e. the number of edges.
      */
     public int size() {
-        return roads.size();
+        return edges.size();
     }
 
     /**
@@ -58,7 +58,7 @@ public class Graph <E extends AbstractLink<E>>{
      * @return Iterator over all edges of the graph.
      */
     public Iterator<E> edges() {
-        return roads.values().iterator();
+        return edges.values().iterator();
     }
 
     /**
@@ -69,7 +69,7 @@ public class Graph <E extends AbstractLink<E>>{
     public Graph<E> construct() {
         Map<Long, ArrayList<E>> map = new HashMap<>();
 
-        for (E edge : roads.values()) {
+        for (E edge : edges.values()) {
             if (!map.containsKey(edge.source())) {
                 map.put(edge.source(), new ArrayList<>(Arrays.asList(edge)));
             } else {
@@ -96,14 +96,14 @@ public class Graph <E extends AbstractLink<E>>{
      * Discards the network topology (used for reconstruction of the network topology).
      */
     public void deconstruct() {
-        for (E edge : roads.values()) {
+        for (E edge : edges.values()) {
             edge.successor(null);
             edge.neighbor(null);
         }
     }
 
-    public HashMap<Long, E> getRoads() {
-        return roads;
+    public HashMap<Long, E> getEdges() {
+        return edges;
     }
 
     /**
@@ -113,7 +113,7 @@ public class Graph <E extends AbstractLink<E>>{
      * @return Set of (weakly) connected components.
      */
     public Set<Set<E>> components() {
-        Set<E> unvisited = new HashSet<>(roads.values());
+        Set<E> unvisited = new HashSet<>(edges.values());
         Map<E, Integer> visited = new HashMap<>();
         Map<Integer, Set<E>> components = new HashMap<>();
         Queue<E> queue = new LinkedList<>();

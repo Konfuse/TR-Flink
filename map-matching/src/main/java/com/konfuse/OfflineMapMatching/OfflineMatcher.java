@@ -25,9 +25,9 @@ public class OfflineMatcher {
         ViterbiAlgorithm<RoadPoint, GPSPoint, Path<Road>> viterbi = new ViterbiAlgorithm<>();
         TimeStep<RoadPoint, GPSPoint, Path<Road>> prevTimeStep = null;
 
-        for (GPSPoint gps : gpsPoints) {
-            final Collection<RoadPoint> candidates = map.spatial().radiusMatch(gps, radius);
-            final TimeStep<RoadPoint, GPSPoint, Path<Road>> timeStep = new TimeStep<>(gps, candidates);
+        for (GPSPoint gpsPoint : gpsPoints) {
+            final Collection<RoadPoint> candidates = map.spatial().radiusMatch(gpsPoint, radius);
+            final TimeStep<RoadPoint, GPSPoint, Path<Road>> timeStep = new TimeStep<>(gpsPoint, candidates);
             computeEmissionProbabilities(timeStep);
             if (prevTimeStep == null) {
                 viterbi.startWithInitialObservation(timeStep.observation, timeStep.candidates, timeStep.emissionLogProbabilities);

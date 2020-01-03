@@ -7,7 +7,6 @@ import com.konfuse.road.RoadReader;
 import com.konfuse.tools.GenerateTestGPSPoint;
 
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -18,7 +17,7 @@ public class TestRoadMap {
     public static void main(String[] args) throws Exception{
         RoadMap map = RoadMap.Load(new RoadReader());
         map.construct();
-        HashMap<Long, Road> roads = map.getRoads();
+        HashMap<Long, Road> roads = map.getEdges();
 //        for(Long id : roads.keySet()){
 //            Road edge = roads.get(id);
 //            LinkedList<Point> points = (LinkedList)edge.base().getPoints();

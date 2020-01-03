@@ -1,7 +1,6 @@
 package com.konfuse.tools;
 
 import com.konfuse.road.*;
-import com.konfuse.topology.LocationOnEdge;
 import com.konfuse.topology.Cost;
 import com.konfuse.topology.Dijkstra;
 import net.sf.geographiclib.Geodesic;
@@ -18,7 +17,7 @@ import java.util.Random;
  */
 public class GenerateTestGPSPoint {
     public List<GPSPoint> generateTestGPSPoint(RoadMap map){
-        HashMap<Long, Road> roads = map.getRoads();
+        HashMap<Long, Road> roads = map.getEdges();
         Long[] keys = roads.keySet().toArray(new Long[0]);
         Dijkstra<Road, RoadPoint> dijkstra = new Dijkstra<>();
         Cost<Road> cost = new DistanceCost();

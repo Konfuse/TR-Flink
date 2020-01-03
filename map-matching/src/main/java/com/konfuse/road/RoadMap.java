@@ -4,7 +4,6 @@ import com.esri.core.geometry.*;
 import com.konfuse.IndexBuilder;
 import com.konfuse.RTree;
 import com.konfuse.geometry.DataObject;
-import com.konfuse.geometry.Line;
 import com.konfuse.geometry.Rectangle;
 import com.konfuse.internal.MBR;
 import com.konfuse.spatial.Geography;
@@ -56,10 +55,10 @@ public class RoadMap extends Graph<Road> {
             Set<RoadPoint> neighbors = new HashSet<>();
 
             for (Tuple<Long, Double> point : points) {
-                neighbors.add(new RoadPoint(getRoads().get(point.f0 * 2), point.f1));
+                neighbors.add(new RoadPoint(getEdges().get(point.f0 * 2), point.f1));
 
-                if (getRoads().containsKey(point.f0 * 2 + 1)) {
-                    neighbors.add(new RoadPoint(getRoads().get(point.f0 * 2 + 1), 1.0 - point.f1));
+                if (getEdges().containsKey(point.f0 * 2 + 1)) {
+                    neighbors.add(new RoadPoint(getEdges().get(point.f0 * 2 + 1), 1.0 - point.f1));
                 }
             }
 
@@ -77,7 +76,7 @@ public class RoadMap extends Graph<Road> {
                 for (DataObject candidate : candidateObject){
                     long id = candidate.getId();
                     Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
-                            WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getRoads().get(2 * id).base().wkb()), null);
+                            WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getEdges().get(2 * id).base().wkb()), null);
                     double fraction = spatial.intercept(geometry, q);
                     Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
                     double d = spatial.distance(e, q);
@@ -104,7 +103,7 @@ public class RoadMap extends Graph<Road> {
                 for (DataObject candidate : candidateObject){
                     long id = candidate.getId();
                     Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
-                            WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getRoads().get(2 * id).base().wkb()), null);
+                            WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getEdges().get(2 * id).base().wkb()), null);
                     double fraction = spatial.intercept(geometry, q);
                     Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
                     double d = spatial.distance(e, q);
@@ -174,7 +173,7 @@ public class RoadMap extends Graph<Road> {
         super.construct();
 
         index = new Index();
-        ArrayList<Road> roadList = new ArrayList<>(getRoads().values());
+        ArrayList<Road> roadList = new ArrayList<>(getEdges().values());
         index.put(roadList);
 
         System.out.println("index and topology constructed");

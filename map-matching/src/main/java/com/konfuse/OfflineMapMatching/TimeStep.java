@@ -70,8 +70,7 @@ public class TimeStep<S, O, D> {
     /**
      * Does not need to be called for non-existent transitions.
      */
-    public void addTransitionLogProbability(S fromPosition, S toPosition,
-            double transitionLogProbability) {
+    public void addTransitionLogProbability(S fromPosition, S toPosition, double transitionLogProbability) {
         final Transition<S> transition = new Transition<>(fromPosition, toPosition);
         if (transitionLogProbabilities.containsKey(transition)) {
             throw new IllegalArgumentException("Transition has already been added.");

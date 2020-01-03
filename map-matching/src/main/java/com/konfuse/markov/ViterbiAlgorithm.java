@@ -1,20 +1,3 @@
-/**
- * Copyright (C) 2015-2016, BMW Car IT GmbH and BMW AG
- * Author: Stefan Holder (stefan.holder@bmw.de)
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.konfuse.markov;
 
 import java.util.*;
@@ -70,9 +53,7 @@ public class ViterbiAlgorithm<S, O, D> {
         O observation;
         D transitionDescriptor;
 
-        ExtendedState(S state,
-                ExtendedState<S, O, D> backPointer,
-                O observation, D transitionDescriptor) {
+        ExtendedState(S state, ExtendedState<S, O, D> backPointer, O observation, D transitionDescriptor) {
             this.state = state;
             this.backPointer = backPointer;
             this.observation = observation;
@@ -206,17 +187,14 @@ public class ViterbiAlgorithm<S, O, D> {
      * each of the road position candidates.
      *
      * @throws NullPointerException if any emission probability is missing
-     *
      * @throws IllegalStateException if this method or
      * {@link #startWithInitialStateProbabilities(Collection, Map)}} has already been called
      */
-    public void startWithInitialObservation(O observation, Collection<S> candidates,
-            Map<S, Double> emissionLogProbabilities) {
+    public void startWithInitialObservation(O observation, Collection<S> candidates, Map<S, Double> emissionLogProbabilities) {
         initializeStateProbabilities(observation, candidates, emissionLogProbabilities);
 
         if (forwardBackward != null) {
-            forwardBackward.startWithInitialObservation(observation, candidates,
-                    Utils.logToNonLogProbabilities(emissionLogProbabilities));
+            forwardBackward.startWithInitialObservation(observation, candidates, Utils.logToNonLogProbabilities(emissionLogProbabilities));
         }
     }
 
@@ -368,8 +346,7 @@ public class ViterbiAlgorithm<S, O, D> {
     /**
      * @param observation Use only if HMM only starts with first observation.
      */
-    private void initializeStateProbabilities(O observation, Collection<S> candidates,
-            Map<S, Double> initialLogProbabilities) {
+    private void initializeStateProbabilities(O observation, Collection<S> candidates, Map<S, Double> initialLogProbabilities) {
         if (processingStarted()) {
             throw new IllegalStateException("Initial probabilities have already been set.");
         }
@@ -396,8 +373,7 @@ public class ViterbiAlgorithm<S, O, D> {
 
         lastExtendedStates = new LinkedHashMap<>();
         for (S candidate : candidates) {
-            lastExtendedStates.put(candidate,
-                    new ExtendedState<S, O, D>(candidate, null, observation, null));
+            lastExtendedStates.put(candidate, new ExtendedState<S, O, D>(candidate, null, observation, null));
         }
 
         prevCandidates = new ArrayList<>(candidates); // Defensive copy.
@@ -428,8 +404,7 @@ public class ViterbiAlgorithm<S, O, D> {
                 }
             }
             // Throws NullPointerException if curState is not stored in the map.
-            result.newMessage.put(curState, maxLogProbability
-                    + emissionLogProbabilities.get(curState));
+            result.newMessage.put(curState, maxLogProbability + emissionLogProbabilities.get(curState));
 
             // Note that maxPrevState == null if there is no transition with non-zero probability.
             // In this case curState has zero probability and will not be part of the most likely
@@ -515,6 +490,4 @@ public class ViterbiAlgorithm<S, O, D> {
         Collections.reverse(result);
         return result;
     }
-
-
 }
