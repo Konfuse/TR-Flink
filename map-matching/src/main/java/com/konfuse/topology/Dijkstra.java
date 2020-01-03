@@ -40,8 +40,7 @@ public class Dijkstra<E extends AbstractLink<E>, P extends LocationOnEdge<E>> {
         return ssmt(source, new HashSet<>(Arrays.asList(target)), cost, bound, max).get(target);
     }
 
-    private Map<P, List<E>> ssmt(P source, Set<P> targets, Cost<E> cost, Cost<E> bound,
-                                 Double max) {
+    private Map<P, List<E>> ssmt(P source, Set<P> targets, Cost<E> cost, Cost<E> bound, Double max) {
         Map<P, Tuple<P, List<E>>> map =
                 msmt(new HashSet<>(Arrays.asList(source)), targets, cost, bound, max);
         Map<P, List<E>> result = new HashMap<>();
@@ -51,8 +50,7 @@ public class Dijkstra<E extends AbstractLink<E>, P extends LocationOnEdge<E>> {
         return result;
     }
 
-    private Map<P, Tuple<P, List<E>>> msmt(final Set<P> sources, final Set<P> targets, Cost<E> cost,
-                                           Cost<E> bound, Double max) {
+    private Map<P, Tuple<P, List<E>>> msmt(final Set<P> sources, final Set<P> targets, Cost<E> cost, Cost<E> bound, Double max) {
 
         /*
          * Route mark representation.

@@ -5,6 +5,8 @@ import com.konfuse.IndexBuilder;
 import com.konfuse.RTree;
 import com.konfuse.geometry.DataObject;
 import com.konfuse.geometry.Line;
+import com.konfuse.geometry.Rectangle;
+import com.konfuse.internal.MBR;
 import com.konfuse.spatial.Geography;
 import com.konfuse.topology.Graph;
 import com.konfuse.util.Tuple;
@@ -25,7 +27,7 @@ public class RoadMap extends Graph<Road> {
 
         public void put(ArrayList<Road> roadList) {
             TreeSet<Long> ids = new TreeSet<>();
-            ArrayList<Line> lines = new ArrayList<>();
+            ArrayList<Rectangle> rectangles = new ArrayList<>();
             for(Road road : roadList){
                 Long id = road.base().id();
                 if (ids.contains(id)) {
@@ -35,13 +37,15 @@ public class RoadMap extends Graph<Road> {
                 Polyline geometry = road.base().geometry();
                 Envelope2D env = new Envelope2D();
                 geometry.queryEnvelope2D(env);
-                Line line = new Line(id, env.getLowerLeft().getX(), env.getUpperRight().getX(), env.getLowerLeft().getY(), env.getUpperRight().getY());
-                lines.add(line);
+                Rectangle rectangle = new Rectangle(id, env.getLowerLeft().getX(), env.getLowerLeft().getY(),
+                        env.getUpperRight().getX(), env.getUpperRight().getY());
+
+                rectangles.add(rectangle);
                 ids.add(id);
             }
-            int size = lines.size();
+            int size = rectangles.size();
             System.out.println(size);
-            this.tree = new IndexBuilder().createRTreeBySTR(lines.toArray(new Line[size]));
+            this.tree = new IndexBuilder().createRTreeBySTR(rectangles.toArray(new Rectangle[size]));
         }
 
         public void clear() {
@@ -62,28 +66,58 @@ public class RoadMap extends Graph<Road> {
             return neighbors;
         }
 
+        public Set<RoadPoint> boxMatch(GPSPoint p, double r) {
+            Geography spatial = new Geography();
+            Set<Tuple<Long, Double>> nearests = new HashSet<>();
+
+            do {
+                MBR query = spatial.envelopeToMBR(p.getPosition().getX(), p.getPosition().getY(), r);
+                ArrayList<DataObject> candidateObject = tree.boxRangeQuery(query);
+                Point q = new Point(p.getPosition().getX(), p.getPosition().getY());
+                for (DataObject candidate : candidateObject){
+                    Long id = candidate.getId();
+                    Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
+                            WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getRoads().get(id).base().wkb()), null);
+                    double fraction = spatial.intercept(geometry, q);
+                    Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
+                    double d = spatial.distance(e, q);
+
+                    if (d < r) {
+//                    candidateRoads.add(new RoadPoint(getRoads().get(id), fraction));
+                        nearests.add(new Tuple<>(id, fraction));
+                    }
+                }
+                r *= 2;
+            } while (nearests.isEmpty());
+
+            return split(nearests);
+        }
+
         public Set<RoadPoint> radiusMatch(GPSPoint p, double r) {
             Geography spatial = new Geography();
-            ArrayList<DataObject> candidateObject = tree.circleRangeQuery(p.getPosition(), 25);
-            if(candidateObject.isEmpty()){
-                System.out.println("No Candidate Road!");
-                return null;
-            }
-            Set<RoadPoint> candidateRoads = new HashSet<>();
-            Point q = new Point(p.getPosition().getX(), p.getPosition().getY());
-            for (DataObject candidate : candidateObject){
-                Long id = candidate.getId();
-                Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
-                        WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getRoads().get(id).base().wkb()), null);
-                double fraction = spatial.intercept(geometry, q);
-                Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
-                double d = spatial.distance(e, q);
+            Set<Tuple<Long, Double>> nearests = new HashSet<>();
 
-                if (d < r) {
-                    candidateRoads.add(new RoadPoint(getRoads().get(id),fraction));
+            do {
+                double radius = spatial.convertRadius(p.getPosition().getX(), p.getPosition().getY(), r);
+                ArrayList<DataObject> candidateObject = tree.circleRangeQuery(p.getPosition(), radius);
+                Point q = new Point(p.getPosition().getX(), p.getPosition().getY());
+                for (DataObject candidate : candidateObject){
+                    Long id = candidate.getId();
+                    Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
+                            WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getRoads().get(id).base().wkb()), null);
+                    double fraction = spatial.intercept(geometry, q);
+                    Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
+                    double d = spatial.distance(e, q);
+
+                    if (d < r) {
+//                    candidateRoads.add(new RoadPoint(getRoads().get(id), fraction));
+                        nearests.add(new Tuple<>(id, fraction));
+                    }
                 }
-            }
-            return candidateRoads;
+                r *= 2;
+            } while (nearests.isEmpty());
+
+            return split(nearests);
         }
     }
 

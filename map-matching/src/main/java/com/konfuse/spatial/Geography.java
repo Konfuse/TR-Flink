@@ -3,10 +3,13 @@ package com.konfuse.spatial;
 import com.esri.core.geometry.Envelope2D;
 import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
+import com.konfuse.internal.MBR;
 import net.sf.geographiclib.Geodesic;
 import net.sf.geographiclib.GeodesicData;
 
 /**
+ * spatial operations on geometries
+ *
  * @Author: Konfuse
  * @Date: 2020/1/1 19:51
  */
@@ -234,5 +237,27 @@ public class Geography {
         env.setCoords(xmin, ymin, xmax, ymax);
 
         return env;
+    }
+
+    public MBR envelopeToMBR(double x, double y, double radius) {
+        double ymax = Geodesic.WGS84.Direct(y, x, 0, radius).lat2;
+        double ymin = Geodesic.WGS84.Direct(y, x, -180, radius).lat2;
+        double xmax = Geodesic.WGS84.Direct(y, x, 90, radius).lon2;
+        double xmin = Geodesic.WGS84.Direct(y, x, -90, radius).lon2;
+
+        return new MBR(xmin, ymin, xmax, ymax);
+    }
+
+    public double convertRadius(double x, double y, double radius) {
+        double[] azis = new double[]{0, 90, -90, -180};
+        double r = Double.MIN_VALUE;
+
+        for (double azi : azis) {
+            GeodesicData pos = Geodesic.WGS84.Direct(y, x, azi, radius);
+            double dis = (pos.lon2 - x) * (pos.lon2 - x) + (pos.lat2 - y) * (pos.lat2 - y);
+            r = Math.max(dis, r);
+        }
+
+        return Math.sqrt(r);
     }
 }

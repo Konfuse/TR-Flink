@@ -2,7 +2,6 @@ package com.konfuse.road;
 
 import com.esri.core.geometry.Geometry.Type;
 import com.esri.core.geometry.*;
-import com.konfuse.geometry.Point;
 
 import java.nio.ByteBuffer;
 import java.util.LinkedList;

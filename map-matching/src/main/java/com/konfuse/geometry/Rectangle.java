@@ -17,6 +17,11 @@ public class Rectangle extends DataObject implements Serializable {
         this.mbr = mbr;
     }
 
+    public Rectangle(long id, double x1, double y1, double x2, double y2) {
+        super(id);
+        this.mbr = new MBR(x1, y1, x2, y2);
+    }
+
     @Override
     public double calDistance(Point point) {
         return mbr.calculateDistanceToBorder(point);

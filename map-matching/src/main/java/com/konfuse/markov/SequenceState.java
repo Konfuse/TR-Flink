@@ -50,6 +50,22 @@ public class SequenceState<S, O, D> {
         this.smoothingProbability = smoothingProbability;
     }
 
+    public S getState() {
+        return state;
+    }
+
+    public O getObservation() {
+        return observation;
+    }
+
+    public D getTransitionDescriptor() {
+        return transitionDescriptor;
+    }
+
+    public Double getSmoothingProbability() {
+        return smoothingProbability;
+    }
+
     @Override
     public String toString() {
         return "SequenceState{" +

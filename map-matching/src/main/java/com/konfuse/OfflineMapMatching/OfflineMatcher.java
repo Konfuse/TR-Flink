@@ -1,14 +1,14 @@
 package com.konfuse.OfflineMapMatching;
 
 import com.esri.core.geometry.Point;
+import com.konfuse.markov.SequenceState;
+import com.konfuse.markov.ViterbiAlgorithm;
 import com.konfuse.road.*;
 import com.konfuse.spatial.Geography;
 import com.konfuse.topology.Cost;
 import com.konfuse.topology.Dijkstra;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 
 /**
@@ -21,8 +21,31 @@ public class OfflineMatcher {
     public final Dijkstra<Road, RoadPoint> dijkstra = new Dijkstra<>();
     public final DistanceCost cost = new DistanceCost();
 
-    public Set<RoadPoint> computeCandidates(GPSPoint gps, double radius, RoadMap map) {
-        return map.spatial().radiusMatch(gps, radius);
+    public List<RoadPoint> match(List<GPSPoint> gpsPoints, RoadMap map, double radius) {
+        ViterbiAlgorithm<RoadPoint, GPSPoint, Path<Road>> viterbi = new ViterbiAlgorithm<>();
+        TimeStep<RoadPoint, GPSPoint, Path<Road>> prevTimeStep = null;
+
+        for (GPSPoint gps : gpsPoints) {
+            final Collection<RoadPoint> candidates = map.spatial().radiusMatch(gps, radius);
+            final TimeStep<RoadPoint, GPSPoint, Path<Road>> timeStep = new TimeStep<>(gps, candidates);
+            computeEmissionProbabilities(timeStep);
+            if (prevTimeStep == null) {
+                viterbi.startWithInitialObservation(timeStep.observation, timeStep.candidates, timeStep.emissionLogProbabilities);
+            } else {
+                computeTransitionProbabilities(prevTimeStep, timeStep);
+                viterbi.nextStep(timeStep.observation, timeStep.candidates,
+                        timeStep.emissionLogProbabilities, timeStep.transitionLogProbabilities,
+                        timeStep.roadPaths);
+            }
+            prevTimeStep = timeStep;
+        }
+
+        List<SequenceState<RoadPoint, GPSPoint, Path<Road>>> sequenceStates = viterbi.computeMostLikelySequence();
+        List<RoadPoint> matchedPoints = new LinkedList<>();
+        for (SequenceState<RoadPoint, GPSPoint, Path<Road>> sequenceState : sequenceStates) {
+            matchedPoints.add(sequenceState.getState());
+        }
+        return matchedPoints;
     }
 
     public void computeEmissionProbabilities(TimeStep<RoadPoint, GPSPoint, Path<Road>> timeStep) {
