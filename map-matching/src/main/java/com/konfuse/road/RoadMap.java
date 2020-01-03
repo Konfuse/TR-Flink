@@ -75,9 +75,9 @@ public class RoadMap extends Graph<Road> {
                 ArrayList<DataObject> candidateObject = tree.boxRangeQuery(query);
                 Point q = new Point(p.getPosition().getX(), p.getPosition().getY());
                 for (DataObject candidate : candidateObject){
-                    Long id = candidate.getId();
+                    long id = candidate.getId();
                     Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
-                            WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getRoads().get(id).base().wkb()), null);
+                            WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getRoads().get(2 * id).base().wkb()), null);
                     double fraction = spatial.intercept(geometry, q);
                     Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
                     double d = spatial.distance(e, q);
@@ -102,9 +102,9 @@ public class RoadMap extends Graph<Road> {
                 ArrayList<DataObject> candidateObject = tree.circleRangeQuery(p.getPosition(), radius);
                 Point q = new Point(p.getPosition().getX(), p.getPosition().getY());
                 for (DataObject candidate : candidateObject){
-                    Long id = candidate.getId();
+                    long id = candidate.getId();
                     Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
-                            WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getRoads().get(id).base().wkb()), null);
+                            WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getRoads().get(2 * id).base().wkb()), null);
                     double fraction = spatial.intercept(geometry, q);
                     Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
                     double d = spatial.distance(e, q);

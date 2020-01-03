@@ -32,9 +32,9 @@ public class Path<R extends AbstractLink<R>> {
         this.source = source;
         this.target = target;
         this.roads = new LinkedList<>(roads);
-        if (!valid()) {
-            throw new RuntimeException("unvalid path");
-        }
+//        if (!valid()) {
+//            throw new RuntimeException("unvalid path");
+//        }
     }
 
     /**
