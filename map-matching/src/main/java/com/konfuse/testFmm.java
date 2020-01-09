@@ -2,37 +2,40 @@ package com.konfuse;
 
 import com.esri.core.geometry.Point;
 import com.konfuse.OfflineMapMatching.OfflineMatcher;
-import com.konfuse.road.GPSPoint;
-import com.konfuse.road.RoadMap;
-import com.konfuse.road.RoadPoint;
-import com.konfuse.road.RoadReader;
+import com.konfuse.fmm.FmmMatcher;
+import com.konfuse.fmm.Record;
+import com.konfuse.road.*;
 import com.konfuse.spatial.Geography;
 import com.konfuse.tools.GenerateTestGPSPoint;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 /**
  * @Auther todd
- * @Date 2019/12/31
+ * @Date 2020/1/8
  */
-public class testOfflineMapMatching {
+public class testFmm {
     public static void main(String[] args) throws Exception{
         RoadMap map = RoadMap.Load(new RoadReader());
         map.construct();
-//        HashMap<Long, Road> roads = map.getRoads();
+
         Geography spatial = new Geography();
 
         GenerateTestGPSPoint test = new GenerateTestGPSPoint();
         List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
         List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
+        FmmMatcher fmmMatcher = new FmmMatcher(456101, 100000, 0.3);
+        fmmMatcher.constructUBODT(map, 1000);
 
-        OfflineMatcher offlineMatcher = new OfflineMatcher();
         Long start = System.currentTimeMillis();
-        List<RoadPoint> matchedRoadPoints = offlineMatcher.match(testGPSPoint, map, 20);
+        List<RoadPoint> matchedRoadPoints = fmmMatcher.match(testGPSPoint, map, 30);
         Long end = System.currentTimeMillis();
         Long search_time = end - start;
         System.out.println("Search time :" + search_time);
-
+        List<Road> c_path = fmmMatcher.constructCompletePathOptimized(matchedRoadPoints,  map);
+        List<GPSPoint> c_path_gps = fmmMatcher.getCompletePathGPS(c_path);
 
         System.out.println("************road***********");
         for(GPSPoint point1 : testRoads){
@@ -48,12 +51,19 @@ public class testOfflineMapMatching {
             System.out.println(x2 + ";" + y2);
         }
         System.out.println("***************************");
-        System.out.println("************match***********");
+        System.out.println("************matched***********");
         for (RoadPoint matchedRoadPoint : matchedRoadPoints) {
             Point point = matchedRoadPoint.point();
             System.out.println(point.getX() + ";" + point.getY());
         }
         System.out.println("***************************");
-    }
+        System.out.println("*******complete path*******");
 
+        for(GPSPoint point3 : c_path_gps){
+            double x3 = point3.getPosition().getX();
+            double y3 = point3.getPosition().getY();
+            System.out.println(x3 + ";" + y3);
+        }
+        System.out.println("***************************");
+    }
 }

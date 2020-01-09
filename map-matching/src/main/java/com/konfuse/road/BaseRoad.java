@@ -16,14 +16,14 @@ import java.util.List;
  * (e.g. {@link BaseRoad#length()} and {@link BaseRoad#geometry()}).
  *
  * @Author: todd
- * @Date: 2019/12/31 14:16
+ * @Date: 2019/12/31
  */
 public class BaseRoad {
     private final long id;
     private final long refId;
     private final long source;
     private final long target;
-    private final boolean oneway;
+    private final int oneway;
     private final float priority;
     private final float maxSpeedForward;
     private final float maxSpeedBackward;
@@ -44,20 +44,27 @@ public class BaseRoad {
      * @param length Length of edge geometry in meters.
      * @param geometry BaseRoad's geometry from source to target as {@link Polyline} object.
      */
-    public BaseRoad(long id, long source, long target, long refId, boolean oneway,
+    public BaseRoad(long id, long source, long target, long refId, int oneway,
                     float priority, float maxSpeedForward, float maxSpeedBackward, double length,
                     Polyline geometry) {
         this.id = id;
-        this.source = source;
-        this.target = target;
         this.refId = refId;
         this.oneway = oneway;
         this.priority = priority;
         this.maxSpeedForward = maxSpeedForward;
         this.maxSpeedBackward = maxSpeedBackward;
         this.length = length;
-        this.geometry = OperatorExportToWkb.local()
-                .execute(WkbExportFlags.wkbExportLineString, geometry, null).array();
+        if(oneway == -1){
+            this.source = target;
+            this.target = source;
+            Polyline poly = invert(geometry);
+            this.geometry = OperatorExportToWkb.local().execute(WkbExportFlags.wkbExportLineString, poly, null).array();
+        }else{
+            this.source = source;
+            this.target = target;
+            this.geometry = OperatorExportToWkb.local()
+                    .execute(WkbExportFlags.wkbExportLineString, geometry, null).array();
+        }
     }
 
     /**
@@ -74,19 +81,27 @@ public class BaseRoad {
      * @param length Length of edge geometry in meters.
      * @param wkb BaseRoad's geometry in WKB format from source to target.
      */
-    public BaseRoad(long id, long source, long target, long osmId, boolean oneway,
+    public BaseRoad(long id, long source, long target, long osmId, int oneway,
                     float priority, float maxSpeedForward, float maxSpeedBackward, double length,
                     byte[] wkb) {
         this.id = id;
-        this.source = source;
-        this.target = target;
         this.refId = osmId;
         this.oneway = oneway;
         this.priority = priority;
         this.maxSpeedForward = maxSpeedForward;
         this.maxSpeedBackward = maxSpeedBackward;
         this.length = length;
-        this.geometry = wkb;
+        if(oneway == -1){
+            this.source = target;
+            this.target = source;
+            Polyline poly = invert((Polyline) OperatorImportFromWkb.local().execute(WkbImportFlags.wkbImportDefaults,
+                    Type.Polyline, ByteBuffer.wrap(wkb), null));
+            this.geometry = OperatorExportToWkb.local().execute(WkbExportFlags.wkbExportLineString, poly, null).array();
+        }else{
+            this.source = source;
+            this.target = target;
+            this.geometry = wkb;
+        }
     }
 
     /**
@@ -134,7 +149,7 @@ public class BaseRoad {
      *
      * @return True if this edge is a one-way edge, false otherwise.
      */
-    public boolean oneway() {
+    public int oneway() {
         return oneway;
     }
 
@@ -188,13 +203,16 @@ public class BaseRoad {
         return geometry;
     }
 
-    public List<Point> getPoints() {
-        Polyline polyline = geometry();
-        List<Point> pointList = new LinkedList<>();
-        int pointSize = polyline.getPointCount();
-        for(int i = 0; i < pointSize; i++){
-            pointList.add(new Point(polyline.getPoint(i).getX(), polyline.getPoint(i).getY()));
+    public static Polyline invert(Polyline geometry) {
+        Polyline reverse = new Polyline();
+        int last = geometry.getPointCount() - 1;
+        reverse.startPath(geometry.getPoint(last));
+
+        for (int i = last - 1; i >= 0; --i) {
+            reverse.lineTo(geometry.getPoint(i));
         }
-        return pointList;
+
+        return reverse;
     }
+
 }

@@ -1,14 +1,17 @@
 package com.konfuse.topology;
 
 
+import com.konfuse.fmm.Record;
+import com.konfuse.road.Road;
+import com.konfuse.road.RoadMap;
 import com.konfuse.util.Quadruple;
 import com.konfuse.util.Tuple;
 
 import java.util.*;
 
 /**
- * @Author: Konfuse
- * @Date: 2020/1/2 12:37
+ * @Author: todd
+ * @Date: 2020/1/2
  */
 public class Dijkstra<E extends AbstractLink<E>, P extends LocationOnEdge<E>> {
     public List<E> route(P source, P target, Cost<E> cost) {
@@ -227,4 +230,62 @@ public class Dijkstra<E extends AbstractLink<E>, P extends LocationOnEdge<E>> {
 
         return paths;
     }
+
+
+
+//    public void calcAllShortestPathWithPredecessor(RoadMap map){
+//        HashMap<Long, HashMap<Long, PathTableEntry>> pathTable = new HashMap<>();
+//        HashMap<Road, DijkstraQueueEntry> queueEntry = new HashMap<>();
+//        HashMap<Long, Road> edges = map.getEdges();
+//        HashMap<Long, Road> nodes = new HashMap<>();
+//        for (Road source : edges.values()){
+//            nodes.put(source.source(), source);
+//        }
+//
+//        for(Long i : nodes.keySet()){
+//            HashMap<Long, PathTableEntry> t = new HashMap<>();
+//            for(Long j : nodes.keySet()){
+//                t.put(j, null);
+//            }
+//            pathTable.put(i, t);
+//        }
+//
+//        for (Map.Entry<Long, Road> i : nodes.entrySet()) {
+//            queueEntry.put(i.getValue(), new DijkstraQueueEntry(i.getKey(), i.getValue()));
+//        }
+//
+//        for (Long source : nodes.keySet()) {
+//            for(DijkstraQueueEntry entry : queueEntry.values()){
+//                entry.cost = Double.MAX_VALUE;
+//                entry.inQueue = true;
+//            }
+//            DijkstraQueueEntry sourceEntry = queueEntry.get(source);
+//            sourceEntry.cost = 0.0;
+//            pathTable.get(source).put(source, new PathTableEntry(0.0, source));
+//
+//            PriorityQueue<DijkstraQueueEntry> queue = new PriorityQueue<>(queueEntry.values());
+//
+//            while(!queue.isEmpty()){
+//                DijkstraQueueEntry entry = queue.poll();
+//                entry.inQueue = false;
+//
+//                Iterator<Road> roads =  entry.edge.nextEdges();
+//                while (roads.hasNext()){
+//                    Road successor = roads.next();
+//                    DijkstraQueueEntry v = queueEntry.get(successor);
+//                    if(!v.inQueue) {
+//                        continue;
+//                    }
+//                    double cost = entry.cost + successor.length();
+//                    if(v.cost > cost){
+//                        queue.remove(v);
+//                        v.cost = cost;
+//                        pathTable.get(source).put(v.edge.target(), new PathTableEntry(v.cost, entry.edge.source()));
+//                        queue.add(v);
+//                    }
+//                }
+//            }
+//        }
+//    }
+
 }

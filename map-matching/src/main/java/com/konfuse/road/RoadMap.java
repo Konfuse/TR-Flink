@@ -15,8 +15,8 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
- * @Author: Konfuse
- * @Date: 2020/1/1 17:42
+ * @Author: todd
+ * @Date: 2020/1/1
  */
 public class RoadMap extends Graph<Road> {
     private transient Index index = null;
@@ -123,10 +123,11 @@ public class RoadMap extends Graph<Road> {
     private static Collection<Road> split(BaseRoad base) {
         ArrayList<Road> roads = new ArrayList<>();
 
-        roads.add(new Road(base, Heading.forward));
-
-        if (!base.oneway()) {
+        if(base.oneway() == 0 || base.oneway() == 2){
+            roads.add(new Road(base, Heading.forward));
             roads.add(new Road(base, Heading.backward));
+        }else{
+            roads.add(new Road(base, Heading.forward));
         }
 
         return roads;
@@ -162,6 +163,7 @@ public class RoadMap extends Graph<Road> {
     /**
      * Constructs edge network topology and spatial index.
      */
+    @Override
     public RoadMap construct() {
         long memory = 0;
 
@@ -180,7 +182,7 @@ public class RoadMap extends Graph<Road> {
 
         System.gc();
         memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) - memory;
-        System.out.println(Math.max(0, Math.round(memory / 1E6)) + " megabytes used for spatial index (estimate)" );
+        System.out.println(Math.max(0, Math.round(memory)) + " bits used for spatial index (estimate)" );
 
         return this;
     }
@@ -189,6 +191,7 @@ public class RoadMap extends Graph<Road> {
      * Destroys edge network topology and spatial index. (Necessary if roads have been added and
      * edge network topology and spatial index must be reconstructed.)
      */
+    @Override
     public void deconstruct() {
         super.deconstruct();
         index.clear();
@@ -196,8 +199,7 @@ public class RoadMap extends Graph<Road> {
     }
 
     public Index spatial() {
-        if (index == null)
-            throw new RuntimeException("index not constructed");
+        if (index == null){ throw new RuntimeException("index not constructed");}
         return index;
     }
 }

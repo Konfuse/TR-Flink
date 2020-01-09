@@ -5,7 +5,7 @@ import java.util.Iterator;
 
 /**
  * @Author: todd
- * @Date: 2019/12/30 17:07
+ * @Date: 2019/12/30
  */
 public abstract class AbstractLink<E extends AbstractLink<E>> implements Serializable {
     private transient E successor = null;
@@ -90,6 +90,38 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
                 }
                 E next = iterator;
                 iterator = iterator.neighbor() == successor ? null : iterator.neighbor();
+
+                return next;
+            }
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    /**
+     * Gets iterator over the link's successor edges.
+     *
+     * @return Iterator over the edge's successor edges.
+     */
+    public Iterator<E> nextEdges() {
+        return new Iterator<E>() {
+            E neighbor = neighbor();
+            E iterator = neighbor;
+
+            @Override
+            public boolean hasNext() {
+                return (iterator != null);
+            }
+
+            @Override
+            public E next() {
+                if (iterator == null){
+                    return null;
+                }
+                E next = iterator;
+                iterator = iterator.neighbor() == neighbor ? null : iterator.neighbor();
 
                 return next;
             }

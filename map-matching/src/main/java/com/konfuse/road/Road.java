@@ -1,7 +1,11 @@
 package com.konfuse.road;
 
+import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
 import com.konfuse.topology.AbstractLink;
+
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Directed edge wrapper of {@link BaseRoad} objects in a directed edge map ({@link RoadMap}). *
@@ -12,8 +16,8 @@ import com.konfuse.topology.AbstractLink;
  * {@link Road} objects, where <i>i * 2</i> is the identifier of the forward directed {@link Road}
  * and <i>i * 2 + 1</i> of the backward directed {@link Road}.
  *
- * @Author: Konfuse
- * @Date: 2020/1/1 17:43
+ * @Author: todd
+ * @Date: 2020/1/1
  */
 public class Road extends AbstractLink<Road> {
     private final BaseRoad base;
@@ -104,5 +108,15 @@ public class Road extends AbstractLink<Road> {
      */
     public BaseRoad base() {
         return base;
+    }
+
+    public List<Point> getPoints() {
+        Polyline polyline = geometry();
+        List<Point> pointList = new LinkedList<>();
+        int pointSize = polyline.getPointCount();
+        for(int i = 0; i < pointSize; i++){
+            pointList.add(new Point(polyline.getPoint(i).getX(), polyline.getPoint(i).getY()));
+        }
+        return pointList;
     }
 }

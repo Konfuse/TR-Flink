@@ -1,8 +1,8 @@
 package com.konfuse.topology;
 
 /**
- * @Author: Konfuse
- * @Date: 2019/12/31 15:19
+ * @Author: todd
+ * @Date: 2019/12/31
  */
 public class Edge extends AbstractLink<Edge> {
     private final long id;

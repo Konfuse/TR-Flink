@@ -1,5 +1,6 @@
 package com.konfuse.tools;
 
+import com.esri.core.geometry.Point;
 import com.konfuse.road.*;
 import com.konfuse.topology.Cost;
 import com.konfuse.topology.Dijkstra;
@@ -13,7 +14,7 @@ import java.util.Random;
 
 /**
  * @Author: todd
- * @Date: 2020/1/2 14:53
+ * @Date: 2020/1/2
  */
 public class GenerateTestGPSPoint {
     public List<GPSPoint> generateTestGPSPoint(RoadMap map){
@@ -34,7 +35,6 @@ public class GenerateTestGPSPoint {
             RoadPoint sourceLocation = new RoadPoint(sourceRoad, 0);
             RoadPoint targetLocation = new RoadPoint(targetRoad, 1);
             path = dijkstra.route(sourceLocation, targetLocation, cost);
-            System.out.println("path size: "+ path.size());
         } while(path == null);
 
         long count = 0;
@@ -47,18 +47,54 @@ public class GenerateTestGPSPoint {
         return testRoads;
     }
 
+    public List<GPSPoint> generateTestGPSPointbyLine(RoadMap map){
+        HashMap<Long, Road> roads = map.getEdges();
+        Long[] keys = roads.keySet().toArray(new Long[0]);
+        Dijkstra<Road, RoadPoint> dijkstra = new Dijkstra<>();
+        Cost<Road> cost = new DistanceCost();
+        List<Road> path;
+
+        do {
+            Random random = new Random();
+            Long sourceKey = keys[random.nextInt(keys.length)];
+            Long targetKey = keys[random.nextInt(keys.length)];
+            Road sourceRoad = roads.get(sourceKey);
+            Road targetRoad = roads.get(targetKey);
+            System.out.println(sourceRoad.source() + "->" + targetRoad.target());
+            System.out.println(sourceRoad.id() + "->" + targetRoad.id());
+            RoadPoint sourceLocation = new RoadPoint(sourceRoad, 0);
+            RoadPoint targetLocation = new RoadPoint(targetRoad, 1);
+            path = dijkstra.route(sourceLocation, targetLocation, cost);
+        } while(path == null);
+
+        long count = 0;
+        List<GPSPoint> testRoads = new LinkedList<>();
+        for(Road road : path){
+            List<Point>  points = road.getPoints();
+            if(count == 0){
+                points = points.subList(1, points.size() - 1);
+                for (Point point : points) {
+                    testRoads.add(new GPSPoint(count++, point.getX(), point.getY()));
+                }
+            }
+            else{
+                for (Point point : points) {
+                    testRoads.add(new GPSPoint(count++, point.getX(), point.getY()));
+                }
+            }
+        }
+
+        return testRoads;
+    }
+
     public List<GPSPoint> generateTestCase(List<GPSPoint> testRoads){
         LinkedList<GPSPoint> testCase = new LinkedList<>();
         for(GPSPoint testRoad : testRoads){
-            double offset = Math.abs(NormalDistribution(0, 50));
+            double offset = 5 * Math.abs(NormalDistribution(0, 4.07));
             Random random = new Random();
             int randomNum = random.nextInt(360 - 1);
             GeodesicData data= Geodesic.WGS84.Direct(testRoad.getPosition().getY() , testRoad.getPosition().getX(), randomNum, offset);
             testCase.add(new GPSPoint(testRoad.getTime(), data.lon2, data.lat2));
-            System.out.println(offset);
-            System.out.println(randomNum);
-            System.out.println("original point" + testRoad.getPosition().getX() + "," + testRoad.getPosition().getY());
-            System.out.println("changed point" + data.lon2 + "," + data.lat2);
         }
         return testCase;
     }

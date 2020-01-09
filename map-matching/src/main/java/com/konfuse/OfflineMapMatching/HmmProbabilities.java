@@ -44,6 +44,15 @@ public class HmmProbabilities {
     }
 
     /**
+     * Returns the emission probability.
+     *
+     * @param distance Absolute distance [m] between GPS measurement and map matching candidate.
+     */
+    public double emissionProbability(double distance) {
+        return Distributions.normalDistribution(sigma, distance);
+    }
+
+    /**
      * Returns the logarithmic transition probability density for the given transition
      * parameters.
      *
