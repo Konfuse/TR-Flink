@@ -1,8 +1,8 @@
 package com.konfuse.fmm;
 
 import com.esri.core.geometry.Point;
-import com.konfuse.OfflineMapMatching.HmmProbabilities;
-import com.konfuse.OfflineMapMatching.TimeStep;
+import com.konfuse.hmm.HmmProbabilities;
+import com.konfuse.hmm.TimeStep;
 import com.konfuse.markov.SequenceState;
 import com.konfuse.markov.ViterbiAlgorithm;
 import com.konfuse.road.*;
