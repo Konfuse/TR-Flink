@@ -43,8 +43,20 @@ public class RTree<T extends DataObject> implements Serializable {
         this.entryCount = entryCount;
     }
 
+    public void setRoot(TreeNode root) {
+        this.root = root;
+    }
+
     public TreeNode getRoot() {
         return root;
+    }
+
+    public void setMaxNodeNb(int maxNodeNb) {
+        this.maxNodeNb = maxNodeNb;
+    }
+
+    public void setMinNodeNb(int minNodeNb) {
+        this.minNodeNb = minNodeNb;
     }
 
     public long getEntryCount() {
