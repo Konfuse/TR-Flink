@@ -10,4 +10,5 @@ gen
 *.model
 
 *.txt
+target
 Test.java
