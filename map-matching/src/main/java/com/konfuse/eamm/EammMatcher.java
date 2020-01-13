@@ -1,4 +1,5 @@
 package com.konfuse.eamm;
+
 import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.OperatorImportFromWkb;
 import com.esri.core.geometry.Polyline;
@@ -10,11 +11,8 @@ import com.konfuse.hmm.HmmProbabilities;
 import com.konfuse.road.*;
 import com.konfuse.spatial.Geography;
 import com.konfuse.topology.Dijkstra;
-import com.konfuse.topology.LocationOnEdge;
 
-import java.lang.Math;
 import java.nio.ByteBuffer;
-import java.sql.Time;
 import java.util.*;
 
 /**
@@ -130,11 +128,11 @@ public class EammMatcher {
 
             for (Long edgeId : C.get(i)) {
                 Road road = map.getEdges().get(edgeId);
-                com.esri.core.geometry.Point q = new com.esri.core.geometry.Point(gpsPointCurrent.getPosition().getX(), gpsPointCurrent.getPosition().getY());
+                Point q = new Point(gpsPointCurrent.getPosition().getX(), gpsPointCurrent.getPosition().getY());
                 Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
                         WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(road.base().wkb()), null);
                 double fraction = spatial.intercept(geometry, q);
-                com.esri.core.geometry.Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
+                Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
                 double d = spatial.distance(e, q);
 
                 if(d > 18.0){
@@ -151,9 +149,9 @@ public class EammMatcher {
                 GPSPoint gpsPointLast = gpsPoints.get(i - 1);
                 for (Long edgeId : result) {
                     Road road = map.getEdges().get(edgeId);
-                    List<com.esri.core.geometry.Point> points = road.getPoints();
-                    com.esri.core.geometry.Point source = points.get(0);
-                    com.esri.core.geometry.Point target = points.get(points.size() - 1);
+                    List<Point> points = road.getPoints();
+                    Point source = points.get(0);
+                    Point target = points.get(points.size() - 1);
 
                     double degree = getDegree(new Point(source.getX(), source.getY()), new Point(target.getX(), target.getY()),
                             new Point(gpsPointLast.getPosition().getX(), gpsPointLast.getPosition().getY()),
@@ -175,19 +173,19 @@ public class EammMatcher {
                     for (Long edgeId : C.get(i)) {
 
                         Road road = map.getEdges().get(edgeId);
-                        List<com.esri.core.geometry.Point> points = road.getPoints();
-                        com.esri.core.geometry.Point source = points.get(0);
-                        com.esri.core.geometry.Point target = points.get(points.size() - 1);
+                        List<Point> points = road.getPoints();
+                        Point source = points.get(0);
+                        Point target = points.get(points.size() - 1);
 
                         double degree = getDegree(new Point(source.getX(), source.getY()), new Point(target.getX(), target.getY()),
                                 new Point(gpsPointLast.getPosition().getX(), gpsPointLast.getPosition().getY()),
                                 new Point(gpsPointCurrent.getPosition().getX(), gpsPointCurrent.getPosition().getY()));
 
-                        com.esri.core.geometry.Point q = new com.esri.core.geometry.Point(gpsPointCurrent.getPosition().getX(), gpsPointCurrent.getPosition().getY());
+                        Point q = new Point(gpsPointCurrent.getPosition().getX(), gpsPointCurrent.getPosition().getY());
                         Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
                                 WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(road.base().wkb()), null);
                         double fraction = spatial.intercept(geometry, q);
-                        com.esri.core.geometry.Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
+                        Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
                         double distance = spatial.distance(e, q);
 
                         double score = getScore(degree, distance);
@@ -222,7 +220,7 @@ public class EammMatcher {
             if(i == 0){
                 for (Long edgeId : edgeIds) {
                     Road road = map.getEdges().get(edgeId);
-                    com.esri.core.geometry.Point q = new com.esri.core.geometry.Point(gpsPoints.get(i).getPosition().getX(), gpsPoints.get(i).getPosition().getY());
+                    Point q = new Point(gpsPoints.get(i).getPosition().getX(), gpsPoints.get(i).getPosition().getY());
                     Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
                             WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(road.base().wkb()), null);
                     double fraction = spatial.intercept(geometry, q);
@@ -235,7 +233,7 @@ public class EammMatcher {
             }else{
                 for (Long edgeId : edgeIds) {
                     Road road = map.getEdges().get(edgeId);
-                    com.esri.core.geometry.Point q = new com.esri.core.geometry.Point(gpsPoints.get(i).getPosition().getX(), gpsPoints.get(i).getPosition().getY());
+                    Point q = new Point(gpsPoints.get(i).getPosition().getX(), gpsPoints.get(i).getPosition().getY());
                     Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
                             WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(road.base().wkb()), null);
                     double fraction = spatial.intercept(geometry, q);

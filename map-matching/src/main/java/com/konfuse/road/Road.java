@@ -1,7 +1,7 @@
 package com.konfuse.road;
 
-import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
+import com.konfuse.geometry.Point;
 import com.konfuse.topology.AbstractLink;
 
 import java.util.LinkedList;

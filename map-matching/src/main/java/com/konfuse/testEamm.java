@@ -1,8 +1,8 @@
 package com.konfuse;
 
-import com.esri.core.geometry.Point;
 import com.konfuse.eamm.EammMatcher;
 import com.konfuse.fmm.FmmMatcher;
+import com.konfuse.geometry.Point;
 import com.konfuse.geometry.Rectangle;
 import com.konfuse.road.*;
 import com.konfuse.spatial.Geography;
@@ -87,7 +87,7 @@ public class testEamm {
         System.out.println("***************************");
         System.out.println("************matched***********");
         for (RoadPoint matchedRoadPoint : matchedRoadPoints) {
-            com.esri.core.geometry.Point point = matchedRoadPoint.point();
+            Point point = matchedRoadPoint.point();
             System.out.println(point.getX() + ";" + point.getY());
         }
         System.out.println("***************************");

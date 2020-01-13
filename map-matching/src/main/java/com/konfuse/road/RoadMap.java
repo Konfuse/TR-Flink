@@ -4,6 +4,7 @@ import com.esri.core.geometry.*;
 import com.konfuse.IndexBuilder;
 import com.konfuse.RTree;
 import com.konfuse.geometry.DataObject;
+import com.konfuse.geometry.Point;
 import com.konfuse.geometry.Rectangle;
 import com.konfuse.internal.MBR;
 import com.konfuse.spatial.Geography;

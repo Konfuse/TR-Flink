@@ -1,8 +1,8 @@
 package com.konfuse.spatial;
 
 import com.esri.core.geometry.Envelope2D;
-import com.esri.core.geometry.Point;
 import com.esri.core.geometry.Polyline;
+import com.konfuse.geometry.Point;
 import com.konfuse.internal.MBR;
 import net.sf.geographiclib.Geodesic;
 import net.sf.geographiclib.GeodesicData;
@@ -14,6 +14,10 @@ import net.sf.geographiclib.GeodesicData;
  * @Date: 2020/1/1 19:51
  */
 public class Geography {
+    public Point getPointInPolyLine(Polyline polyline, int index) {
+        return new Point(polyline.getPoint(index).getX(), polyline.getPoint(index).getY());
+    }
+
     /**
      * Gets the distance between two {@link Point}s <i>a</i> and <i>b</i>.
      *
@@ -92,7 +96,9 @@ public class Geography {
         double d = 0;
 
         for (int i = 1; i < p.getPointCount(); ++i) {
-            d += distance(p.getPoint(i - 1), p.getPoint(i));
+            Point a = getPointInPolyLine(p, i - 1);
+            Point b = getPointInPolyLine(p, i);
+            d += distance(a, b);
         }
 
         return d;
@@ -110,11 +116,11 @@ public class Geography {
      */
     public double intercept(Polyline p, Point c) {
         double d = Double.MAX_VALUE;
-        Point a = p.getPoint(0);
+        Point a = getPointInPolyLine(p, 0);
         double s = 0, sf = 0, ds = 0;
 
         for (int i = 1; i < p.getPointCount(); ++i) {
-            Point b = p.getPoint(i);
+            Point b = getPointInPolyLine(p, i);
 
             ds = distance(a, b);
 
@@ -165,20 +171,20 @@ public class Geography {
     public Point interpolate(Polyline p, double l, double f) {
         assert (f >= 0 && f <= 1);
 
-        Point a = p.getPoint(0);
+        Point a = getPointInPolyLine(p, 0);
         double d = l * f;
         double s = 0, ds = 0;
 
         if (f < 0 + 1E-10) {
-            return p.getPoint(0);
+            return getPointInPolyLine(p, 0);
         }
 
         if (f > 1 - 1E-10) {
-            return p.getPoint(p.getPointCount() - 1);
+            return getPointInPolyLine(p, p.getPointCount() - 1);
         }
 
         for (int i = 1; i < p.getPointCount(); ++i) {
-            Point b = p.getPoint(i);
+            Point b = getPointInPolyLine(p, i);
             ds = distance(a, b);
 
             if ((s + ds) >= d) {
@@ -199,20 +205,20 @@ public class Geography {
     public double azimuth(Polyline p, double l, double f) {
         assert (f >= 0 && f <= 1);
 
-        Point a = p.getPoint(0);
+        Point a = getPointInPolyLine(p, 0);
         double d = l * f;
         double s = 0, ds = 0;
 
         if (f < 0 + 1E-10) {
-            return azimuth(p.getPoint(0), p.getPoint(1), 0);
+            return azimuth(getPointInPolyLine(p, 0), getPointInPolyLine(p, 1), 0);
         }
 
         if (f > 1 - 1E-10) {
-            return azimuth(p.getPoint(p.getPointCount() - 2), p.getPoint(p.getPointCount() - 1), f);
+            return azimuth(getPointInPolyLine(p, p.getPointCount() - 2), getPointInPolyLine(p, p.getPointCount() - 1), f);
         }
 
         for (int i = 1; i < p.getPointCount(); ++i) {
-            Point b = p.getPoint(i);
+            Point b = getPointInPolyLine(p, i);
             ds = distance(a, b);
 
             if ((s + ds) >= d) {

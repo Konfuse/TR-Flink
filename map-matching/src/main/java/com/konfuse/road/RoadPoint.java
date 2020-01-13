@@ -1,6 +1,7 @@
 package com.konfuse.road;
 
-import com.esri.core.geometry.Point;
+
+import com.konfuse.geometry.Point;
 import com.konfuse.spatial.Geography;
 import com.konfuse.topology.LocationOnEdge;
 

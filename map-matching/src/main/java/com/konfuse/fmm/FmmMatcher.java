@@ -1,6 +1,6 @@
 package com.konfuse.fmm;
 
-import com.esri.core.geometry.Point;
+import com.konfuse.geometry.Point;
 import com.konfuse.hmm.HmmProbabilities;
 import com.konfuse.hmm.TimeStep;
 import com.konfuse.markov.SequenceState;
@@ -240,7 +240,7 @@ public class FmmMatcher {
         List<GPSPoint> completePathCoordinate = new LinkedList<>();
         int count = 0;
         for(Road road : c_path){
-            List<Point>  points = road.getPoints();
+            List<Point> points = road.getPoints();
             if(count == 0){
                 points = points.subList(0, points.size() - 2);
                 for (Point point : points) {

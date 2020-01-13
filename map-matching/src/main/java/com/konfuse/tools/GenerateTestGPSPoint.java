@@ -1,6 +1,6 @@
 package com.konfuse.tools;
 
-import com.esri.core.geometry.Point;
+import com.konfuse.geometry.Point;
 import com.konfuse.road.*;
 import com.konfuse.topology.Cost;
 import com.konfuse.topology.Dijkstra;

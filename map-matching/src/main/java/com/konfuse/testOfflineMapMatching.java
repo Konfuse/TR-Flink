@@ -1,6 +1,6 @@
 package com.konfuse;
 
-import com.esri.core.geometry.Point;
+import com.konfuse.geometry.Point;
 import com.konfuse.hmm.OfflineMatcher;
 import com.konfuse.road.GPSPoint;
 import com.konfuse.road.RoadMap;

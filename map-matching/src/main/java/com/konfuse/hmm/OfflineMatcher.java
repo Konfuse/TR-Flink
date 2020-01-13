@@ -1,6 +1,6 @@
 package com.konfuse.hmm;
 
-import com.esri.core.geometry.Point;
+import com.konfuse.geometry.Point;
 import com.konfuse.markov.SequenceState;
 import com.konfuse.markov.ViterbiAlgorithm;
 import com.konfuse.road.*;
