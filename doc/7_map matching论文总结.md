@@ -203,7 +203,7 @@ HMM公式：
 
 1. 预计算部分、
   
-   最短路径的计算：论文中的方法是遍历图中的每一个点，将该点到其他点小于一个阈值$\delta$的最短路径信息(SP)存储到一张表Upper Bounded Origin Destination Table(UBODT)中。其每一条信息的存储方式如下：$R(n_o, n_d) = (n_o, n_d, next_n, next_e, prev_n, dist)$。在这里$n_o, n_d$指代起始点和末点的id号，$next_n, next_e, prev_n$指代在这个路径中(way)起始点的下一个的点的id、起始点指向的边的id和路径中末点之前点的id。SP信息由Dijkstra算法生成。最终UBODT存储成hash table形式，其对应关系是：$h = (n_o*M + n_d) mod H$。因此任意两点之间的最短径可以通过之前存储的信息以递归的方式获得。如果没有找到最短路径，此时才调用Dijkstra算法进行查找(对于长度大于阈值的情况，作者列出了4种情况去计算)。
+   最短路径的计算：论文中的方法是遍历图中的每一个点，将该点到其他点小于一个阈值$\delta$的最短路径信息(SP)存储到一张表Upper Bounded Origin Destination Table(UBODT)中。其每一条信息的存储方式如下：$R(n_o, n_d) = (n_o, n_d, next_n, next_e, prev_n, dist)$。在这里$n_o, n_d$指代起始点和末点的id号，$next_n, next_e, prev_n$指代在这个路径中(way)起始点的下一个的点的id、起始点指向的边的id和路径中末点之前点的id。SP信息由Dijkstra算法生成。最终UBODT存储成hash table形式，其对应关系是：$h = (n_o*M + n_d) mod H$。因此任意两点之间的最短径长度可以通过之前存储的信息以递归的方式获得。如果没有找到最短路径长度，此时才采取其他策略（设置为最大值或利用dijkstra来进行计算）。
 
 2. 隐式马尔科夫过程
 
@@ -219,12 +219,12 @@ HMM公式：
 
    ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/FMM_GPS_candidate.png)
 
-   文章中转移概率如下，使得第一种情况小于1，第二三种情况等于0。
+   文章中转移概率如下，第一种情况概率值小于1，第二三种情况概率值等于0。
    ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/FMM_TRANSITION.png)
 
-   论文中的观测概率依旧如HMM中的标准正太分布一样。最终可以通过viterbi算法得到最优的匹配路径OPI。
+   论文中的观测概率依旧如HMM中的标准正态分布一样。最终可以通过viterbi算法得到最优的匹配路径（OPI）。
 
-   (4) 在找到最优的匹配路径后OPI，作者希望找到一整条完整的路径CPI（通过OPI）。作者整个查询的过程中只在这里才使用最短路径的计算。前面的最短路径都是通过预计算得到的，这样就节省了时间。
+   (4) 在找到最优的匹配路径后OPI，作者希望找到一整条完整的路径CPI（利用OPI信息）。作者整个查询的过程中只在这里才使用最短路径的计算。前面的最短路径都是通过预计算得到的，这样就节省了时间。
 
    (5) 惩罚机制：如下图所示，GPS点$p_n$匹配后可能在计算最短距离时经历了一个反向运动。因此文中在投影点之间的最短距离计算之上添加了一个惩罚距离。pf为惩罚因子。在施加惩罚后，包含反向运动的路径很可能被赋以较低的转移概率，并在OPI步骤中被消除。
    ![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/FMM_PENALTY.png)
@@ -238,4 +238,49 @@ HMM公式：
 |**添加的启发信息3**|**对经历反向运行的轨迹进行优化**|
 
 ---
+
+## 9. Online map-matching based on Hidden Markov model for real-time traffic sensing applications[ITSC 2012]
+
+这篇论文中在计算观测概率和转移概率的时候和HMM类似。
+
+观测概率：在计算观测概率时，除了计算一般的观测概率，作者还考虑了道路的宽度信息和实时情况的速度信息。其计算公式如下：
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/OnMapMatching_Observation.png)
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/OnlineMapMatching_Speed.png)
+
+![](https://github.com/Konfuse/TR-Flink/blob/master/doc/pic/OnlineMapMatching_SpeedObservation.png)
+
+转移概率：与HMM类似，使用的是GPS点空间距离与匹配点最短距离的比值。
+
+这篇论文处理充分利用汇聚点的信息处理实时路网匹配，假设在当前时间的所有点在马尔科夫链中都汇聚于上一个时间的某一个点（转移概率最高），就将上一个时间的那个点记为汇聚点。每得到一个汇聚点，将该汇聚点和前一个汇聚点之间的具有最大转移概率的路径输出。若在不断向后处理的过程中没有汇聚点出现，当时间超过一定时间时，就直接将具有最大转移概率的路径进行输出。
+
+|算法类型|增量算法|
+|:---:|:---|
+|**实时数据处理的思路**|**在顺序处理的过程中，将汇聚点之间的路径进行输出**|
+
+## 10. GeoMatch: Efficient Large-Scale Map Matching on Apache Spark[Big Data 2018]
+
+论文目标：在分布式环境中，找到每个轨迹数据点的候选匹配路段。
+
+希尔伯特填充曲线：希尔伯特填充曲线可以对空间区域进行划分。划分的每个单元格，由于其空间的邻近性，在单元格上相近的点，其对应希尔伯特值也比较接近。
+
+论文利用希尔伯特构造曲线的构造方式，对整个路网区域按照设置的并行度进行分区，将相邻的单元格进行聚集，使得每片区域具有大致均等数量的路网路段，保证了负载的均衡。再对每个分区中的空间数据构建本地R-tree索引，便于每个分区的查找。
+
+对于一个查询点，找到其对应的分区，查找其候选的匹配路段。
+
+|算法类型|分布式算法|
+|:---:|:---|
+|**分区思路**|**利用希尔伯特填充曲线的空间邻近性将空间进行分区，保证负载均衡**|
+
+## 11. A framework for parallelmap-matching at scale using Spark[DPD 2019]
+
+论文目标：在分布式环境中，找到每个轨迹数据点的候选匹配路段。对所有的结果进行收集，利用前面的路网匹配算法计算最优匹配。
+
+论文首先对所有待匹配轨迹进行采样，构建一个四叉树索引结构，并将索引通过广播的方式传递给每一个节点。其次将所有路网数据和轨迹数据利用四叉树索引找到相对应的分区。在相应的分区中，查找每个轨迹段的候选匹配路网路段。最后将所有结果按照轨迹的序号进行收集，利用路网匹配算法对轨迹进行匹配。
+
+|算法类型|分布式算法|
+|:---:|:---|
+|**分区思路**|**利用采样信息将轨迹数据和路网数据分配到不同的分区节点中进行查找**|
+
+
 
