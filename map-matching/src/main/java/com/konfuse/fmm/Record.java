@@ -5,13 +5,13 @@ package com.konfuse.fmm;
  * @Date 2020/1/6
  */
 public class Record {
-    public long source;
-    public long target;
-    public long first_n;
-    public long prev_n;
-    public long next_e;
-    public double cost;
-    public Record next;
+    protected long source;
+    protected long target;
+    protected long first_n;
+    protected long prev_n;
+    protected long next_e;
+    protected double cost;
+    protected Record next;
 
     public Record(long source, long target, long first_n, long prev_n, long next_e, double cost) {
         this.source = source;

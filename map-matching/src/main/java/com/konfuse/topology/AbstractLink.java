@@ -105,7 +105,7 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
      *
      * @return Iterator over the edge's successor edges.
      */
-    public Iterator<E> nextEdges() {
+    public Iterator<E> neighbors() {
         return new Iterator<E>() {
             E neighbor = neighbor();
             E iterator = neighbor;

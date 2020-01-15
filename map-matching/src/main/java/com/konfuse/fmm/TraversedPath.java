@@ -9,11 +9,11 @@ import java.util.List;
  */
 public class TraversedPath {
     public List<Long> completePath;
-    public List<Integer> indics;
+    public List<Integer> indexes;
 
     public TraversedPath() {
         completePath = new LinkedList<>();
-        indics = new LinkedList<>();
+        indexes = new LinkedList<>();
     }
 
     public void addPath(Long id){
@@ -21,22 +21,22 @@ public class TraversedPath {
     }
 
     public void addIndex(Integer index){
-        indics.add(index);
+        indexes.add(index);
     }
 
     public void setCompletePath(List<Long> completePath) {
         this.completePath = completePath;
     }
 
-    public void setIndics(List<Integer> indics) {
-        this.indics = indics;
+    public void setIndexes(List<Integer> indexes) {
+        this.indexes = indexes;
     }
 
     public List<Long> getCompletePath() {
         return completePath;
     }
 
-    public List<Integer> getIndics() {
-        return indics;
+    public List<Integer> getIndexes() {
+        return indexes;
     }
 }

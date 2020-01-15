@@ -269,7 +269,7 @@ public class Dijkstra<E extends AbstractLink<E>, P extends LocationOnEdge<E>> {
 //                DijkstraQueueEntry entry = queue.poll();
 //                entry.inQueue = false;
 //
-//                Iterator<Road> roads =  entry.edge.nextEdges();
+//                Iterator<Road> roads =  entry.edge.neighbors();
 //                while (roads.hasNext()){
 //                    Road successor = roads.next();
 //                    DijkstraQueueEntry v = queueEntry.get(successor);

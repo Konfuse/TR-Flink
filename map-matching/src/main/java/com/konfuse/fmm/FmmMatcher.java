@@ -143,7 +143,7 @@ public class FmmMatcher {
             spDist += 2 * source.edge().length() + offsetOfSource - offsetOfTarget;
         }else{
             Record r = ubodt.lookUp(source.edge().target(), target.edge().source());
-            if(r == null){
+            if(r == null) {
                 return DISTANCE_NOT_FOUND;
             }
             spDist = source.edge().length() + offsetOfSource - offsetOfTarget + r.cost;
@@ -162,7 +162,7 @@ public class FmmMatcher {
         if (linearDist < 0.000001) {
             transitionProbability = shorestPathDist > 0.000001 ? 0:1.0;
         } else {
-            transitionProbability = linearDist > shorestPathDist ? shorestPathDist/linearDist:linearDist/shorestPathDist;
+            transitionProbability = linearDist > shorestPathDist ? shorestPathDist/linearDist : linearDist/shorestPathDist;
         }
         return transitionProbability;
     }
@@ -207,7 +207,7 @@ public class FmmMatcher {
             RoadPoint source = o_path.get(i);
             RoadPoint target = o_path.get(i + 1);
             if((source.edge().id() != target.edge().id()) || (source.fraction() > target.fraction())){
-                List<Long> segs = ubodt.lookShorestPath(source.edge().target(), target.edge().source());
+                List<Long> segs = ubodt.lookShortestPath(source.edge().target(), target.edge().source());
                 if(segs == null){
                     List<Road> path = dijkstra.route(source, target, cost);
                     if(path != null && path.size() > 1) {
@@ -264,21 +264,24 @@ public class FmmMatcher {
         HashMap<Long, Road> edges = map.getEdges();
         HashMap<Long, Road> nodes = new HashMap<>();
 
-        for (Road source : edges.values()) {
-            Iterator<Road> itr = source.nextEdges();
-            nodes.put(source.source(), itr.next());
-            if (!nodes.containsKey(source.target())) {
-                Iterator<Road> itrSuccessors = source.successors();
-                nodes.put(source.target(), itrSuccessors.next());
+        for (Road road : edges.values()) {
+            if (!nodes.containsKey(road.source())) {
+                Iterator<Road> itr = road.neighbors();
+                nodes.put(road.source(), itr.next());
+            }
+
+            if (!nodes.containsKey(road.target())) {
+                Iterator<Road> itr = road.successors();
+                nodes.put(road.target(), itr.next());
             }
         }
 
-        for (Long i : nodes.keySet()) {
+        for (Long nodeId : nodes.keySet()) {
             HashMap<Long, PathTableEntry> t = new HashMap<>();
             for (Long j : nodes.keySet()) {
                 t.put(j, null);
             }
-            pathTable.put(i, t);
+            pathTable.put(nodeId, t);
         }
 
         for (Long longEntry : nodes.keySet()) {
@@ -323,7 +326,7 @@ public class FmmMatcher {
                 if(nodes.get(entry.nodeId) == null){
                     continue;
                 }else{
-                    roads = nodes.get(entry.nodeId).nextEdges();
+                    roads = nodes.get(entry.nodeId).neighbors();
                 }
                 while (roads.hasNext()){
                     Road next = roads.next();
@@ -346,7 +349,7 @@ public class FmmMatcher {
     }
 
 
-    private class DijkstraQueueEntry implements Comparable<DijkstraQueueEntry> {
+    private static class DijkstraQueueEntry implements Comparable<DijkstraQueueEntry> {
         long nodeId;
         double cost;
         boolean inQueue ;
@@ -355,7 +358,6 @@ public class FmmMatcher {
             this.nodeId = nodeId;
             this.cost = Double.MAX_VALUE;
             this.inQueue = true;
-
         }
 
         @Override
@@ -374,10 +376,11 @@ public class FmmMatcher {
         }
     }
 
-    private class PathTableEntry {
+    private static class PathTableEntry {
         final double length;
         final long predecessor;
         final long edgeId;
+
         PathTableEntry(double length, long predecessor, long edgeId) {
             this.length = length;
             this.predecessor = predecessor;

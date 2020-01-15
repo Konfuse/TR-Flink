@@ -22,8 +22,8 @@ public class testFmm {
         GenerateTestGPSPoint test = new GenerateTestGPSPoint();
         List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
         List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
-        FmmMatcher fmmMatcher = new FmmMatcher(456101, 100000, 0.3);
-        fmmMatcher.constructUBODT(map, 1000);
+        FmmMatcher fmmMatcher = new FmmMatcher(4993, 100000, 0.3);
+        fmmMatcher.constructUBODT(map, 3000);
 
         Long start = System.currentTimeMillis();
         List<RoadPoint> matchedRoadPoints = fmmMatcher.match(testGPSPoint, map, 30);
