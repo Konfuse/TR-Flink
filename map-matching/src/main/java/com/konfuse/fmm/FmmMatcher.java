@@ -322,12 +322,14 @@ public class FmmMatcher {
                     long next_e = pathRecord.edgeId;
                     records.add(new Record(source, entry.nodeId, first_n, prev_n, next_e, entry.cost));
                 }
+
                 Iterator<Road> roads = null;
                 if(nodes.get(entry.nodeId) == null){
                     continue;
                 }else{
                     roads = nodes.get(entry.nodeId).neighbors();
                 }
+
                 while (roads.hasNext()){
                     Road next = roads.next();
                     DijkstraQueueEntry v = queueEntry.get(next.target());

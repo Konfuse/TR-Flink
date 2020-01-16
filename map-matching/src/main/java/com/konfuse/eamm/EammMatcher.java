@@ -98,28 +98,24 @@ public class EammMatcher {
             S.add(edgeId);
         }
 
+        C.add(S.get(0));
         for(int i = 0; i < N; i++){
-            if(i == 0){
-                C.add(S.get(0));
-            }else{
-                TreeSet<Long> set1 = C.get(C.size() - 1);
-                TreeSet<Long> set2 = S.get(i);
-                TreeSet<Long> result = new TreeSet<>();
-                result.addAll(set2);
-                result.retainAll(set1);
+            TreeSet<Long> set1 = C.get(C.size() - 1);
+            TreeSet<Long> set2 = S.get(i);
+            TreeSet<Long> result = new TreeSet<>();
+            result.addAll(set2);
+            result.retainAll(set1);
 
-                for (Long edgeCurrent : set2) {
-                    Long sourceId = map.getEdges().get(edgeCurrent).source();
-                    for(Long edgeLast : set1){
-                        Long targetId = map.getEdges().get(edgeLast).target();
-                        if(sourceId.equals(targetId)){
-                            result.add(edgeCurrent);
-                        }
+            for (Long edgeCurrent : set2) {
+                Long sourceId = map.getEdges().get(edgeCurrent).source();
+                for(Long edgeLast : set1){
+                    Long targetId = map.getEdges().get(edgeLast).target();
+                    if(sourceId.equals(targetId)){
+                        result.add(edgeCurrent);
                     }
                 }
-                C.add(result);
             }
-
+            C.add(result);
         }
 
         for(int i = 0; i < N; i++){

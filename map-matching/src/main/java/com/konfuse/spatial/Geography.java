@@ -142,6 +142,35 @@ public class Geography {
     }
 
     /**
+     * Gets the distance between a {@link Polyline} and a {@link Point} <i>c</i>.
+     *
+     * @param p {@link Polyline} .
+     * @param c {@link Point}
+     * @return the distance between a {@link Polyline} and a {@link Point} <i>c</i>
+     */
+    public double distanceBetweenPolylineAndPoint(Polyline p, Point c) {
+        double d = Double.MAX_VALUE;
+        Point a = p.getPoint(0);
+
+        for (int i = 1; i < p.getPointCount(); ++i) {
+            Point b = p.getPoint(i);
+
+
+            double f_ = intercept(a, b, c);
+            f_ = (f_ > 1) ? 1 : (f_ < 0) ? 0 : f_;
+            Point x = interpolate(a, b, f_);
+            double d_ = distance(c, x);
+
+            if (d_ < d) {
+                d = d_;
+            }
+            a = b;
+        }
+
+        return d;
+    }
+
+    /**
      * Gets {@link Point} from linear interpolation of a fraction <i>f</i>, in the interval
      * <i>[0,1]</i>, on a {@link Polyline}. This is analog to
      * {@link Geography#interpolate(Point, Point, double)}.The fraction refers to the full
