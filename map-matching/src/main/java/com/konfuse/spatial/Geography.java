@@ -150,10 +150,10 @@ public class Geography {
      */
     public double distanceBetweenPolylineAndPoint(Polyline p, Point c) {
         double d = Double.MAX_VALUE;
-        Point a = p.getPoint(0);
+        Point a = getPointInPolyLine(p, 0);
 
         for (int i = 1; i < p.getPointCount(); ++i) {
-            Point b = p.getPoint(i);
+            Point b = getPointInPolyLine(p, i);
 
 
             double f_ = intercept(a, b, c);
