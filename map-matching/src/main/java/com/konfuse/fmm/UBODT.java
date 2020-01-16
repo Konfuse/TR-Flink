@@ -74,7 +74,7 @@ public class UBODT {
         for(int i = 0; i < N - 1; i++) {
             RoadPoint a = o_path.get(i);
             RoadPoint b = o_path.get(i + 1);
-            if((a.edge().id() != b.edge().id()) || (a.fraction() > b.fraction())){
+            if((a.edge().id() != b.edge().id()) || (a.fraction() > b.fraction())) {
                 List<Long> shortestPathBetweenAB = lookShortestPath(a.edge().target(), b.edge().source());
 
                 if(shortestPathBetweenAB.isEmpty() && a.edge().target() != b.edge().source()){
