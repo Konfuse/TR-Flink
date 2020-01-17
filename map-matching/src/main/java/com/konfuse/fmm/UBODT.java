@@ -1,14 +1,12 @@
 package com.konfuse.fmm;
 
-import com.konfuse.road.Road;
-import com.konfuse.road.RoadMap;
 import com.konfuse.road.RoadPoint;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Auther todd
