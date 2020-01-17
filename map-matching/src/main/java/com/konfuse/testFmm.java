@@ -19,10 +19,10 @@ public class testFmm {
         map.construct();
 
         GenerateTestGPSPoint test = new GenerateTestGPSPoint();
-        List<GPSPoint> testRoads = test.generateTestGPSPointbyLine(map);
+        List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
         List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
 
-        FmmMatcher fmmMatcher = new FmmMatcher(0.3);
+        FmmMatcher fmmMatcher = new FmmMatcher(2);
         fmmMatcher.constructUBODT(map, 3000);
 
         long start = System.currentTimeMillis();

@@ -19,11 +19,11 @@ public class testEamm {
         RoadMap map = RoadMap.Load(new RoadReader());
         map.construct();
 
-
         /*======================build vertex index==========================*/
         HashMap<Long, Road> roads = map.getEdges();
         HashMap<Long, Long> nodeRef = new HashMap<>();
         HashMap<Long, Vertex> vertices = new HashMap<>();
+
         long count = 0;
         for (Road road : roads.values()) {
             List<Point> edgeNodes = road.getPoints();
@@ -49,26 +49,27 @@ public class testEamm {
             }
         }
 
-        ArrayList<com.konfuse.geometry.Point> pointList = new ArrayList<>();
+        ArrayList<Point> pointList = new ArrayList<>();
 
-        for (Map.Entry<Long, Vertex> vertex : vertices.entrySet()) {
-            pointList.add(new com.konfuse.geometry.Point(vertex.getKey(), vertex.getValue().x, vertex.getValue().y));
-        }
-
-        int size = pointList.size();
-        RTree tree = new IndexBuilder().createRTreeBySTR(pointList.toArray(new com.konfuse.geometry.Point[size]));
         /*======================build vertex index==========================*/
+        for (Map.Entry<Long, Vertex> vertex : vertices.entrySet()) {
+            pointList.add(new Point(vertex.getKey(), vertex.getValue().x, vertex.getValue().y));
+        }
+        int size = pointList.size();
+        RTree tree = new IndexBuilder().createRTreeBySTR(pointList.toArray(new Point[size]));
+
         /*======================generate test case==========================*/
         GenerateTestGPSPoint test = new GenerateTestGPSPoint();
         List<GPSPoint> testRoads = test.generateTestGPSPointbyLine(map);
         List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
-        /*======================generate test case==========================*/
+
+        /*======================match==========================*/
         EammMatcher eammMatcher = new EammMatcher();
 
-        Long start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
         List<RoadPoint> matchedRoadPoints = eammMatcher.match(testGPSPoint, map, vertices, tree);
-        Long end = System.currentTimeMillis();
-        Long search_time = end - start;
+        long end = System.currentTimeMillis();
+        long search_time = end - start;
         System.out.println("Search time :" + search_time);
 
         System.out.println("************road***********");
@@ -91,7 +92,6 @@ public class testEamm {
             System.out.println(point.getX() + ";" + point.getY());
         }
         System.out.println("***************************");
-
     }
 }
 

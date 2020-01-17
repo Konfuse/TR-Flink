@@ -155,7 +155,6 @@ public class Geography {
         for (int i = 1; i < p.getPointCount(); ++i) {
             Point b = getPointInPolyLine(p, i);
 
-
             double f_ = intercept(a, b, c);
             f_ = (f_ > 1) ? 1 : (f_ < 0) ? 0 : f_;
             Point x = interpolate(a, b, f_);
