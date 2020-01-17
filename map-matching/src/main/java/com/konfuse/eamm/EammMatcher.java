@@ -50,7 +50,7 @@ public class EammMatcher {
     }
 
     public double getCos(Point a1, Point b1, Point a2, Point b2){
-        double vector = (a1.getX() - b1.getX()) * (a2.getX() - b2.getX()) + (a1.getY() - b1.getY()) * (a2.getY() - b2.getY());
+        double vector = (b1.getX() - a1.getX()) * (b2.getX() - a2.getX()) + (b1.getY() - a1.getY()) * (b2.getY() - a2.getY());
         double sqrt = Math.sqrt(
                 (Math.abs((a1.getX() - b1.getX()) * (a1.getX() - b1.getX())) + Math.abs((a1.getY() - b1.getY()) * (a1.getY() - b1.getY())))
                         * (Math.abs((a2.getX() - b2.getX()) * (a2.getX() - b2.getX())) + Math.abs((a2.getY() - b2.getY()) * (a2.getY() - b2.getY()))));
@@ -58,11 +58,11 @@ public class EammMatcher {
     }
 
     public double getDegree(Point a1, Point b1, Point a2, Point b2){
-        double vector = (a1.getX() - b1.getX()) * (a2.getX() - b2.getX()) + (a1.getY() - b1.getY()) * (a2.getY() - b2.getY());
+        double vector = (b1.getX() - a1.getX()) * (b2.getX() - a2.getX()) + (b1.getY() - a1.getY()) * (b2.getY() - a2.getY());
         double sqrt = Math.sqrt(
                 (Math.abs((a1.getX() - b1.getX()) * (a1.getX() - b1.getX())) + Math.abs((a1.getY() - b1.getY()) * (a1.getY() - b1.getY())))
                         * (Math.abs((a2.getX() - b2.getX()) * (a2.getX() - b2.getX())) + Math.abs((a2.getY() - b2.getY()) * (a2.getY() - b2.getY()))));
-        return Math.acos(vector / sqrt);
+        return Math.toDegrees(Math.acos(vector / sqrt));
     }
 
     public double shortestDistance(RoadPoint source, RoadPoint target, DistanceCost cost) {
