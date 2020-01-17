@@ -1,6 +1,4 @@
-package com.konfuse.hmm;
-
-import com.konfuse.markov.Transition;
+package com.konfuse.markov;
 
 import java.util.Collection;
 import java.util.HashMap;

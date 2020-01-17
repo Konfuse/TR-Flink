@@ -1,39 +1,32 @@
-package com.konfuse.hmm;
-
+package com.konfuse.fmm;
 
 import com.konfuse.markov.Distributions;
 
 /**
- * Based on Newson, Paul, and John Krumm. "Hidden Markov map matching through noise and sparseness."
- * Proceedings of the 17th ACM SIGSPATIAL International Conference on Advances in Geographic
- * Information Systems. ACM, 2009.
+ * @Author: Konfuse
+ * @Date: 2020/1/17 11:35
  */
-public class HmmProbabilities {
-
+public class FmmProbabilities {
     private final double sigma;
-    private final double beta;
 
     /**
      * Sets default values for sigma and beta.
      */
-    public HmmProbabilities() {
+    public FmmProbabilities() {
         /*
          * Sigma taken from Newson&Krumm.
          * Beta empirically computed from the Microsoft ground truth data for shortest route
          * lengths and 60 s sampling interval but also works for other sampling intervals.
          */
-        this(4.07, 0.00959442);
+        this(4.07);
     }
 
     /**
      * @param sigma standard deviation of the normal distribution [m] used for modeling the
      * GPS error
-     * @param beta beta parameter of the exponential distribution for 1 s sampling interval, used
-     * for modeling transition probabilities
      */
-    public HmmProbabilities(double sigma, double beta) {
+    public FmmProbabilities(double sigma) {
         this.sigma = sigma;
-        this.beta = beta;
     }
 
     /**
@@ -58,14 +51,22 @@ public class HmmProbabilities {
      * Returns the logarithmic transition probability density for the given transition
      * parameters.
      *
-     * @param routeLength Length of the shortest route [m] between two consecutive map matching
+     * @param shortestPathDist Length of the shortest route [m] between two consecutive map matching
      * candidates.
-     * @param linearDistance Linear distance [m] between two consecutive GPS measurements.
-     * @param timeDiff time difference [s] between two consecutive GPS measurements.
+     * @param linearDist Linear distance [m] between two consecutive GPS measurements.
      */
-    public double transitionLogProbability(double routeLength, double linearDistance, double timeDiff) {
-        Double transitionMetric = normalizedTransitionMetric(routeLength, linearDistance, timeDiff);
-        return Distributions.logExponentialDistribution(beta, transitionMetric);
+    public double transitionLogProbability(double shortestPathDist, double linearDist) {
+        return Math.log(transitionProbability(shortestPathDist, linearDist));
+    }
+
+    public double transitionProbability(double shortestPathDist, double linearDist) {
+        double transitionProbability = 1.0;
+        if (linearDist < 0.000001) {
+            transitionProbability = shortestPathDist > 0.000001 ? 0 : 1.0;
+        } else {
+            transitionProbability = linearDist > shortestPathDist ? shortestPathDist/linearDist : linearDist/shortestPathDist;
+        }
+        return transitionProbability;
     }
 
     /**
@@ -82,5 +83,4 @@ public class HmmProbabilities {
         }
         return Math.abs(linearDistance - routeLength) / (timeDiff * timeDiff);
     }
-
 }

@@ -1,4 +1,4 @@
-package com.konfuse.hmm;
+package com.konfuse.markov;
 
 import static java.lang.Math.*;
 
@@ -7,7 +7,7 @@ import static java.lang.Math.*;
  */
 public class Distributions {
 
-    static double normalDistribution(double sigma, double x) {
+    public static double normalDistribution(double sigma, double x) {
         return 1.0 / (sqrt(2.0 * PI) * sigma) * exp(-0.5 * pow(x / sigma, 2));
     }
 
@@ -22,7 +22,7 @@ public class Distributions {
     /**
      * @param beta =1/lambda with lambda being the standard exponential distribution rate parameter
      */
-    static double exponentialDistribution(double beta, double x) {
+    public static double exponentialDistribution(double beta, double x) {
         return 1.0 / beta * exp(-x / beta);
     }
 
@@ -32,7 +32,7 @@ public class Distributions {
      *
      * @param beta =1/lambda with lambda being the standard exponential distribution rate parameter
      */
-    static double logExponentialDistribution(double beta, double x) {
+    public static double logExponentialDistribution(double beta, double x) {
         return log(1.0 / beta) - (x / beta);
     }
 }

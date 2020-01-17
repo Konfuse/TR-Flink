@@ -48,6 +48,4 @@ public class Record {
     public void setTarget(long target) {
         this.target = target;
     }
-
-
 }

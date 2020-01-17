@@ -87,12 +87,12 @@ public class GenerateTestGPSPoint {
         return testRoads;
     }
 
-    public List<GPSPoint> generateTestCase(List<GPSPoint> testRoads){
+    public List<GPSPoint> generateTestCase(List<GPSPoint> testRoads) {
         LinkedList<GPSPoint> testCase = new LinkedList<>();
-        for(GPSPoint testRoad : testRoads){
-            double offset = 5 * Math.abs(NormalDistribution(0, 4.07));
+        for(GPSPoint testRoad : testRoads) {
+            double offset = Math.abs(NormalDistribution(0, 4.07)) + 3;
             Random random = new Random();
-            int randomNum = random.nextInt(360 - 1);
+            int randomNum = random.nextInt(360);
             GeodesicData data= Geodesic.WGS84.Direct(testRoad.getPosition().getY() , testRoad.getPosition().getX(), randomNum, offset);
             testCase.add(new GPSPoint(testRoad.getTime(), data.lon2, data.lat2));
         }
@@ -102,8 +102,8 @@ public class GenerateTestGPSPoint {
     //普通正态随机分布
     //参数 u 均值
     //参数 v 方差
-    public static double NormalDistribution(double u,double v){
+    public static double NormalDistribution(double u, double v){
         Random random = new Random();
-        return Math.sqrt(v)*random.nextGaussian()+u;
+        return Math.sqrt(v) * random.nextGaussian() + u;
     }
 }

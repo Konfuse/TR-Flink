@@ -17,19 +17,19 @@ public class testFmm {
         RoadMap map = RoadMap.Load(new RoadReader());
         map.construct();
 
-        Geography spatial = new Geography();
-
         GenerateTestGPSPoint test = new GenerateTestGPSPoint();
         List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
         List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
+
         FmmMatcher fmmMatcher = new FmmMatcher(4993, 100000, 0.3);
         fmmMatcher.constructUBODT(map, 3000);
 
-        Long start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
         List<RoadPoint> matchedRoadPoints = fmmMatcher.match(testGPSPoint, map, 30);
-        Long end = System.currentTimeMillis();
-        Long search_time = end - start;
+        long end = System.currentTimeMillis();
+        long search_time = end - start;
         System.out.println("Search time :" + search_time);
+
         List<Road> c_path = fmmMatcher.constructCompletePathOptimized(matchedRoadPoints,  map);
         List<GPSPoint> c_path_gps = fmmMatcher.getCompletePathGPS(c_path);
 

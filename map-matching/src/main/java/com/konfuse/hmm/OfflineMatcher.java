@@ -2,6 +2,7 @@ package com.konfuse.hmm;
 
 import com.konfuse.geometry.Point;
 import com.konfuse.markov.SequenceState;
+import com.konfuse.markov.TimeStep;
 import com.konfuse.markov.ViterbiAlgorithm;
 import com.konfuse.road.*;
 import com.konfuse.spatial.Geography;

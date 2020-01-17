@@ -8,7 +8,6 @@ import com.konfuse.RTree;
 import com.konfuse.geometry.DataObject;
 import com.konfuse.geometry.Point;
 import com.konfuse.hmm.HmmProbabilities;
-import com.konfuse.hmm.TimeStep;
 import com.konfuse.road.*;
 import com.konfuse.spatial.Geography;
 import com.konfuse.topology.Dijkstra;

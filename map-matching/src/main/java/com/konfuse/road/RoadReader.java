@@ -14,7 +14,7 @@ public class RoadReader {
     public void open() throws Exception {
         try {
             Class.forName("org.postgresql.Driver");
-            connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/chengdu","postgres","1234");
+            connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/roma","postgres","9713");
             System.out.println("连接数据库成功!");
         } catch (Exception e) {
             System.out.println("postgresql get connection has exception , msg = " + e.getMessage());

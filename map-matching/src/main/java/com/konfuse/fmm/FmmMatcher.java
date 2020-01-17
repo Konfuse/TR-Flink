@@ -1,8 +1,7 @@
 package com.konfuse.fmm;
 
 import com.konfuse.geometry.Point;
-import com.konfuse.hmm.HmmProbabilities;
-import com.konfuse.hmm.TimeStep;
+import com.konfuse.markov.TimeStep;
 import com.konfuse.markov.SequenceState;
 import com.konfuse.markov.ViterbiAlgorithm;
 import com.konfuse.road.*;
@@ -18,7 +17,7 @@ import java.util.*;
 public class FmmMatcher {
     public UBODT ubodt;
     public final Geography spatial = new Geography();
-    public final HmmProbabilities hmmProbabilities = new HmmProbabilities();
+    public final FmmProbabilities fmmProbabilities = new FmmProbabilities();
     public final Dijkstra<Road, RoadPoint> dijkstra = new Dijkstra<>();
     public final DistanceCost cost = new DistanceCost();
     public final static double DISTANCE_NOT_FOUND = 5000.0;
@@ -68,7 +67,7 @@ public class FmmMatcher {
     public void computeEmissionProbabilities(TimeStep<RoadPoint, GPSPoint, Path<Road>> timeStep) {
         for (RoadPoint candidate : timeStep.candidates) {
             double distance = spatial.distance(new Point(timeStep.observation.getPosition().getX(), timeStep.observation.getPosition().getY()), candidate.point());
-            timeStep.addEmissionLogProbability(candidate, hmmProbabilities.emissionLogProbability(distance));
+            timeStep.addEmissionLogProbability(candidate, fmmProbabilities.emissionLogProbability(distance));
         }
     }
 
@@ -84,7 +83,7 @@ public class FmmMatcher {
                 LinkedList<Road> roadList = new LinkedList<>();
                 timeStep.addRoadPath(from, to, new Path<>(from, to, roadList));
 
-                final double transitionLogProbability = calcFMMTransitionProbability(spDistance, linearDistance);
+                final double transitionLogProbability = fmmProbabilities.transitionLogProbability(spDistance, linearDistance);
                 timeStep.addTransitionLogProbability(from, to, transitionLogProbability);
             }
         }
@@ -156,16 +155,6 @@ public class FmmMatcher {
             }
         }
         return spDist;
-    }
-
-    public double calcFMMTransitionProbability(double shortestPathDist, double linearDist) {
-        double transitionProbability = 1.0;
-        if (linearDist < 0.000001) {
-            transitionProbability = shortestPathDist > 0.000001 ? 0 : 1.0;
-        } else {
-            transitionProbability = linearDist > shortestPathDist ? shortestPathDist/linearDist : linearDist/shortestPathDist;
-        }
-        return transitionProbability;
     }
 
     public List<Road> constructCompletePath(List<RoadPoint> o_path, RoadMap map){
