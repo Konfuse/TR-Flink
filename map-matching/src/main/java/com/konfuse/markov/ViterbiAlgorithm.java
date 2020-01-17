@@ -356,6 +356,7 @@ public class ViterbiAlgorithm<S, O, D> {
         // order.
         final Map<S, Double> initialMessage = new LinkedHashMap<>();
         for (S candidate : candidates) {
+//            final double logProbability = 0;
             final Double logProbability = initialLogProbabilities.get(candidate);
             if (logProbability == null) {
                 throw new NullPointerException("No initial probability for " + candidate);
@@ -398,6 +399,8 @@ public class ViterbiAlgorithm<S, O, D> {
             for (S prevState : prevCandidates) {
                 final double logProbability = message.get(prevState) + transitionLogProbability(
                         prevState, curState, transitionLogProbabilities);
+//                final double logProbability = message.get(prevState) + getProbability(
+//                        prevState, curState, transitionLogProbabilities, emissionLogProbabilities);
                 if (logProbability > maxLogProbability) {
                     maxLogProbability = logProbability;
                     maxPrevState = prevState;
@@ -405,6 +408,7 @@ public class ViterbiAlgorithm<S, O, D> {
             }
             // Throws NullPointerException if curState is not stored in the map.
             result.newMessage.put(curState, maxLogProbability + emissionLogProbabilities.get(curState));
+//            result.newMessage.put(curState, maxLogProbability);
 
             // Note that maxPrevState == null if there is no transition with non-zero probability.
             // In this case curState has zero probability and will not be part of the most likely
@@ -418,6 +422,22 @@ public class ViterbiAlgorithm<S, O, D> {
             }
         }
         return result;
+    }
+
+    private double getProbability(S prevState, S curState, Map<Transition<S>, Double> transitionLogProbabilities, Map<S, Double> emissionLogProbabilities) {
+        final Double transitionLogProbability =
+                transitionLogProbabilities.get(new Transition<S>(prevState, curState));
+        if (transitionLogProbability == null) {
+            return Double.NEGATIVE_INFINITY; // Transition has zero probability.
+        }
+
+        final Double emissionLogProbability =
+                emissionLogProbabilities.get(curState);
+        if (emissionLogProbability == null) {
+            return Double.NEGATIVE_INFINITY; // Transition has zero probability.
+        }
+
+        return transitionLogProbability * emissionLogProbability;
     }
 
     private double transitionLogProbability(S prevState, S curState, Map<Transition<S>,

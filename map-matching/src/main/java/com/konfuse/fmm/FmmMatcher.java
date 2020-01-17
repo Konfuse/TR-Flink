@@ -1,6 +1,7 @@
 package com.konfuse.fmm;
 
 import com.konfuse.geometry.Point;
+import com.konfuse.hmm.HmmProbabilities;
 import com.konfuse.markov.TimeStep;
 import com.konfuse.markov.SequenceState;
 import com.konfuse.markov.ViterbiAlgorithm;
@@ -68,6 +69,7 @@ public class FmmMatcher {
         for (RoadPoint candidate : timeStep.candidates) {
             double distance = spatial.distance(new Point(timeStep.observation.getPosition().getX(), timeStep.observation.getPosition().getY()), candidate.point());
             timeStep.addEmissionLogProbability(candidate, fmmProbabilities.emissionLogProbability(distance));
+//            timeStep.addEmissionLogProbability(candidate, fmmProbabilities.emissionProbability(distance));
         }
     }
 
@@ -83,7 +85,9 @@ public class FmmMatcher {
                 LinkedList<Road> roadList = new LinkedList<>();
                 timeStep.addRoadPath(from, to, new Path<>(from, to, roadList));
 
-                final double transitionLogProbability = fmmProbabilities.transitionLogProbability(spDistance, linearDistance);
+                final double transitionLogProbability = fmmProbabilities.transitionLogProbability(spDistance, linearDistance, 1);
+//                final double transitionLogProbability = fmmProbabilities.transitionLogProbability(spDistance, linearDistance);
+//                final double transitionLogProbability = fmmProbabilities.transitionProbability(spDistance, linearDistance);
                 timeStep.addTransitionLogProbability(from, to, transitionLogProbability);
             }
         }

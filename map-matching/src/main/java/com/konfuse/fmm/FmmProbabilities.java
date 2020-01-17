@@ -8,6 +8,7 @@ import com.konfuse.markov.Distributions;
  */
 public class FmmProbabilities {
     private final double sigma;
+    private final double beta;
 
     /**
      * Sets default values for sigma and beta.
@@ -18,15 +19,16 @@ public class FmmProbabilities {
          * Beta empirically computed from the Microsoft ground truth data for shortest route
          * lengths and 60 s sampling interval but also works for other sampling intervals.
          */
-        this(4.07);
+        this(4.07, 0.00959442);
     }
 
     /**
      * @param sigma standard deviation of the normal distribution [m] used for modeling the
      * GPS error
      */
-    public FmmProbabilities(double sigma) {
+    public FmmProbabilities(double sigma, double beta) {
         this.sigma = sigma;
+        this.beta = beta;
     }
 
     /**
@@ -57,6 +59,11 @@ public class FmmProbabilities {
      */
     public double transitionLogProbability(double shortestPathDist, double linearDist) {
         return Math.log(transitionProbability(shortestPathDist, linearDist));
+    }
+
+    public double transitionLogProbability(double shortestPathDist, double linearDist, double timeDiff) {
+        double transitionMetric = normalizedTransitionMetric(shortestPathDist, linearDist, timeDiff);
+        return Distributions.logExponentialDistribution(beta, transitionMetric);
     }
 
     public double transitionProbability(double shortestPathDist, double linearDist) {

@@ -9,7 +9,6 @@ import com.konfuse.markov.Distributions;
  * Information Systems. ACM, 2009.
  */
 public class HmmProbabilities {
-
     private final double sigma;
     private final double beta;
 
@@ -64,7 +63,7 @@ public class HmmProbabilities {
      * @param timeDiff time difference [s] between two consecutive GPS measurements.
      */
     public double transitionLogProbability(double routeLength, double linearDistance, double timeDiff) {
-        Double transitionMetric = normalizedTransitionMetric(routeLength, linearDistance, timeDiff);
+        double transitionMetric = normalizedTransitionMetric(routeLength, linearDistance, timeDiff);
         return Distributions.logExponentialDistribution(beta, transitionMetric);
     }
 
@@ -82,5 +81,4 @@ public class HmmProbabilities {
         }
         return Math.abs(linearDistance - routeLength) / (timeDiff * timeDiff);
     }
-
 }

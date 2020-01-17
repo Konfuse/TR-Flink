@@ -117,7 +117,7 @@ public class GenerateTestGPSPoint {
     public List<GPSPoint> generateTestCase(List<GPSPoint> testRoads) {
         LinkedList<GPSPoint> testCase = new LinkedList<>();
         for(GPSPoint testRoad : testRoads) {
-            double offset = Math.abs(NormalDistribution(0, 6)) + 6;
+            double offset = Math.abs(NormalDistribution(0, 4.07)) + 8;
             Random random = new Random();
             int randomNum = random.nextInt(360);
             GeodesicData data= Geodesic.WGS84.Direct(testRoad.getPosition().getY() , testRoad.getPosition().getX(), randomNum, offset);

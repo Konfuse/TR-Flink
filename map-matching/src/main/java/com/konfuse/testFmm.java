@@ -19,7 +19,7 @@ public class testFmm {
         map.construct();
 
         GenerateTestGPSPoint test = new GenerateTestGPSPoint();
-        List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
+        List<GPSPoint> testRoads = test.generateTestGPSPointbyLine(map);
         List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
 
         FmmMatcher fmmMatcher = new FmmMatcher(0.3);
@@ -35,20 +35,20 @@ public class testFmm {
         List<GPSPoint> c_path_gps = fmmMatcher.getCompletePathGPS(c_path);
 
         System.out.println("************road***********");
-        test.writeAsTxt(testRoads, "road.txt");
+        test.writeAsTxt(testRoads, "output/road.txt");
 
         System.out.println("***************************");
         System.out.println("************trajectory***********");
-        test.writeAsTxt(testGPSPoint, "trajectory.txt");
+        test.writeAsTxt(testGPSPoint, "output/trajectory.txt");
 
         System.out.println("***************************");
         System.out.println("************matched***********");
-        write(matchedRoadPoints, "matched.txt");
+        write(matchedRoadPoints, "output/matched.txt");
 
         System.out.println("***************************");
         System.out.println("*******complete path*******");
 
-        test.writeAsTxt(c_path_gps, "c_path.txt");
+        test.writeAsTxt(c_path_gps, "output/c_path.txt");
         System.out.println("***************************");
     }
 
