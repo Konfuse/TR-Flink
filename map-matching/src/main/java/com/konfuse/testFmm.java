@@ -1,11 +1,12 @@
 package com.konfuse;
 
 import com.konfuse.fmm.FmmMatcher;
-import com.konfuse.geometry.Point;
 import com.konfuse.road.*;
-import com.konfuse.spatial.Geography;
 import com.konfuse.tools.GenerateTestGPSPoint;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -21,7 +22,7 @@ public class testFmm {
         List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
         List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
 
-        FmmMatcher fmmMatcher = new FmmMatcher(4993, 100000, 0.3);
+        FmmMatcher fmmMatcher = new FmmMatcher(0.3);
         fmmMatcher.constructUBODT(map, 3000);
 
         long start = System.currentTimeMillis();
@@ -34,32 +35,44 @@ public class testFmm {
         List<GPSPoint> c_path_gps = fmmMatcher.getCompletePathGPS(c_path);
 
         System.out.println("************road***********");
-        for(GPSPoint point1 : testRoads){
-            double x1 = point1.getPosition().getX();
-            double y1 = point1.getPosition().getY();
-            System.out.println(x1 + ";" + y1);
-        }
+        test.writeAsTxt(testRoads, "road.txt");
+
         System.out.println("***************************");
-        System.out.println("************test***********");
-        for(GPSPoint point2 : testGPSPoint){
-            double x2 = point2.getPosition().getX();
-            double y2 = point2.getPosition().getY();
-            System.out.println(x2 + ";" + y2);
-        }
+        System.out.println("************trajectory***********");
+        test.writeAsTxt(testGPSPoint, "trajectory.txt");
+
         System.out.println("***************************");
         System.out.println("************matched***********");
-        for (RoadPoint matchedRoadPoint : matchedRoadPoints) {
-            Point point = matchedRoadPoint.point();
-            System.out.println(point.getX() + ";" + point.getY());
-        }
+        write(matchedRoadPoints, "matched.txt");
+
         System.out.println("***************************");
         System.out.println("*******complete path*******");
 
-        for(GPSPoint point3 : c_path_gps){
-            double x3 = point3.getPosition().getX();
-            double y3 = point3.getPosition().getY();
-            System.out.println(x3 + ";" + y3);
-        }
+        test.writeAsTxt(c_path_gps, "c_path.txt");
         System.out.println("***************************");
+    }
+
+    public static void write(List<RoadPoint> points, String path) {
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(path));
+            for (RoadPoint point : points) {
+                double x = point.point().getX();
+                double y = point.point().getY();
+                System.out.println(x + ";" + y);
+                writer.write(x + ";" + y);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

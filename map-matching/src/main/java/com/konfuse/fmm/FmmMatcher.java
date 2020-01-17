@@ -23,18 +23,18 @@ public class FmmMatcher {
     public final static double DISTANCE_NOT_FOUND = 5000.0;
     public final double penaltyFactor;
 
-    public FmmMatcher(long multiplier, int buckets, double penaltyFactor){
-        ubodt = new UBODT(multiplier, buckets);
+    public FmmMatcher(double penaltyFactor){
         this.penaltyFactor = penaltyFactor;
     }
 
     public void constructUBODT(RoadMap map, double max){
-        List<Record> records = calcAllShortestPathWithinThreshold(map, max);
+        HashMap<Long, Road> nodes = map.getNodes();
 
-        System.out.println("records size: " + records.size());
-        for (Record record : records) {
-            ubodt.insert(record);
-        }
+        List<Record> records = calcAllShortestPathWithinThreshold(nodes, max);
+        int multiplier = nodes.size();
+
+        ubodt = UBODT.construct(records, multiplier);
+        records.clear();
     }
 
     public List<RoadPoint> match(List<GPSPoint> gpsPoints, RoadMap map, double radius) {
@@ -243,7 +243,7 @@ public class FmmMatcher {
         return completePathCoordinate;
     }
 
-    public List<Record> calcAllShortestPathWithinThreshold(RoadMap map, double max) {
+    public List<Record> calcAllShortestPathWithinThreshold(HashMap<Long, Road> nodes, double max) {
         class DijkstraQueueEntry implements Comparable<DijkstraQueueEntry> {
             long nodeId;
             double cost;
@@ -285,20 +285,7 @@ public class FmmMatcher {
 
         List<Record> records = new LinkedList<>();
         HashMap<Long, DijkstraQueueEntry> queueEntry = new HashMap<>();
-        HashMap<Long, Road> edges = map.getEdges();
-        HashMap<Long, Road> nodes = new HashMap<>();
 
-        for (Road road : edges.values()) {
-            if (!nodes.containsKey(road.source())) {
-                Iterator<Road> itr = road.neighbors();
-                nodes.put(road.source(), itr.next());
-            }
-
-            if (!nodes.containsKey(road.target())) {
-                Iterator<Road> itr = road.successors();
-                nodes.put(road.target(), itr.next());
-            }
-        }
 
         for (Long longEntry : nodes.keySet()) {
             queueEntry.put(longEntry, new DijkstraQueueEntry(longEntry));

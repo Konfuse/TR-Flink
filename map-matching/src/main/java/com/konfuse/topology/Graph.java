@@ -1,5 +1,7 @@
 package com.konfuse.topology;
 
+import com.konfuse.road.Road;
+
 import java.util.*;
 
 /**
@@ -12,6 +14,7 @@ import java.util.*;
  */
 public class Graph <E extends AbstractLink<E>>{
     private final HashMap<Long, E> edges = new HashMap<>();
+    private final HashMap<Long, E> nodes = new HashMap<>();
 
     /**
      * Adds an {@link AbstractLink} to the graph. (Requires construction.)
@@ -89,6 +92,18 @@ public class Graph <E extends AbstractLink<E>>{
             edges.get(edges.size() - 1).successor(successors != null ? successors.get(0) : null);
         }
 
+        for (E edge : edges.values()) {
+            if (!nodes.containsKey(edge.source())) {
+                Iterator<E> itr = edge.neighbors();
+                nodes.put(edge.source(), itr.next());
+            }
+
+            if (!nodes.containsKey(edge.target())) {
+                Iterator<E> itr = edge.successors();
+                nodes.put(edge.target(), itr.next());
+            }
+        }
+
         return this;
     }
 
@@ -104,6 +119,10 @@ public class Graph <E extends AbstractLink<E>>{
 
     public HashMap<Long, E> getEdges() {
         return edges;
+    }
+
+    public HashMap<Long, E> getNodes() {
+        return nodes;
     }
 
     /**

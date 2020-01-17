@@ -7,6 +7,9 @@ import com.konfuse.topology.Dijkstra;
 import net.sf.geographiclib.Geodesic;
 import net.sf.geographiclib.GeodesicData;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,6 +48,30 @@ public class GenerateTestGPSPoint {
         int pointCount = path.get(path.size() - 1).geometry().getPointCount();
         testRoads.add(new GPSPoint(count, path.get(path.size() - 1).geometry().getPoint(pointCount - 1).getX(), path.get(path.size() - 1).geometry().getPoint(pointCount - 1).getY()));
         return testRoads;
+    }
+
+    public void writeAsTxt(List<GPSPoint> points, String path) {
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter(path));
+            for (GPSPoint point : points) {
+                double x = point.getPosition().getX();
+                double y = point.getPosition().getY();
+                System.out.println(x + ";" + y);
+                writer.write(x + ";" + y);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public List<GPSPoint> generateTestGPSPointbyLine(RoadMap map){
@@ -90,7 +117,7 @@ public class GenerateTestGPSPoint {
     public List<GPSPoint> generateTestCase(List<GPSPoint> testRoads) {
         LinkedList<GPSPoint> testCase = new LinkedList<>();
         for(GPSPoint testRoad : testRoads) {
-            double offset = Math.abs(NormalDistribution(0, 4.07)) + 3;
+            double offset = Math.abs(NormalDistribution(0, 6)) + 6;
             Random random = new Random();
             int randomNum = random.nextInt(360);
             GeodesicData data= Geodesic.WGS84.Direct(testRoad.getPosition().getY() , testRoad.getPosition().getX(), randomNum, offset);

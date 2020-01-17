@@ -1,7 +1,13 @@
 package com.konfuse.fmm;
 
+import com.konfuse.road.Road;
+import com.konfuse.road.RoadMap;
 import com.konfuse.road.RoadPoint;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -13,13 +19,68 @@ public class UBODT {
     private static int buckets;
     private double delta;
     private Record[] hashtable;
+    private final static double LOAD_FACTOR = 2.0;
 
-    public UBODT(long multiplier, int buckets) {
+    private UBODT(long multiplier, int buckets) {
         System.out.println("multiplier: " + multiplier);
         System.out.println("buckets: " + buckets);
         UBODT.multiplier = multiplier;
         UBODT.buckets = buckets;
         hashtable = new Record[buckets];
+    }
+
+    public static UBODT construct(List<Record> records, int multiplier) {
+        int buckets = find_prime_number(records.size() / LOAD_FACTOR);
+        UBODT ubodt = new UBODT(multiplier, buckets);
+
+        System.out.println("records size: " + records.size());
+        for (Record record : records) {
+            ubodt.insert(record);
+        }
+
+        return ubodt;
+    }
+
+    public static UBODT construct(String path, int multiplier) {
+        List<Record> records = new ArrayList<>();
+
+        BufferedReader reader;
+        try {
+            reader = new BufferedReader(new FileReader(path));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] elements = line.split(":");
+                long source = Long.parseLong(elements[0]);
+                long target = Long.parseLong(elements[1]);
+                long first_n = Long.parseLong(elements[2]);
+                long prev_n = Long.parseLong(elements[3]);
+                long next_e = Long.parseLong(elements[4]);
+                double cost = Double.parseDouble(elements[5]);
+                records.add(new Record(source, target, first_n, prev_n, next_e, cost));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        UBODT ubodt =  construct(records, multiplier);
+        records.clear();
+        return ubodt;
+    }
+
+    private static int find_prime_number(double value) {
+        int[] prime_numbers = {
+            5003,10039,20029,50047,100669,200003,500000,
+            1000039,2000083,5000101,10000103,20000033
+        };
+
+        int N = prime_numbers.length;
+        for (int prime_number : prime_numbers) {
+            if (value <= prime_number) {
+                return prime_number;
+            }
+        }
+
+        return prime_numbers[N - 1];
     }
 
     public double getDelta() {
