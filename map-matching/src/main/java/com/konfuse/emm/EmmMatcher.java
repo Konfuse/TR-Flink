@@ -1,4 +1,4 @@
-package com.konfuse.eamm;
+package com.konfuse.emm;
 
 import com.esri.core.geometry.Geometry;
 import com.esri.core.geometry.OperatorImportFromWkb;
@@ -7,7 +7,6 @@ import com.esri.core.geometry.WkbImportFlags;
 import com.konfuse.RTree;
 import com.konfuse.geometry.DataObject;
 import com.konfuse.geometry.Point;
-import com.konfuse.hmm.HmmProbabilities;
 import com.konfuse.road.*;
 import com.konfuse.spatial.Geography;
 import com.konfuse.topology.Dijkstra;
@@ -19,27 +18,22 @@ import java.util.*;
  * @Auther todd
  * @Date 2020/1/9
  */
-public class EammMatcher {
+public class EmmMatcher {
 
     public final Geography spatial = new Geography();
     public final Dijkstra<Road, RoadPoint> dijkstra = new Dijkstra<>();
     public final DistanceCost cost = new DistanceCost();
 
     public List<RoadPoint> match(List<GPSPoint> gpsPoints, RoadMap map, HashMap<Long, Vertex> vertices, RTree rtree){
-
-        int N = gpsPoints.size();
-
         ArrayList<HashSet<Long>> S = getCandidateSetS(gpsPoints, vertices, rtree);
 
         ArrayList<HashSet<Long>> C = getCandidateSetC(S, map);
 
         ArrayList<HashSet<Long>> refinedC = getRefinedSetC(gpsPoints, C, S, map) ;
 
-        ArrayList<TimeStep> timesteps = getTimeSteps(gpsPoints, refinedC, map);
+        ArrayList<TimeStep> timeSteps = getTimeSteps(gpsPoints, refinedC, map);
 
-        ArrayList<RoadPoint> matchedPoint = getMatchedPoints(timesteps);
-
-        return matchedPoint;
+        return getMatchedPoints(timeSteps);
     }
 
 
@@ -230,10 +224,10 @@ public class EammMatcher {
                 for (Long edgeId : edgeIds) {
                     Road road = map.getEdges().get(edgeId);
 
-                    Point q = new Point(gpsPoints.get(i).getPosition().getX(), gpsPoints.get(i).getPosition().getY());
+                    Point gpsPosition = new Point(gpsPoints.get(i).getPosition().getX(), gpsPoints.get(i).getPosition().getY());
                     Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
                             WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(road.base().wkb()), null);
-                    double fraction = spatial.intercept(geometry, q);
+                    double fraction = spatial.intercept(geometry, gpsPosition);
                     RoadPoint p = new RoadPoint(road, fraction);
 
                     current.add(p);
@@ -244,10 +238,10 @@ public class EammMatcher {
                 for (Long edgeId : edgeIds) {
                     Road road = map.getEdges().get(edgeId);
 
-                    Point q = new Point(gpsPoints.get(i).getPosition().getX(), gpsPoints.get(i).getPosition().getY());
+                    Point gpsPosition = new Point(gpsPoints.get(i).getPosition().getX(), gpsPoints.get(i).getPosition().getY());
                     Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
                             WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(road.base().wkb()), null);
-                    double fraction = spatial.intercept(geometry, q);
+                    double fraction = spatial.intercept(geometry, gpsPosition);
                     RoadPoint roadPoint = new RoadPoint(road, fraction);
 
                     TimeStep preTimeStep = timeSteps.get(timeSteps.size() - 1);
@@ -256,10 +250,11 @@ public class EammMatcher {
                     int index = 0;
                     double minDist = Double.MAX_VALUE;
                     for(int preIndex = 0; preIndex < roadPointsNum; preIndex++) {
-                        double dist = shortestDistance(preTimeStep.roadPoints.get(preIndex), roadPoint, cost);
-                        if(dist + preTimeStep.getWeights().get(preIndex) < minDist ){
+                        double spDist = shortestDistance(preTimeStep.roadPoints.get(preIndex), roadPoint, cost);
+
+                        if(spDist + preTimeStep.getWeights().get(preIndex) < minDist ){
                             index = preIndex;
-                            minDist = dist + preTimeStep.getWeights().get(preIndex);
+                            minDist = spDist + preTimeStep.getWeights().get(preIndex);
                         }
                     }
                     current.add(roadPoint);
@@ -300,7 +295,7 @@ public class EammMatcher {
         return matchedPoint;
     }
 
-    static class Score implements Comparable<Score>{
+    private static class Score implements Comparable<Score>{
         public double score;
         public long edgeId;
         public Score(long edgeId, double score){
@@ -310,11 +305,11 @@ public class EammMatcher {
 
         @Override
         public int compareTo(Score other) {
-            return (this.score < other.score) ? -1 : (this.score > other.score) ? 1 : 0;
+            return Double.compare(this.score, other.score);
         }
     }
 
-    static class TimeStep {
+    private static class TimeStep {
         public final GPSPoint gpsPoint;
         public ArrayList<RoadPoint> roadPoints;
         public ArrayList<Integer> pres;

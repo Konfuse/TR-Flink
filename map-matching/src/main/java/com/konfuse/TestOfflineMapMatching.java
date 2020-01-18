@@ -15,7 +15,7 @@ import java.util.List;
  * @Auther todd
  * @Date 2019/12/31
  */
-public class testOfflineMapMatching {
+public class TestOfflineMapMatching {
     public static void main(String[] args) throws Exception{
         RoadMap map = RoadMap.Load(new RoadReader());
         map.construct();

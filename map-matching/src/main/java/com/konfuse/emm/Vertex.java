@@ -1,7 +1,9 @@
-package com.konfuse.road;
+package com.konfuse.emm;
 
+import com.konfuse.road.Road;
+
+import java.util.HashSet;
 import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * @Auther todd
@@ -11,13 +13,13 @@ public class Vertex {
     public Long id;
     public double x;
     public double y;
-    public TreeSet<Long> relateEdges;
+    public HashSet<Long> relateEdges;
 
     public Vertex(Long id, double x, double y) {
         this.id = id;
         this.x = x;
         this.y = y;
-        relateEdges = new TreeSet<>();
+        relateEdges = new HashSet<>();
     }
 
     public void addRelateEdges(Road road){
