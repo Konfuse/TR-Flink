@@ -102,7 +102,7 @@ public class ViterbiAlgorithm<S, O, D> {
     private List<Map<S, Double>> messageHistory; // For debugging only.
 
     /**
-     * Need to construct a new instance for each sequence of observations.
+     * Need to read a new instance for each sequence of observations.
      */
     public ViterbiAlgorithm() { }
 

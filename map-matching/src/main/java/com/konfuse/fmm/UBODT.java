@@ -1,11 +1,11 @@
 package com.konfuse.fmm;
 
+import com.konfuse.road.Road;
 import com.konfuse.road.RoadPoint;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -27,7 +27,25 @@ public class UBODT {
         hashtable = new Record[buckets];
     }
 
-    public static UBODT construct(List<Record> records, int multiplier) {
+    public static void construct(HashMap<Long, Road> nodes, double max) {
+        BufferedWriter writer = null;
+        try {
+            writer = new BufferedWriter(new FileWriter("UBODT.txt"));
+            writer.write(source + "," + entry.nodeId + "," + first_n + "," + prev_n + "," + next_e + "," + entry.cost);
+            writer.newLine();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (writer != null)
+                    writer.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static UBODT read(List<Record> records, int multiplier) {
         int buckets = find_prime_number(records.size() / LOAD_FACTOR);
         UBODT ubodt = new UBODT(multiplier, buckets);
 
@@ -39,7 +57,7 @@ public class UBODT {
         return ubodt;
     }
 
-    public static UBODT construct(String path, int multiplier) {
+    public static UBODT read(String path, int multiplier) {
         List<Record> records = new ArrayList<>();
 
         BufferedReader reader;
@@ -60,7 +78,7 @@ public class UBODT {
             e.printStackTrace();
         }
 
-        UBODT ubodt =  construct(records, multiplier);
+        UBODT ubodt =  read(records, multiplier);
         records.clear();
         return ubodt;
     }

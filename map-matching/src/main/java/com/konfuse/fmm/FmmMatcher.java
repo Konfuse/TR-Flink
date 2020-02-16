@@ -1,7 +1,6 @@
 package com.konfuse.fmm;
 
 import com.konfuse.geometry.Point;
-import com.konfuse.hmm.HmmProbabilities;
 import com.konfuse.markov.TimeStep;
 import com.konfuse.markov.SequenceState;
 import com.konfuse.markov.ViterbiAlgorithm;
@@ -9,6 +8,7 @@ import com.konfuse.road.*;
 import com.konfuse.spatial.Geography;
 import com.konfuse.topology.Dijkstra;
 
+import java.io.BufferedWriter;
 import java.util.*;
 
 /**
@@ -34,7 +34,7 @@ public class FmmMatcher {
         List<Record> records = calcAllShortestPathWithinThreshold(nodes, max);
         int multiplier = nodes.size();
 
-        ubodt = UBODT.construct(records, multiplier);
+        ubodt = UBODT.read(records, multiplier);
         records.clear();
     }
 
@@ -290,10 +290,10 @@ public class FmmMatcher {
         List<Record> records = new LinkedList<>();
         HashMap<Long, DijkstraQueueEntry> queueEntry = new HashMap<>();
 
-
         for (Long longEntry : nodes.keySet()) {
             queueEntry.put(longEntry, new DijkstraQueueEntry(longEntry));
         }
+
 
         for (long source : nodes.keySet()) {
             HashMap<Long, PathTableEntry> pathRecords = new HashMap<>();
@@ -333,6 +333,7 @@ public class FmmMatcher {
                     }
 
                     long next_e = pathRecord.edgeId;
+
                     records.add(new Record(source, entry.nodeId, first_n, prev_n, next_e, entry.cost));
                 }
 
@@ -362,6 +363,7 @@ public class FmmMatcher {
                 }
             }
         }
+
         return records;
     }
 }
