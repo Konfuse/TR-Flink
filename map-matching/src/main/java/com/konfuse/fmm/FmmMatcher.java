@@ -9,6 +9,9 @@ import com.konfuse.spatial.Geography;
 import com.konfuse.topology.Dijkstra;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -30,12 +33,41 @@ public class FmmMatcher {
 
     public void constructUBODT(RoadMap map, double max){
         HashMap<Long, Road> nodes = map.getNodes();
-
         List<Record> records = calcAllShortestPathWithinThreshold(nodes, max);
         int multiplier = nodes.size();
-
         ubodt = UBODT.read(records, multiplier);
         records.clear();
+    }
+
+    public void writeUBODTFileBinary(String udobtPath, RoadMap map, double max) {
+        HashMap<Long, Road> nodes = map.getNodes();
+        List<Record> records = calcAllShortestPathWithinThreshold(nodes, max);
+        UBODT.fileWriterBinary(udobtPath, records);
+        records.clear();
+    }
+
+    public void readUDOBTFileBinary(String udobtPath, RoadMap map) {
+        HashMap<Long, Road> nodes = map.getNodes();
+        int multiplier = nodes.size();
+        ubodt = UBODT.fileReaderBinary(udobtPath, multiplier);
+    }
+
+    public void writeUBODTFileDirect(String udobtPath, RoadMap map, double max) {
+        HashMap<Long, Road> nodes = map.getNodes();
+        calcAllShortestPathWithinThresholdToFile(nodes, max, udobtPath);
+    }
+
+    public void writeUBODTFile(String udobtPath, RoadMap map, double max) {
+        HashMap<Long, Road> nodes = map.getNodes();
+        List<Record> records = calcAllShortestPathWithinThreshold(nodes, max);
+        UBODT.fileWriter(udobtPath, records);
+        records.clear();
+    }
+
+    public void readUDOBTFile(String udobtPath, RoadMap map) {
+        HashMap<Long, Road> nodes = map.getNodes();
+        int multiplier = nodes.size();
+        ubodt = UBODT.fileReader(udobtPath, multiplier);
     }
 
     public List<RoadPoint> match(List<GPSPoint> gpsPoints, RoadMap map, double radius) {
@@ -365,5 +397,136 @@ public class FmmMatcher {
         }
 
         return records;
+    }
+
+    public void calcAllShortestPathWithinThresholdToFile(HashMap<Long, Road> nodes, double max, String path) {
+        class DijkstraQueueEntry implements Comparable<DijkstraQueueEntry> {
+            long nodeId;
+            double cost;
+            boolean inQueue ;
+
+            DijkstraQueueEntry(long nodeId) {
+                this.nodeId = nodeId;
+                this.cost = Double.MAX_VALUE;
+                this.inQueue = true;
+            }
+
+            @Override
+            public int compareTo(DijkstraQueueEntry j) {
+                if (this.cost < j.cost) {
+                    return -1;
+                } else if (this.cost > j.cost) {
+                    return 1;
+                } else if (this.nodeId < j.nodeId) {
+                    return -1;
+                } else if (this.nodeId > j.nodeId) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+        }
+
+        class PathTableEntry {
+            final double length;
+            final long predecessor;
+            final long edgeId;
+
+            PathTableEntry(double length, long predecessor, long edgeId) {
+                this.length = length;
+                this.predecessor = predecessor;
+                this.edgeId = edgeId;
+            }
+        }
+
+        BufferedWriter writer = null;
+
+        HashMap<Long, DijkstraQueueEntry> queueEntry = new HashMap<>();
+
+        for (Long longEntry : nodes.keySet()) {
+            queueEntry.put(longEntry, new DijkstraQueueEntry(longEntry));
+        }
+
+        try{
+            writer = new BufferedWriter(new FileWriter(path));
+            for (long source : nodes.keySet()) {
+                HashMap<Long, PathTableEntry> pathRecords = new HashMap<>();
+
+                for (DijkstraQueueEntry entry : queueEntry.values()) {
+                    entry.cost = Double.MAX_VALUE;
+                    entry.inQueue = true;
+                }
+
+                DijkstraQueueEntry sourceEntry = queueEntry.get(source);
+                sourceEntry.cost = 0.0;
+                pathRecords.put(source, new PathTableEntry(0.0, source, -1));
+
+                PriorityQueue<DijkstraQueueEntry> queue = new PriorityQueue<>(queueEntry.values());
+
+                while(!queue.isEmpty()) {
+                    DijkstraQueueEntry entry = queue.poll();
+                    entry.inQueue = false;
+
+                    if(entry.cost > max) {
+                        continue;
+                    }
+
+                    if(entry.nodeId != source) {
+                        PathTableEntry pathRecord = pathRecords.get(entry.nodeId);
+
+                        long prev_n = pathRecord.predecessor;
+                        long current = entry.nodeId;
+                        long first_n = current;
+                        long pred = current;
+
+                        while(current != source) {
+                            first_n = current;
+                            pathRecord = pathRecords.get(pred);
+                            pred = pathRecord.predecessor;
+                            current = pred;
+                        }
+
+                        long next_e = pathRecord.edgeId;
+                        writer.write(source + "," + entry.nodeId + "," + first_n + "," + prev_n + "," + next_e + "," + entry.cost);
+                        writer.newLine();
+                    }
+
+                    Iterator<Road> roads = null;
+                    if(nodes.get(entry.nodeId) == null) {
+                        continue;
+                    } else {
+                        roads = nodes.get(entry.nodeId).neighbors();
+                    }
+
+                    while (roads.hasNext()) {
+                        Road next = roads.next();
+                        DijkstraQueueEntry v = queueEntry.get(next.target());
+
+                        if(!v.inQueue) {
+                            continue;
+                        }
+
+                        double cost = entry.cost + next.length();
+
+                        if(v.cost > cost) {
+                            queue.remove(v);
+                            v.cost = cost;
+                            pathRecords.put(next.target(), new PathTableEntry(v.cost, next.source(), next.id()));
+                            queue.add(v);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
