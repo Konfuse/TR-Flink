@@ -2,6 +2,7 @@ package com.konfuse.fmm;
 
 import com.konfuse.road.Road;
 import com.konfuse.road.RoadPoint;
+import javafx.scene.chart.ScatterChart;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -27,23 +28,73 @@ public class UBODT {
         hashtable = new Record[buckets];
     }
 
-//    public static void construct(HashMap<Long, Road> nodes, double max) {
-//        BufferedWriter writer = null;
-//        try {
-//            writer = new BufferedWriter(new FileWriter("UBODT.txt"));
-//            writer.write(source + "," + entry.nodeId + "," + first_n + "," + prev_n + "," + next_e + "," + entry.cost);
-//            writer.newLine();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        } finally {
-//            try {
-//                if (writer != null)
-//                    writer.close();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
+
+    public static void fileWriterBinary(String path, List<Record> records) {
+        File file=new File(path);
+
+        if(file.exists()){
+            System.out.println("File created successfully！");
+        }else{
+            try {
+                boolean flag =file.createNewFile();
+                if(flag){
+                    System.out.println("File created successfully");
+                }else{
+                    System.out.println("File creation failed");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        try {
+            DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+            int listSize = records.size();
+            out.writeInt(listSize);
+            int i = 0;
+            for (Record record : records) {
+                out.writeLong(record.source);
+                out.writeLong(record.target);
+                out.writeLong(record.first_n);
+                out.writeLong(record.prev_n);
+                out.writeLong(record.next_e);
+                out.writeDouble(record.cost);
+            }
+            System.out.println("records size: " + records.size());
+            System.out.println("file size: "+ file.length()+" Bytes");
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public static UBODT fileReaderBinary(String path, int multiplier) {
+        List<Record> records = new ArrayList<>();
+
+        try {
+            DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(path)));
+            int listSize = in.readInt();
+            for (int i = 0; i < listSize; i++) {
+                long source = in.readLong();
+                long target = in.readLong();
+                long first_n = in.readLong();
+                long prev_n = in.readLong();
+                long next_e = in.readLong();
+                double cost = in.readDouble();
+                records.add(new Record(source, target, first_n, prev_n, next_e, cost));
+            }
+            System.out.println("records size: " + records.size());
+
+            in.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        UBODT ubodt = read(records, multiplier);
+        records.clear();
+        return ubodt;
+    }
 
     public static UBODT read(List<Record> records, int multiplier) {
         int buckets = find_prime_number(records.size() / LOAD_FACTOR);
@@ -57,15 +108,16 @@ public class UBODT {
         return ubodt;
     }
 
-    public static UBODT read(String path, int multiplier) {
+    public static UBODT fileReader(String path, int multiplier) {
         List<Record> records = new ArrayList<>();
 
         BufferedReader reader;
         try {
             reader = new BufferedReader(new FileReader(path));
             String line;
+            int i = 0;
             while ((line = reader.readLine()) != null) {
-                String[] elements = line.split(":");
+                String[] elements = line.split(",");
                 long source = Long.parseLong(elements[0]);
                 long target = Long.parseLong(elements[1]);
                 long first_n = Long.parseLong(elements[2]);
@@ -74,6 +126,7 @@ public class UBODT {
                 double cost = Double.parseDouble(elements[5]);
                 records.add(new Record(source, target, first_n, prev_n, next_e, cost));
             }
+            System.out.println("records size:" + records.size());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -81,6 +134,46 @@ public class UBODT {
         UBODT ubodt =  read(records, multiplier);
         records.clear();
         return ubodt;
+    }
+
+    public static void fileWriter(String path, List<Record> records) {
+        BufferedWriter writer = null;
+
+        File file=new File(path);
+
+        if(file.exists()){
+            System.out.println("created successfully！");
+        }else{
+            try {
+                boolean flag =file.createNewFile();
+                if(flag){
+                    System.out.println("File created successfully");
+                }else{
+                    System.out.println("File creation failed");
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        try {
+            writer = new BufferedWriter(new FileWriter(file));
+            for (Record record : records) {
+                writer.write(record.source + "," + record.target + "," + record.first_n + "," + record.prev_n + "," + record.next_e + "," + record.cost);
+                writer.newLine();
+            }
+            System.out.println("file size: "+ file.length()+" Bytes");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (writer != null) {
+                    writer.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private static int find_prime_number(double value) {
