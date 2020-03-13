@@ -27,23 +27,23 @@ public class UBODT {
         hashtable = new Record[buckets];
     }
 
-    public static void construct(HashMap<Long, Road> nodes, double max) {
-        BufferedWriter writer = null;
-        try {
-            writer = new BufferedWriter(new FileWriter("UBODT.txt"));
-            writer.write(source + "," + entry.nodeId + "," + first_n + "," + prev_n + "," + next_e + "," + entry.cost);
-            writer.newLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (writer != null)
-                    writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+//    public static void construct(HashMap<Long, Road> nodes, double max) {
+//        BufferedWriter writer = null;
+//        try {
+//            writer = new BufferedWriter(new FileWriter("UBODT.txt"));
+//            writer.write(source + "," + entry.nodeId + "," + first_n + "," + prev_n + "," + next_e + "," + entry.cost);
+//            writer.newLine();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        } finally {
+//            try {
+//                if (writer != null)
+//                    writer.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
     public static UBODT read(List<Record> records, int multiplier) {
         int buckets = find_prime_number(records.size() / LOAD_FACTOR);

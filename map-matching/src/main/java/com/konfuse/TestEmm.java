@@ -2,13 +2,12 @@ package com.konfuse;
 
 import com.konfuse.emm.EmmMatcher;
 import com.konfuse.emm.Vertex;
+import com.konfuse.fmm.FmmMatcher;
 import com.konfuse.geometry.Point;
 import com.konfuse.road.*;
 import com.konfuse.tools.GenerateTestGPSPoint;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,28 +34,31 @@ public class TestEmm {
         RTree tree = new IndexBuilder().createRTreeBySTR(pointList.toArray(new Point[size]));
 
         /*======================generate test case==========================*/
-        GenerateTestGPSPoint test = new GenerateTestGPSPoint();
-        List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
-        List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
+//        GenerateTestGPSPoint test = new GenerateTestGPSPoint();
+//        List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
+//        List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
 
         /*======================match==========================*/
         EmmMatcher emmMatcher = new EmmMatcher();
 
-        long start = System.currentTimeMillis();
-        List<RoadPoint> matchedRoadPoints = emmMatcher.match(testGPSPoint, map, vertices, tree);
-        long end = System.currentTimeMillis();
-        long search_time = end - start;
-        System.out.println("Search time :" + search_time);
+//        long start = System.currentTimeMillis();
+//        List<RoadPoint> matchedRoadPoints = emmMatcher.match(testGPSPoint, map, vertices, tree);
+//        long end = System.currentTimeMillis();
+//        long search_time = end - start;
+//        System.out.println("Search time :" + search_time);
 
-        System.out.println("************road***********");
-        test.writeAsTxt(testRoads, "output/road.txt");
-        System.out.println("***************************");
-        System.out.println("************test***********");
-        test.writeAsTxt(testGPSPoint, "output/trajectory.txt");
-        System.out.println("***************************");
-        System.out.println("************matched***********");
-        write(matchedRoadPoints, "output/matched.txt");
-        System.out.println("***************************");
+        long search_time = testMatch("C:/Users/Konfuse/Desktop/1", emmMatcher, map, vertices, tree);
+        System.out.println("Search time :" + search_time + "ms");
+
+//        System.out.println("************road***********");
+//        test.writeAsTxt(testRoads, "output/road.txt");
+//        System.out.println("***************************");
+//        System.out.println("************test***********");
+//        test.writeAsTxt(testGPSPoint, "output/trajectory.txt");
+//        System.out.println("***************************");
+//        System.out.println("************matched***********");
+//        write(matchedRoadPoints, "output/matched.txt");
+//        System.out.println("***************************");
     }
 
     public static HashMap<Long, Vertex> getVertices(RoadMap map) {
@@ -113,6 +115,68 @@ public class TestEmm {
                 }
             }
         }
+    }
+
+    public static long testMatch(String path, EmmMatcher emmMatcher, RoadMap map, HashMap<Long, Vertex> vertices, RTree tree) {
+        List<GPSPoint> gpsPoints = new ArrayList<>();
+        File[] fileList = new File(path).listFiles();
+        BufferedReader reader = null;
+        long search_time = 0;
+        int count = 0;
+        int except = 0;
+
+        for (File file : fileList) {
+            try {
+                reader = new BufferedReader(new FileReader(file));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] items = line.split(";");
+                    double x = Double.parseDouble(items[0]);
+                    double y = Double.parseDouble(items[1]);
+                    long time = Long.parseLong(items[2]);
+                    gpsPoints.add(new GPSPoint(time, x, y));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            System.out.println("the " + (count++) + "th trajectory is being processed: " + file.getName());
+
+            long start = System.currentTimeMillis();
+            emmMatcher.match(gpsPoints, map, vertices, tree);
+            long end = System.currentTimeMillis();
+            search_time += end - start;
+
+//            try {
+//                long start = System.currentTimeMillis();
+//                emmMatcher.match(gpsPoints, map, vertices, tree);
+//                long end = System.currentTimeMillis();
+//                search_time += end - start;
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                ++except;
+//
+//                if (reader != null) {
+//                    try {
+//                        reader.close();
+//                    } catch (IOException e2) {
+//                        e2.printStackTrace();
+//                    }
+//                }
+//
+//                try{
+//                    if(file.delete()) {
+//                        System.out.println(file.getName() + " 文件已被删除！");
+//                    } else {
+//                        System.out.println("文件删除失败！");
+//                    }
+//                } catch(Exception e3){
+//                    e3.printStackTrace();
+//                }
+//            }
+            gpsPoints.clear();
+        }
+        System.out.println(except + " trajectories failed");
+        return search_time;
     }
 }
 

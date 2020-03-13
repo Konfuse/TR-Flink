@@ -46,6 +46,8 @@ public class EmmMatcher {
         double sqrt = Math.sqrt(
                 (Math.abs((a1.getX() - b1.getX()) * (a1.getX() - b1.getX())) + Math.abs((a1.getY() - b1.getY()) * (a1.getY() - b1.getY())))
                         * (Math.abs((a2.getX() - b2.getX()) * (a2.getX() - b2.getX())) + Math.abs((a2.getY() - b2.getY()) * (a2.getY() - b2.getY()))));
+        if (sqrt == 0)
+            return 0;
         return vector / sqrt;
     }
 
@@ -54,6 +56,9 @@ public class EmmMatcher {
         double sqrt = Math.sqrt(
                 (Math.abs((a1.getX() - b1.getX()) * (a1.getX() - b1.getX())) + Math.abs((a1.getY() - b1.getY()) * (a1.getY() - b1.getY())))
                         * (Math.abs((a2.getX() - b2.getX()) * (a2.getX() - b2.getX())) + Math.abs((a2.getY() - b2.getY()) * (a2.getY() - b2.getY()))));
+
+       if (sqrt == 0)
+           return 0;
         return Math.toDegrees(Math.acos(vector / sqrt));
     }
 
@@ -144,7 +149,6 @@ public class EmmMatcher {
                 }
             }
 
-
             HashSet<Long> secondFilterSet = new HashSet<>();
 
             if(i > 0) {
@@ -165,6 +169,8 @@ public class EmmMatcher {
             }
 
             HashSet<Long> result = secondFilterSet;
+
+//            System.out.print("secondFilterSet's result size: " + result.size());
 
             if (result.isEmpty()) {
                 if(i == 0) {
@@ -191,20 +197,28 @@ public class EmmMatcher {
                         scores.add(new Score(edgeId, score));
                     }
 
-                    double maxScore = - Double.MAX_VALUE;
+                    double maxScore = Integer.MIN_VALUE;
+                    System.out.print("scores is: ");
                     for (Score score : scores) {
+                        System.out.print(score.score + ";");
                         if(maxScore < score.score){
                             maxScore = score.score;
                         }
                     }
 
+                    System.out.println("scores's size is: " + scores.size());
+
+                    double bound = maxScore > 0 ? maxScore * 0.8 : maxScore /0.8;
                     for (Score score : scores) {
-                        if(score.score > 0.8 * maxScore){
+                        if(score.score > bound){
                             result.add(score.edgeId);
                         }
                     }
                 }
             }
+
+//            System.out.println("; final result size: " + result.size());
+
             refinedSetC.add(result);
         }
         return refinedSetC;
@@ -287,6 +301,7 @@ public class EmmMatcher {
 
         int N = timeSteps.size();
         for(int i = N - 1; i >=  0; i--) {
+//            System.out.println("timeSteps is: " + timeSteps.get(i).getPres() + " index is: " + index);
             matchedPoint.add(timeSteps.get(i).getRoadPoints().get(index));
             index = timeSteps.get(i).getPres().get(index);
         }
@@ -347,5 +362,4 @@ public class EmmMatcher {
             this.weights = weights;
         }
     }
-
 }

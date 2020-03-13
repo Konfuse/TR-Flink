@@ -78,6 +78,7 @@ public class FmmMatcher {
         Point thisObservationPosition = new Point(timeStep.observation.getPosition().getX(), timeStep.observation.getPosition().getY());
 
         final double linearDistance = spatial.distance(preObservationPosition, thisObservationPosition);
+        final double timeDiff = (timeStep.observation.getTime() - prevTimeStep.observation.getTime());
 
         for (RoadPoint from : prevTimeStep.candidates) {
             for (RoadPoint to : timeStep.candidates) {
@@ -85,7 +86,7 @@ public class FmmMatcher {
                 LinkedList<Road> roadList = new LinkedList<>();
                 timeStep.addRoadPath(from, to, new Path<>(from, to, roadList));
 
-                final double transitionLogProbability = fmmProbabilities.transitionLogProbability(spDistance, linearDistance, 1);
+                final double transitionLogProbability = fmmProbabilities.transitionLogProbability(spDistance, linearDistance, timeDiff);
 //                final double transitionLogProbability = fmmProbabilities.transitionLogProbability(spDistance, linearDistance);
 //                final double transitionLogProbability = fmmProbabilities.transitionProbability(spDistance, linearDistance);
                 timeStep.addTransitionLogProbability(from, to, transitionLogProbability);
