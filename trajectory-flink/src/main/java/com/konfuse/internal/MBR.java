@@ -1,6 +1,9 @@
-package com.konfuse.geometry;
+package com.konfuse.internal;
 
-import com.konfuse.internal.TreeNode;
+import com.konfuse.geometry.DataObject;
+import com.konfuse.geometry.Line;
+import com.konfuse.geometry.PartitionedMBR;
+import com.konfuse.geometry.Point;
 
 import java.io.Serializable;
 import java.util.Comparator;

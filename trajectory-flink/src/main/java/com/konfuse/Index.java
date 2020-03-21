@@ -1,7 +1,7 @@
 package com.konfuse;
 
 import com.konfuse.geometry.DataObject;
-import com.konfuse.geometry.MBR;
+import com.konfuse.internal.MBR;
 import com.konfuse.geometry.PartitionedMBR;
 import com.konfuse.geometry.Point;
 import com.konfuse.internal.RTree;

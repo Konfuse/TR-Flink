@@ -1,13 +1,11 @@
 package com.konfuse;
 
-import com.konfuse.geometry.DataObject;
-import com.konfuse.geometry.MBR;
+import com.konfuse.internal.MBR;
 import com.konfuse.geometry.PartitionedMBR;
 import com.konfuse.geometry.Point;
 import com.konfuse.geopartitioner.PointSTRPartitioner;
 import com.konfuse.internal.RTree;
 import org.apache.flink.api.common.functions.*;
-import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;

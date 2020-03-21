@@ -1,7 +1,5 @@
 package com.konfuse.internal;
 
-import com.konfuse.geometry.MBR;
-
 import java.io.Serializable;
 
 /**

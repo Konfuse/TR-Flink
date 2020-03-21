@@ -1,17 +1,10 @@
 package com.konfuse;
 
-import com.konfuse.geometry.MBR;
-import com.konfuse.geometry.PartitionedMBR;
+import com.konfuse.internal.MBR;
 import com.konfuse.geometry.Point;
-import com.konfuse.internal.LeafNode;
-import com.konfuse.internal.PartitionedLeafNode;
-import com.konfuse.internal.RTree;
-import com.konfuse.internal.TreeNode;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.RichGroupReduceFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
 
 import java.io.*;

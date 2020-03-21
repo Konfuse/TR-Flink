@@ -2,12 +2,10 @@ package com.konfuse;
 
 import com.konfuse.geometry.*;
 import com.konfuse.geopartitioner.LineSTRPartitioner;
-import com.konfuse.internal.PartitionedLeafNode;
+import com.konfuse.internal.MBR;
 import com.konfuse.internal.RTree;
 import org.apache.flink.api.common.functions.*;
-import org.apache.flink.api.common.operators.Order;
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 

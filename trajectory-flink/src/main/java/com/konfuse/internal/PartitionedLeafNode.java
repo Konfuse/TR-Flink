@@ -1,6 +1,5 @@
 package com.konfuse.internal;
 
-import com.konfuse.geometry.MBR;
 import com.konfuse.geometry.PartitionedMBR;
 
 import java.io.Serializable;

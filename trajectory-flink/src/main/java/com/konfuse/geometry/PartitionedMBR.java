@@ -1,5 +1,7 @@
 package com.konfuse.geometry;
 
+import com.konfuse.internal.MBR;
+
 import java.io.Serializable;
 import java.util.Comparator;
 

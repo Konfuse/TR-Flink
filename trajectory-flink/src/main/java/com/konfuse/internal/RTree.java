@@ -1,7 +1,6 @@
 package com.konfuse.internal;
 
 import com.konfuse.geometry.DataObject;
-import com.konfuse.geometry.MBR;
 import com.konfuse.geometry.PartitionedMBR;
 import com.konfuse.geometry.Point;
 
