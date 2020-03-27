@@ -49,17 +49,18 @@ public class BaseRoad {
                     Polyline geometry) {
         this.id = id;
         this.refId = refId;
-        this.oneway = oneway;
         this.priority = priority;
         this.maxSpeedForward = maxSpeedForward;
         this.maxSpeedBackward = maxSpeedBackward;
         this.length = length;
         if(oneway == -1){
+            this.oneway = 1;
             this.source = target;
             this.target = source;
             Polyline poly = invert(geometry);
             this.geometry = OperatorExportToWkb.local().execute(WkbExportFlags.wkbExportLineString, poly, null).array();
         }else{
+            this.oneway = oneway;
             this.source = source;
             this.target = target;
             this.geometry = OperatorExportToWkb.local()
@@ -86,18 +87,19 @@ public class BaseRoad {
                     byte[] wkb) {
         this.id = id;
         this.refId = osmId;
-        this.oneway = oneway;
         this.priority = priority;
         this.maxSpeedForward = maxSpeedForward;
         this.maxSpeedBackward = maxSpeedBackward;
         this.length = length;
-        if(oneway == -1){
+        if(oneway == -1) {
+            this.oneway = 1;
             this.source = target;
             this.target = source;
             Polyline poly = invert((Polyline) OperatorImportFromWkb.local().execute(WkbImportFlags.wkbImportDefaults,
                     Type.Polyline, ByteBuffer.wrap(wkb), null));
             this.geometry = OperatorExportToWkb.local().execute(WkbExportFlags.wkbExportLineString, poly, null).array();
-        }else{
+        } else {
+            this.oneway = oneway;
             this.source = source;
             this.target = target;
             this.geometry = wkb;
@@ -161,6 +163,14 @@ public class BaseRoad {
      */
     public float priority() {
         return priority;
+    }
+
+    public float maxspeedforward() {
+        return maxSpeedForward;
+    }
+
+    public float maxspeedbackward() {
+        return maxSpeedBackward;
     }
 
     /**

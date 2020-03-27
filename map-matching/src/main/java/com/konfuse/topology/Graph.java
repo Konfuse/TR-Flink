@@ -5,7 +5,7 @@ import com.konfuse.road.Road;
 import java.util.*;
 
 /**
- * Directed graph providing a basic routing topology to be used by {@link Router} implementations.
+ * Directed graph providing a basic routing topology.
  *
  * @param <E> {@link AbstractLink} type of the graph.
  *
