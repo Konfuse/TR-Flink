@@ -100,8 +100,8 @@ public class FmmMatcher {
     public void computeEmissionProbabilities(TimeStep<RoadPoint, GPSPoint, Path<Road>> timeStep) {
         for (RoadPoint candidate : timeStep.candidates) {
             double distance = spatial.distance(new Point(timeStep.observation.getPosition().getX(), timeStep.observation.getPosition().getY()), candidate.point());
-            timeStep.addEmissionLogProbability(candidate, fmmProbabilities.emissionLogProbability(distance));
-//            timeStep.addEmissionLogProbability(candidate, fmmProbabilities.emissionProbability(distance));
+//            timeStep.addEmissionLogProbability(candidate, fmmProbabilities.emissionLogProbability(distance));
+            timeStep.addEmissionProbability(candidate, fmmProbabilities.emissionProbability(distance));
         }
     }
 
@@ -118,9 +118,7 @@ public class FmmMatcher {
                 LinkedList<Road> roadList = new LinkedList<>();
                 timeStep.addRoadPath(from, to, new Path<>(from, to, roadList));
 
-                final double transitionLogProbability = fmmProbabilities.transitionLogProbability(spDistance, linearDistance, timeDiff);
-//                final double transitionLogProbability = fmmProbabilities.transitionLogProbability(spDistance, linearDistance);
-//                final double transitionLogProbability = fmmProbabilities.transitionProbability(spDistance, linearDistance);
+                final double transitionLogProbability = fmmProbabilities.transitionProbability(spDistance, linearDistance);
                 timeStep.addTransitionLogProbability(from, to, transitionLogProbability);
             }
         }

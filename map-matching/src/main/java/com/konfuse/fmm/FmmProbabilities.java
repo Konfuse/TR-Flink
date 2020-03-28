@@ -57,10 +57,6 @@ public class FmmProbabilities {
      * candidates.
      * @param linearDist Linear distance [m] between two consecutive GPS measurements.
      */
-    public double transitionLogProbability(double shortestPathDist, double linearDist) {
-        return Math.log(transitionProbability(shortestPathDist, linearDist));
-    }
-
     public double transitionLogProbability(double shortestPathDist, double linearDist, double timeDiff) {
         double transitionMetric = normalizedTransitionMetric(shortestPathDist, linearDist, timeDiff);
         return Distributions.logExponentialDistribution(beta, transitionMetric);

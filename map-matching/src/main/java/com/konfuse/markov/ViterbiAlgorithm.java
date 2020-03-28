@@ -255,10 +255,44 @@ public class ViterbiAlgorithm<S, O, D> {
      * See {@link #nextStep(Object, Collection, Map, Map, Map)}
      */
     public void nextStep(O observation, Collection<S> candidates,
-            Map<S, Double> emissionLogProbabilities,
-            Map<Transition<S>, Double> transitionLogProbabilities) {
+                         Map<S, Double> emissionLogProbabilities,
+                         Map<Transition<S>, Double> transitionLogProbabilities) {
         nextStep(observation, candidates, emissionLogProbabilities, transitionLogProbabilities,
                 new LinkedHashMap<Transition<S>, D>());
+    }
+
+    public void fmmNextStep(O observation, Collection<S> candidates,
+                         Map<S, Double> emissionLogProbabilities,
+                         Map<Transition<S>, Double> transitionLogProbabilities,
+                         Map<Transition<S>, D> transitionDescriptors) {
+        if (!processingStarted()) {
+            throw new IllegalStateException(
+                    "startWithInitialStateProbabilities() or startWithInitialObservation() "
+                            + "must be called first.");
+        }
+        if (isBroken) {
+            throw new IllegalStateException("Method must not be called after an HMM break.");
+        }
+
+        // Forward step
+        ForwardStepResult<S, O, D> forwardStepResult = fmmForwardStep(observation, prevCandidates,
+                candidates, message, emissionLogProbabilities, transitionLogProbabilities,
+                transitionDescriptors);
+        isBroken = hmmBreak(forwardStepResult.newMessage);
+        if (isBroken) return;
+        if (messageHistory != null) {
+            messageHistory.add(forwardStepResult.newMessage);
+        }
+        message = forwardStepResult.newMessage;
+        lastExtendedStates = forwardStepResult.newExtendedStates;
+
+        prevCandidates = new ArrayList<>(candidates); // Defensive copy.
+
+        if (forwardBackward != null) {
+            forwardBackward.nextStep(observation, candidates,
+                    Utils.logToNonLogProbabilities(emissionLogProbabilities),
+                    Utils.logToNonLogProbabilities(transitionLogProbabilities));
+        }
     }
 
     /**
@@ -356,7 +390,6 @@ public class ViterbiAlgorithm<S, O, D> {
         // order.
         final Map<S, Double> initialMessage = new LinkedHashMap<>();
         for (S candidate : candidates) {
-//            final double logProbability = 0;
             final Double logProbability = initialLogProbabilities.get(candidate);
             if (logProbability == null) {
                 throw new NullPointerException("No initial probability for " + candidate);
@@ -409,6 +442,45 @@ public class ViterbiAlgorithm<S, O, D> {
             // Throws NullPointerException if curState is not stored in the map.
             result.newMessage.put(curState, maxLogProbability + emissionLogProbabilities.get(curState));
 //            result.newMessage.put(curState, maxLogProbability);
+
+            // Note that maxPrevState == null if there is no transition with non-zero probability.
+            // In this case curState has zero probability and will not be part of the most likely
+            // sequence, so we don't need an ExtendedState.
+            if (maxPrevState != null) {
+                final Transition<S> transition = new Transition<>(maxPrevState, curState);
+                final ExtendedState<S, O, D> extendedState = new ExtendedState<>(curState,
+                        lastExtendedStates.get(maxPrevState), observation,
+                        transitionDescriptors.get(transition));
+                result.newExtendedStates.put(curState, extendedState);
+            }
+        }
+        return result;
+    }
+
+    private ForwardStepResult<S, O, D> fmmForwardStep(O observation, Collection<S> prevCandidates,
+                                                   Collection<S> curCandidates, Map<S, Double> message,
+                                                   Map<S, Double> emissionLogProbabilities,
+                                                   Map<Transition<S>, Double> transitionLogProbabilities,
+                                                   Map<Transition<S>,D> transitionDescriptors) {
+        final ForwardStepResult<S, O, D> result = new ForwardStepResult<>(curCandidates.size());
+        assert !prevCandidates.isEmpty();
+
+        for (S curState : curCandidates) {
+            double maxLogProbability = Double.NEGATIVE_INFINITY;
+            S maxPrevState = null;
+            for (S prevState : prevCandidates) {
+//                final double logProbability = message.get(prevState) + transitionLogProbability(
+//                        prevState, curState, transitionLogProbabilities);
+                final double logProbability = message.get(prevState) + getProbability(
+                        prevState, curState, transitionLogProbabilities, emissionLogProbabilities);
+                if (logProbability > maxLogProbability) {
+                    maxLogProbability = logProbability;
+                    maxPrevState = prevState;
+                }
+            }
+            // Throws NullPointerException if curState is not stored in the map.
+//            result.newMessage.put(curState, maxLogProbability + emissionLogProbabilities.get(curState));
+            result.newMessage.put(curState, maxLogProbability);
 
             // Note that maxPrevState == null if there is no transition with non-zero probability.
             // In this case curState has zero probability and will not be part of the most likely

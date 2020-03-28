@@ -41,6 +41,13 @@ public class TimeStep<S, O, D> {
         this.candidates = candidates;
     }
 
+    public void addEmissionProbability(S candidate, double emissionProbability) {
+        if (emissionLogProbabilities.containsKey(candidate)) {
+            throw new IllegalArgumentException("Candidate has already been added.");
+        }
+        emissionLogProbabilities.put(candidate, emissionProbability);
+    }
+
     public void addEmissionLogProbability(S candidate, double emissionLogProbability) {
         if (emissionLogProbabilities.containsKey(candidate)) {
             throw new IllegalArgumentException("Candidate has already been added.");
