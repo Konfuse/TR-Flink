@@ -23,8 +23,8 @@ public class TestEmm {
         map.construct();
 
         /*======================build vertex index==========================*/
-        HashMap<Long, Vertex> vertices = getVertices(map);
-
+//        HashMap<Long, Vertex> vertices = getVertices(map);
+        HashMap<Long, Vertex> vertices = getNodes(map);
         /*======================build vertex index==========================*/
         ArrayList<Point> pointList = new ArrayList<>();
         for (Map.Entry<Long, Vertex> vertex : vertices.entrySet()) {
@@ -47,7 +47,7 @@ public class TestEmm {
 //        long search_time = end - start;
 //        System.out.println("Search time :" + search_time);
 
-        long search_time = testMatch("C:/Users/Konfuse/Desktop/1", emmMatcher, map, vertices, tree);
+        long search_time = testMatch("E:\\test1\\trajectory", emmMatcher, map, vertices, tree);
         System.out.println("Search time :" + search_time + "ms");
 
 //        System.out.println("************road***********");
@@ -89,6 +89,24 @@ public class TestEmm {
                 }
                 count++;
             }
+        }
+        return vertices;
+    }
+
+    public static HashMap<Long, Vertex> getNodes(RoadMap map) {
+        HashMap<Long, Road> roads = map.getEdges();
+        HashMap<Long, Vertex> vertices = new HashMap<>();
+
+        for (Road road : roads.values()) {
+            List<Point> edgeNodes = road.getPoints();
+            if (!vertices.containsKey(road.source())) {
+                vertices.put(road.source(), new Vertex(road.source(), edgeNodes.get(0).getX(), edgeNodes.get(0).getY()));
+            }
+            vertices.get(road.source()).getRelateEdges().add(road.id());
+            if (!vertices.containsKey(road.target())) {
+                vertices.put(road.target(), new Vertex(road.target(), edgeNodes.get(1).getX(), edgeNodes.get(1).getY()));
+            }
+            vertices.get(road.target()).getRelateEdges().add(road.id());
         }
         return vertices;
     }
