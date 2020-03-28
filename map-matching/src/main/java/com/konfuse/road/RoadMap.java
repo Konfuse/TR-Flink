@@ -3,6 +3,7 @@ package com.konfuse.road;
 import com.esri.core.geometry.*;
 import com.konfuse.IndexBuilder;
 import com.konfuse.RTree;
+import com.konfuse.emm.Vertex;
 import com.konfuse.geometry.DataObject;
 import com.konfuse.geometry.Point;
 import com.konfuse.geometry.Rectangle;
@@ -21,6 +22,8 @@ import java.util.*;
  */
 public class RoadMap extends Graph<Road> {
     private transient Index index = null;
+    private static HashMap<Long, Long> nodeRef = new HashMap<>();
+    private static long vertexId = 0, roadId = 0;
 
     public class Index implements Serializable {
         private RTree tree;
@@ -121,14 +124,72 @@ public class RoadMap extends Graph<Road> {
         }
     }
 
-    private static Collection<Road> split(BaseRoad base) {
+//    private static Collection<Road> split(BaseRoad base) {
+//        ArrayList<Road> roads = new ArrayList<>();
+//
+//        if(base.oneway() == 0 || base.oneway() == 2) {
+//            roads.add(new Road(base, Heading.forward));
+//            roads.add(new Road(base, Heading.backward));
+//        } else {
+//            roads.add(new Road(base, Heading.forward));
+//        }
+//
+//        return roads;
+//    }
+
+    private static Collection<Road> split(BaseRoad baseRoad) {
         ArrayList<Road> roads = new ArrayList<>();
 
-        if(base.oneway() == 0 || base.oneway() == 2){
-            roads.add(new Road(base, Heading.forward));
-            roads.add(new Road(base, Heading.backward));
-        }else{
-            roads.add(new Road(base, Heading.forward));
+        Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
+                WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(baseRoad.wkb()), null);
+
+        int size = geometry.getPointCount();
+        for (int i = 1; i < size; i++) {
+            Polyline polyline = new Polyline();
+            polyline.startPath(geometry.getPoint(i - 1));
+            polyline.lineTo(geometry.getPoint(i));
+            byte[] wkb = OperatorExportToWkb.local()
+                    .execute(WkbExportFlags.wkbExportLineString, geometry, null).array();
+
+            long source, target;
+            if (i == 1) {
+                if (!nodeRef.containsKey(baseRoad.source())) {
+                    nodeRef.put(baseRoad.source(), vertexId);
+                    source = vertexId;
+                    target = vertexId + 1;
+                    vertexId += 2;
+                } else {
+                    source = nodeRef.get(baseRoad.source());
+                    target = vertexId;
+                    vertexId += 1;
+                }
+            } else if (i == size - 1) {
+                if (!nodeRef.containsKey(baseRoad.target())) {
+                    nodeRef.put(baseRoad.source(), vertexId);
+                    source = vertexId;
+                    target = vertexId + 1;
+                    vertexId += 2;
+                } else {
+                    source = vertexId;
+                    target = nodeRef.get(baseRoad.target());
+                    vertexId += 1;
+                }
+            } else {
+                source = vertexId;
+                target = vertexId + 1;
+                vertexId += 2;
+            }
+
+            BaseRoad base = new BaseRoad(roadId, source, target, baseRoad.refid(), baseRoad.oneway(),
+                    baseRoad.priority(), baseRoad.maxspeedforward(), baseRoad.maxspeedbackward(), baseRoad.length(), wkb);
+            roadId += 1;
+
+            if(base.oneway() == 0 || base.oneway() == 2) {
+                roads.add(new Road(base, Heading.forward));
+                roads.add(new Road(base, Heading.backward));
+            } else {
+                roads.add(new Road(base, Heading.forward));
+            }
         }
 
         return roads;
