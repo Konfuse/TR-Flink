@@ -517,6 +517,7 @@ public class ViterbiAlgorithm<S, O, D> {
         final Double transitionLogProbability =
                 transitionLogProbabilities.get(new Transition<S>(prevState, curState));
         if (transitionLogProbability == null) {
+//            System.out.println("transitionLogProbability is null");
             return Double.NEGATIVE_INFINITY; // Transition has zero probability.
         } else {
             return transitionLogProbability;

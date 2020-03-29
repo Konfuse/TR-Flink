@@ -82,7 +82,7 @@ public class FmmMatcher {
                 viterbi.startWithInitialObservation(timeStep.observation, timeStep.candidates, timeStep.emissionLogProbabilities);
             } else {
                 computeTransitionProbabilities(prevTimeStep, timeStep);
-                viterbi.nextStep(timeStep.observation, timeStep.candidates,
+                viterbi.fmmNextStep(timeStep.observation, timeStep.candidates,
                         timeStep.emissionLogProbabilities, timeStep.transitionLogProbabilities,
                         timeStep.roadPaths);
             }

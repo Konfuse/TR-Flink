@@ -1,13 +1,9 @@
 package com.konfuse;
 
-import com.konfuse.geometry.Point;
 import com.konfuse.hmm.OfflineMatcher;
 import com.konfuse.road.GPSPoint;
 import com.konfuse.road.RoadMap;
-import com.konfuse.road.RoadPoint;
 import com.konfuse.road.RoadReader;
-import com.konfuse.spatial.Geography;
-import com.konfuse.tools.GenerateTestGPSPoint;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -74,6 +70,10 @@ public class TestOfflineMapMatching {
         long pointCount = 0;
 
         for (File file : fileList) {
+            if (trajectoryCount == 200) {
+                break;
+            }
+            System.out.println("the " + (++trajectoryCount) + "th trajectory is being processed: " + file.getName());
             try {
                 reader = new BufferedReader(new FileReader(file));
                 String line;
@@ -87,7 +87,7 @@ public class TestOfflineMapMatching {
             } catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
-            System.out.println("the " + (trajectoryCount++) + "th trajectory is being processed: " + file.getName());
+
             try {
                 long start = System.currentTimeMillis();
                 offlineMatcher.match(gpsPoints, map, 20);
@@ -96,7 +96,7 @@ public class TestOfflineMapMatching {
             } catch (Exception e) {
                 e.printStackTrace();
                 ++exceptCount;
-                System.out.println((trajectoryCount++) + "th trajectory failed");
+                System.out.println((trajectoryCount) + "th trajectory failed");
 
 //                if (reader != null) {
 //                    try {
@@ -118,6 +118,7 @@ public class TestOfflineMapMatching {
             }
             gpsPoints.clear();
         }
+        System.out.println("trajectories processed: " + trajectoryCount);
         System.out.println("trajectories failed: " + exceptCount);
         System.out.println("trajectory points matched: " + pointCount);
         return search_time;

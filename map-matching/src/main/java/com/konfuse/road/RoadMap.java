@@ -232,21 +232,25 @@ public class RoadMap extends Graph<Road> {
 
         System.gc();
         memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-
         System.out.println("index and topology constructing ...");
 
         super.construct();
+
+        System.out.println("road map contains " + getNodes().size() + " vertices");
+        System.gc();
+        memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) - memory;
+        System.out.println(Math.max(0, Math.round(memory / 1E6)) + " megabytes used for spatial topology object (estimate)" );
+
+        memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
 
         index = new Index();
         ArrayList<Road> roadList = new ArrayList<>(getEdges().values());
         index.put(roadList);
 
-        System.out.println("road map contains " + getNodes().size() + " vertices");
         System.out.println("index and topology constructed.");
-
         System.gc();
         memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) - memory;
-        System.out.println(Math.max(0, Math.round(memory)) + " bits used for spatial index (estimate)" );
+        System.out.println(Math.max(0, Math.round(memory / 1E6)) + " megabytes used for spatial index (estimate)" );
 
         return this;
     }

@@ -79,6 +79,7 @@ public class HmmProbabilities {
         if (timeDiff < 0.0) {
             throw new IllegalStateException("Time difference between subsequent location measurements must be >= 0.");
         }
-        return Math.abs(linearDistance - routeLength) / (timeDiff * timeDiff);
+//        return Math.abs(linearDistance - routeLength) / (timeDiff * timeDiff);
+        return Math.abs(linearDistance - routeLength);
     }
 }

@@ -33,6 +33,7 @@ public class OfflineMatcher {
                 viterbi.startWithInitialObservation(timeStep.observation, timeStep.candidates, timeStep.emissionLogProbabilities);
             } else {
                 computeTransitionProbabilities(prevTimeStep, timeStep);
+//                System.out.println(timeStep.transitionLogProbabilities.values());
                 viterbi.nextStep(timeStep.observation, timeStep.candidates,
                         timeStep.emissionLogProbabilities, timeStep.transitionLogProbabilities,
                         timeStep.roadPaths);
