@@ -26,7 +26,7 @@ public class TestOfflineMapMatching {
         map.construct();
 
         OfflineMatcher offlineMatcher = new OfflineMatcher();
-        long search_time = testMatch("D:\\SchoolWork\\HUST\\DataBaseGroup\\Roma\\Roma_by_date", offlineMatcher, map);
+        long search_time = testMatch("D:\\SchoolWork\\HUST\\DataBaseGroup\\Roma\\Roma_by_hour", offlineMatcher, map);
         System.out.println("Search time :" + search_time + "ms");
 
 //        HashMap<Long, Road> roads = map.getRoads();
@@ -70,7 +70,7 @@ public class TestOfflineMapMatching {
         long pointCount = 0;
 
         for (File file : fileList) {
-            if (trajectoryCount == 200) {
+            if (trajectoryCount == 1000) {
                 break;
             }
             System.out.println("the " + (++trajectoryCount) + "th trajectory is being processed: " + file.getName());
