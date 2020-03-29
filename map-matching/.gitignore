@@ -8,6 +8,7 @@
 out
 gen
 *.model
+*table
 
 output
 *.txt

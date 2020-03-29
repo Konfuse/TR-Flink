@@ -131,7 +131,7 @@ public class UBODT {
             e.printStackTrace();
         }
 
-        UBODT ubodt =  read(records, multiplier);
+        UBODT ubodt = read(records, multiplier);
         records.clear();
         return ubodt;
     }

@@ -47,7 +47,7 @@ public class RoadMap extends Graph<Road> {
                 ids.add(id);
             }
             int size = rectangles.size();
-            System.out.println(size);
+            System.out.println(size + " roads segments added into index");
             this.tree = new IndexBuilder().createRTreeBySTR(rectangles.toArray(new Rectangle[size]));
         }
 
@@ -124,76 +124,76 @@ public class RoadMap extends Graph<Road> {
         }
     }
 
-//    private static Collection<Road> split(BaseRoad base) {
-//        ArrayList<Road> roads = new ArrayList<>();
-//
-//        if(base.oneway() == 0 || base.oneway() == 2) {
-//            roads.add(new Road(base, Heading.forward));
-//            roads.add(new Road(base, Heading.backward));
-//        } else {
-//            roads.add(new Road(base, Heading.forward));
-//        }
-//
-//        return roads;
-//    }
-
-    private static Collection<Road> split(BaseRoad baseRoad) {
+    private static Collection<Road> split(BaseRoad base) {
         ArrayList<Road> roads = new ArrayList<>();
 
-        Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
-                WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(baseRoad.wkb()), null);
-
-        int size = geometry.getPointCount();
-        for (int i = 1; i < size; i++) {
-            Polyline polyline = new Polyline();
-            polyline.startPath(geometry.getPoint(i - 1));
-            polyline.lineTo(geometry.getPoint(i));
-            byte[] wkb = OperatorExportToWkb.local()
-                    .execute(WkbExportFlags.wkbExportLineString, geometry, null).array();
-
-            long source, target;
-            if (i == 1) {
-                if (!nodeRef.containsKey(baseRoad.source())) {
-                    nodeRef.put(baseRoad.source(), vertexId);
-                    source = vertexId;
-                    target = vertexId + 1;
-                    vertexId += 2;
-                } else {
-                    source = nodeRef.get(baseRoad.source());
-                    target = vertexId;
-                    vertexId += 1;
-                }
-            } else if (i == size - 1) {
-                if (!nodeRef.containsKey(baseRoad.target())) {
-                    nodeRef.put(baseRoad.source(), vertexId);
-                    source = vertexId;
-                    target = vertexId + 1;
-                    vertexId += 2;
-                } else {
-                    source = vertexId;
-                    target = nodeRef.get(baseRoad.target());
-                    vertexId += 1;
-                }
-            } else {
-                source = vertexId;
-                target = vertexId + 1;
-                vertexId += 2;
-            }
-
-            BaseRoad base = new BaseRoad(roadId, source, target, baseRoad.refid(), baseRoad.oneway(),
-                    baseRoad.priority(), baseRoad.maxspeedforward(), baseRoad.maxspeedbackward(), baseRoad.length(), wkb);
-            roadId += 1;
-
-            if(base.oneway() == 0 || base.oneway() == 2) {
-                roads.add(new Road(base, Heading.forward));
-                roads.add(new Road(base, Heading.backward));
-            } else {
-                roads.add(new Road(base, Heading.forward));
-            }
+        if(base.oneway() == 0 || base.oneway() == 2) {
+            roads.add(new Road(base, Heading.forward));
+            roads.add(new Road(base, Heading.backward));
+        } else {
+            roads.add(new Road(base, Heading.forward));
         }
 
         return roads;
     }
+
+//    private static Collection<Road> split(BaseRoad baseRoad) {
+//        ArrayList<Road> roads = new ArrayList<>();
+//
+//        Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
+//                WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(baseRoad.wkb()), null);
+//
+//        int size = geometry.getPointCount();
+//        for (int i = 1; i < size; i++) {
+//            Polyline polyline = new Polyline();
+//            polyline.startPath(geometry.getPoint(i - 1));
+//            polyline.lineTo(geometry.getPoint(i));
+//            byte[] wkb = OperatorExportToWkb.local()
+//                    .execute(WkbExportFlags.wkbExportLineString, geometry, null).array();
+//
+//            long source, target;
+//            if (i == 1) {
+//                if (!nodeRef.containsKey(baseRoad.source())) {
+//                    nodeRef.put(baseRoad.source(), vertexId);
+//                    source = vertexId;
+//                    target = vertexId + 1;
+//                    vertexId += 2;
+//                } else {
+//                    source = nodeRef.get(baseRoad.source());
+//                    target = vertexId;
+//                    vertexId += 1;
+//                }
+//            } else if (i == size - 1) {
+//                if (!nodeRef.containsKey(baseRoad.target())) {
+//                    nodeRef.put(baseRoad.source(), vertexId);
+//                    source = vertexId;
+//                    target = vertexId + 1;
+//                    vertexId += 2;
+//                } else {
+//                    source = vertexId;
+//                    target = nodeRef.get(baseRoad.target());
+//                    vertexId += 1;
+//                }
+//            } else {
+//                source = vertexId;
+//                target = vertexId + 1;
+//                vertexId += 2;
+//            }
+//
+//            BaseRoad base = new BaseRoad(roadId, source, target, baseRoad.refid(), baseRoad.oneway(),
+//                    baseRoad.priority(), baseRoad.maxspeedforward(), baseRoad.maxspeedbackward(), baseRoad.length(), wkb);
+//            roadId += 1;
+//
+//            if(base.oneway() == 0 || base.oneway() == 2) {
+//                roads.add(new Road(base, Heading.forward));
+//                roads.add(new Road(base, Heading.backward));
+//            } else {
+//                roads.add(new Road(base, Heading.forward));
+//            }
+//        }
+//
+//        return roads;
+//    }
 
     public static RoadMap Load(RoadReader reader) throws Exception {
         long memory = 0;
@@ -213,6 +213,7 @@ public class RoadMap extends Graph<Road> {
                 roadmap.add(uni);
             }
         }
+//        nodeRef.clear();
         reader.close();
 
         System.gc();
@@ -240,7 +241,8 @@ public class RoadMap extends Graph<Road> {
         ArrayList<Road> roadList = new ArrayList<>(getEdges().values());
         index.put(roadList);
 
-        System.out.println("index and topology constructed");
+        System.out.println("road map contains " + getNodes().size() + " vertices");
+        System.out.println("index and topology constructed.");
 
         System.gc();
         memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) - memory;

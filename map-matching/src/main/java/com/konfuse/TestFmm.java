@@ -17,19 +17,33 @@ import java.util.List;
  */
 public class TestFmm {
     public static void main(String[] args) throws Exception{
+        long memory = 0;
+        String udobtPath = "udobt.table";
+
         RoadMap map = RoadMap.Load(new RoadReader());
         map.construct();
+
+        FmmMatcher fmmMatcher = new FmmMatcher(2);
+
+        System.out.println("read ubodt table.");
+        System.gc();
+        memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+        long start = System.currentTimeMillis();
+        fmmMatcher.readUDOBTFile(udobtPath, map);
+        long end = System.currentTimeMillis();
+        long build_time = end - start;
+        System.out.println("UBODT read time :" + build_time + "ms");
+        System.gc();
+        memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) - memory;
+        System.out.println(Math.max(0, Math.round(memory)) + " bits used for UBODT table (estimate)" );
+
+        long search_time = testMatch("D:\\SchoolWork\\HUST\\DataBaseGroup\\Roma\\Roma_by_date", fmmMatcher, map);
+        System.out.println("Search time :" + search_time + "ms");
 
 //        GenerateTestGPSPoint test = new GenerateTestGPSPoint();
 //        List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
 //        List<GPSPoint> testGPSPoint = test.generateTestCase(testRoads);
 //        List<GPSPoint> testGPSPoint = readGPSPoint("199_2014-02-28.txt");
-
-        FmmMatcher fmmMatcher = new FmmMatcher(2);
-        fmmMatcher.constructUBODT(map, 3000);
-
-        long search_time = testMatch("C:/Users/Konfuse/Desktop/1", fmmMatcher, map);
-        System.out.println("Search time :" + search_time + "ms");
 
 //        List<Road> c_path = fmmMatcher.constructCompletePathOptimized(matchedRoadPoints, map);
 //        List<GPSPoint> c_path_gps = fmmMatcher.getCompletePathGPS(c_path);
@@ -97,12 +111,13 @@ public class TestFmm {
     }
 
     public static long testMatch(String path, FmmMatcher fmmMatcher, RoadMap map) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         List<GPSPoint> gpsPoints = new ArrayList<>();
         File[] fileList = new File(path).listFiles();
         BufferedReader reader = null;
         long search_time = 0;
-        int count = 0;
-        int except = 0;
+        int trajectoryCount = 0, exceptCount = 0;
+        long pointCount = 0;
 
         for (File file : fileList) {
             try {
@@ -112,13 +127,14 @@ public class TestFmm {
                     String[] items = line.split(";");
                     double x = Double.parseDouble(items[0]);
                     double y = Double.parseDouble(items[1]);
-                    long time = Long.parseLong(items[2]);
+                    long time = simpleDateFormat.parse(items[2]).getTime() / 1000;
                     gpsPoints.add(new GPSPoint(time, x, y));
+                    ++pointCount;
                 }
-            } catch (IOException e) {
+            } catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
-            System.out.println("the " + (count++) + "th trajectory is being processed: " + file.getName());
+            System.out.println("the " + (trajectoryCount++) + "th trajectory is being processed: " + file.getName());
             try {
                 long start = System.currentTimeMillis();
                 fmmMatcher.match(gpsPoints, map, 20);
@@ -126,29 +142,31 @@ public class TestFmm {
                 search_time += end - start;
             } catch (Exception e) {
                 e.printStackTrace();
-                ++except;
+                ++exceptCount;
+                System.out.println((trajectoryCount++) + "th trajectory failed");
 
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (IOException e2) {
-                        e2.printStackTrace();
-                    }
-                }
-
-                try{
-                    if(file.delete()) {
-                        System.out.println(file.getName() + " 文件已被删除！");
-                    } else {
-                        System.out.println("文件删除失败！");
-                    }
-                } catch(Exception e3){
-                    e3.printStackTrace();
-                }
+//                if (reader != null) {
+//                    try {
+//                        reader.close();
+//                    } catch (IOException e2) {
+//                        e2.printStackTrace();
+//                    }
+//                }
+//
+//                try{
+//                    if(file.delete()) {
+//                        System.out.println(file.getName() + " 文件已被删除！");
+//                    } else {
+//                        System.out.println("文件删除失败！");
+//                    }
+//                } catch(Exception e3){
+//                    e3.printStackTrace();
+//                }
             }
             gpsPoints.clear();
         }
-        System.out.println(except + " trajectories failed");
+        System.out.println("trajectories failed: " + exceptCount);
+        System.out.println("trajectory points matched: " + pointCount);
         return search_time;
     }
 }
