@@ -77,16 +77,16 @@ public class OfflineMatcher {
     public double shortestDistance(RoadPoint source, RoadPoint target, DistanceCost cost) {
         double distanceToEndVertexOfSource = cost.cost(source.edge(), 1 -  source.fraction());
         double distanceFromStartVertexOfDestinationToTarget = cost.cost(target.edge(), target.fraction());
-        if(source.edge().id() == target.edge().id()){
-            if(source.fraction() < target.fraction()){
+        if(source.edge().id() == target.edge().id()) {
+            if(source.fraction() < target.fraction()) {
                 return 2 * source.edge().length() - distanceToEndVertexOfSource +  distanceFromStartVertexOfDestinationToTarget;
             }
-            else{
+            else {
                 return distanceFromStartVertexOfDestinationToTarget - distanceToEndVertexOfSource;
             }
         }
 
-        List<Road> shortestPath = dijkstra.route(source, target, cost);
+        List<Road> shortestPath = dijkstra.route(source, target, cost, null, 1000.0);
 
         if(shortestPath == null){
             return Double.MAX_VALUE;

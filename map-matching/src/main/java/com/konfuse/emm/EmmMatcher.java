@@ -198,15 +198,15 @@ public class EmmMatcher {
                     }
 
                     double maxScore = Integer.MIN_VALUE;
-                    System.out.print("scores is: ");
+//                    System.out.print("scores is: ");
                     for (Score score : scores) {
-                        System.out.print(score.score + ";");
+//                        System.out.print(score.score + ";");
                         if(maxScore < score.score){
                             maxScore = score.score;
                         }
                     }
 
-                    System.out.println("scores's size is: " + scores.size());
+//                    System.out.println("scores's size is: " + scores.size());
 
                     double bound = maxScore > 0 ? maxScore * 0.8 : maxScore /0.8;
                     for (Score score : scores) {

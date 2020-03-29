@@ -76,9 +76,9 @@ public class HmmProbabilities {
      * sampling interval.
      */
     private double normalizedTransitionMetric(double routeLength, double linearDistance, double timeDiff) {
-        if (timeDiff < 0.0) {
-            throw new IllegalStateException("Time difference between subsequent location measurements must be >= 0.");
-        }
+//        if (timeDiff < 0.0) {
+//            throw new IllegalStateException("Time difference between subsequent location measurements must be >= 0.");
+//        }
 //        return Math.abs(linearDistance - routeLength) / (timeDiff * timeDiff);
         return Math.abs(linearDistance - routeLength);
     }

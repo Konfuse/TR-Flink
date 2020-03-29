@@ -1,9 +1,6 @@
 package com.konfuse.topology;
 
 
-import com.konfuse.fmm.Record;
-import com.konfuse.road.Road;
-import com.konfuse.road.RoadMap;
 import com.konfuse.util.Quadruple;
 import com.konfuse.util.Tuple;
 

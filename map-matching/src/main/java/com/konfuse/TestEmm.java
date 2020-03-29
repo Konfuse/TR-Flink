@@ -2,12 +2,12 @@ package com.konfuse;
 
 import com.konfuse.emm.EmmMatcher;
 import com.konfuse.emm.Vertex;
-import com.konfuse.fmm.FmmMatcher;
 import com.konfuse.geometry.Point;
 import com.konfuse.road.*;
-import com.konfuse.tools.GenerateTestGPSPoint;
 
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,10 +19,12 @@ import java.util.Map;
  */
 public class TestEmm {
     public static void main(String[] args) throws Exception {
+        long memory = 0;
+
         RoadMap map = RoadMap.Load(new RoadReader());
         map.construct();
 
-        /*======================build vertex index==========================*/
+        /*======================build vertex structure==========================*/
 //        HashMap<Long, Vertex> vertices = getVertices(map);
         HashMap<Long, Vertex> vertices = getNodes(map);
         /*======================build vertex index==========================*/
@@ -31,7 +33,15 @@ public class TestEmm {
             pointList.add(new Point(vertex.getKey(), vertex.getValue().x, vertex.getValue().y));
         }
         int size = pointList.size();
+        System.gc();
+        memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+
         RTree tree = new IndexBuilder().createRTreeBySTR(pointList.toArray(new Point[size]));
+
+        System.gc();
+        memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) - memory;
+        System.out.println(Math.max(0, Math.round(memory / 1E6)) + " megabytes used for vertices index (estimate)" );
+
 
         /*======================generate test case==========================*/
 //        GenerateTestGPSPoint test = new GenerateTestGPSPoint();
@@ -40,15 +50,14 @@ public class TestEmm {
 
         /*======================match==========================*/
         EmmMatcher emmMatcher = new EmmMatcher();
+        long search_time = testMatch("D:\\SchoolWork\\HUST\\DataBaseGroup\\Roma\\Roma_by_half_hour", emmMatcher, map, vertices, tree);
+        System.out.println("Search time :" + search_time + "ms");
 
 //        long start = System.currentTimeMillis();
 //        List<RoadPoint> matchedRoadPoints = emmMatcher.match(testGPSPoint, map, vertices, tree);
 //        long end = System.currentTimeMillis();
 //        long search_time = end - start;
 //        System.out.println("Search time :" + search_time);
-
-        long search_time = testMatch("E:\\test1\\trajectory", emmMatcher, map, vertices, tree);
-        System.out.println("Search time :" + search_time + "ms");
 
 //        System.out.println("************road***********");
 //        test.writeAsTxt(testRoads, "output/road.txt");
@@ -136,14 +145,20 @@ public class TestEmm {
     }
 
     public static long testMatch(String path, EmmMatcher emmMatcher, RoadMap map, HashMap<Long, Vertex> vertices, RTree tree) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         List<GPSPoint> gpsPoints = new ArrayList<>();
         File[] fileList = new File(path).listFiles();
         BufferedReader reader = null;
         long search_time = 0;
-        int count = 0;
-        int except = 0;
+        int trajectoryCount = 0, exceptCount = 0;
+        long pointCount = 0, currentTrajectoryPointCount;
 
         for (File file : fileList) {
+            currentTrajectoryPointCount = 0;
+            if (trajectoryCount == 1000) {
+                break;
+            }
+            System.out.println("the " + (++trajectoryCount) + "th trajectory is being processed: " + file.getName());
             try {
                 reader = new BufferedReader(new FileReader(file));
                 String line;
@@ -151,28 +166,25 @@ public class TestEmm {
                     String[] items = line.split(";");
                     double x = Double.parseDouble(items[0]);
                     double y = Double.parseDouble(items[1]);
-                    long time = Long.parseLong(items[2]);
+                    long time = simpleDateFormat.parse(items[2]).getTime() / 1000;
                     gpsPoints.add(new GPSPoint(time, x, y));
+                    ++currentTrajectoryPointCount;
                 }
-            } catch (IOException e) {
+            } catch (IOException | ParseException e) {
                 e.printStackTrace();
             }
-            System.out.println("the " + (count++) + "th trajectory is being processed: " + file.getName());
 
-            long start = System.currentTimeMillis();
-            emmMatcher.match(gpsPoints, map, vertices, tree);
-            long end = System.currentTimeMillis();
-            search_time += end - start;
+            try {
+                long start = System.currentTimeMillis();
+                emmMatcher.match(gpsPoints, map, vertices, tree);
+                long end = System.currentTimeMillis();
+                search_time += end - start;
+                pointCount += currentTrajectoryPointCount;
+            } catch (Exception e) {
+                e.printStackTrace();
+                ++exceptCount;
+                System.out.println((trajectoryCount) + "th trajectory failed");
 
-//            try {
-//                long start = System.currentTimeMillis();
-//                emmMatcher.match(gpsPoints, map, vertices, tree);
-//                long end = System.currentTimeMillis();
-//                search_time += end - start;
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//                ++except;
-//
 //                if (reader != null) {
 //                    try {
 //                        reader.close();
@@ -190,10 +202,12 @@ public class TestEmm {
 //                } catch(Exception e3){
 //                    e3.printStackTrace();
 //                }
-//            }
+            }
             gpsPoints.clear();
         }
-        System.out.println(except + " trajectories failed");
+        System.out.println("trajectories processed: " + trajectoryCount);
+        System.out.println("trajectories failed: " + exceptCount);
+        System.out.println("trajectory points matched: " + pointCount);
         return search_time;
     }
 }
