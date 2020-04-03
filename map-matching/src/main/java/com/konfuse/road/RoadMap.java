@@ -96,6 +96,29 @@ public class RoadMap extends Graph<Road> {
             return split(nearests);
         }
 
+        public Set<RoadPoint> knnMatch(GPSPoint p, int k, double r) {
+            Geography spatial = new Geography();
+            Set<Tuple<Long, Double>> nearests = new HashSet<>();
+
+            ArrayList<DataObject> candidateObject = tree.knnQuery(p.getPosition(), k);
+            Point q = new Point(p.getPosition().getX(), p.getPosition().getY());
+            for (DataObject candidate : candidateObject){
+                long id = candidate.getId();
+                Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
+                        WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getEdges().get(2 * id).base().wkb()), null);
+                double fraction = spatial.intercept(geometry, q);
+                Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
+                double d = spatial.distance(e, q);
+
+                if (d < r) {
+//                    candidateRoads.add(new RoadPoint(getRoads().get(id), fraction));
+                    nearests.add(new Tuple<>(id, fraction));
+                }
+            }
+
+            return split(nearests);
+        }
+
         public Set<RoadPoint> radiusMatch(GPSPoint p, double r) {
             Geography spatial = new Geography();
             Set<Tuple<Long, Double>> nearests = new HashSet<>();

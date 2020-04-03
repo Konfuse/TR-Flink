@@ -38,7 +38,7 @@ public class TestFmm {
         memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) - memory;
         System.out.println(Math.max(0, Math.round(memory)) + " bits used for UBODT table (estimate)" );
 
-        long search_time = testMatch("D:\\SchoolWork\\HUST\\DataBaseGroup\\Roma\\Roma_by_half_hour", fmmMatcher, map);
+        long search_time = testMatch("D:\\SchoolWork\\HUST\\DataBaseGroup\\Roma\\experiment", fmmMatcher, map);
         System.out.println("Search time :" + search_time + "ms");
 
 //        GenerateTestGPSPoint test = new GenerateTestGPSPoint();
@@ -122,9 +122,9 @@ public class TestFmm {
 
         for (File file : fileList) {
             currentTrajectoryPointCount = 0;
-            if (trajectoryCount == 1000) {
-                break;
-            }
+//            if (trajectoryCount == 1000) {
+//                break;
+//            }
             System.out.println("the " + (++trajectoryCount) + "th trajectory is being processed: " + file.getName());
             try {
                 reader = new BufferedReader(new FileReader(file));
@@ -143,7 +143,7 @@ public class TestFmm {
 
             try {
                 long start = System.currentTimeMillis();
-                fmmMatcher.match(gpsPoints, map, 20);
+                fmmMatcher.match(gpsPoints, map, 20, 100);
                 long end = System.currentTimeMillis();
                 search_time += end - start;
                 pointCount += currentTrajectoryPointCount;

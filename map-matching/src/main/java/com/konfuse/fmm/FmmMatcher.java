@@ -70,12 +70,12 @@ public class FmmMatcher {
         ubodt = UBODT.fileReader(udobtPath, multiplier);
     }
 
-    public List<RoadPoint> match(List<GPSPoint> gpsPoints, RoadMap map, double radius) {
+    public List<RoadPoint> match(List<GPSPoint> gpsPoints, RoadMap map, int k, double radius) {
         ViterbiAlgorithm<RoadPoint, GPSPoint, Path<Road>> viterbi = new ViterbiAlgorithm<>();
         TimeStep<RoadPoint, GPSPoint, Path<Road>> prevTimeStep = null;
 
         for (GPSPoint gpsPoint : gpsPoints) {
-            final Collection<RoadPoint> candidates = map.spatial().radiusMatch(gpsPoint, radius);
+            final Collection<RoadPoint> candidates = map.spatial().knnMatch(gpsPoint, k, radius);
             final TimeStep<RoadPoint, GPSPoint, Path<Road>> timeStep = new TimeStep<>(gpsPoint, candidates);
             computeEmissionProbabilities(timeStep);
             if (prevTimeStep == null) {
