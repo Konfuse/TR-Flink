@@ -27,6 +27,10 @@ public class FmmMatcher {
     public final static double DISTANCE_NOT_FOUND = 5000.0;
     public final double penaltyFactor;
 
+    public static long candidateSearchTime = 0L;
+    public static long viterbiStepTime = 0L;
+    public static long pointConvertTime = 0L;
+
     public FmmMatcher(double penaltyFactor){
         this.penaltyFactor = penaltyFactor;
     }
@@ -71,11 +75,23 @@ public class FmmMatcher {
     }
 
     public List<RoadPoint> match(List<GPSPoint> gpsPoints, RoadMap map, int k, double radius) {
+        long start, end;
         ViterbiAlgorithm<RoadPoint, GPSPoint, Path<Road>> viterbi = new ViterbiAlgorithm<>();
         TimeStep<RoadPoint, GPSPoint, Path<Road>> prevTimeStep = null;
 
         for (GPSPoint gpsPoint : gpsPoints) {
+//            start = System.currentTimeMillis();
+//            double r = spatial.convertRadius(gpsPoint.getPosition().getX(), gpsPoint.getPosition().getY(), radius);
+//            end = System.currentTimeMillis();
+//            pointConvertTime += end - start;
+//            System.out.println(r);
+
+            start = System.currentTimeMillis();
             final Collection<RoadPoint> candidates = map.spatial().knnMatch(gpsPoint, k, radius);
+            end = System.currentTimeMillis();
+            candidateSearchTime += end - start;
+
+            start = System.currentTimeMillis();
             final TimeStep<RoadPoint, GPSPoint, Path<Road>> timeStep = new TimeStep<>(gpsPoint, candidates);
             computeEmissionProbabilities(timeStep);
             if (prevTimeStep == null) {
@@ -87,9 +103,12 @@ public class FmmMatcher {
                         timeStep.roadPaths);
             }
             prevTimeStep = timeStep;
+            end = System.currentTimeMillis();
+            viterbiStepTime += end - start;
         }
 
         List<SequenceState<RoadPoint, GPSPoint, Path<Road>>> sequenceStates = viterbi.computeMostLikelySequence();
+
         List<RoadPoint> matchedPoints = new LinkedList<>();
         for (SequenceState<RoadPoint, GPSPoint, Path<Road>> sequenceState : sequenceStates) {
             matchedPoints.add(sequenceState.getState());

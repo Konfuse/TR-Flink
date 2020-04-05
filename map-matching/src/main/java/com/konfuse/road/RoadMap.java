@@ -100,19 +100,35 @@ public class RoadMap extends Graph<Road> {
             Geography spatial = new Geography();
             Set<Tuple<Long, Double>> nearests = new HashSet<>();
 
-            ArrayList<DataObject> candidateObject = tree.knnQuery(p.getPosition(), k);
+//            MBR query = spatial.envelopeToMBR(p.getPosition().getX(), p.getPosition().getY(), r);
+            MBR query = new MBR(p.getPosition().getX() - r, p.getPosition().getY() - r, p.getPosition().getX() + r, p.getPosition().getY() + r);
+            ArrayList<DataObject> candidateObject = tree.boxRangeQuery(query);
+
+            if (candidateObject.size() > k) {
+                Point queryPoint = new Point(p.getPosition().getX(), p.getPosition().getY());
+                candidateObject.sort((o1, o2) -> {
+                    Double d1 = o1.calDistance(queryPoint);
+                    Double d2 = o2.calDistance(queryPoint);
+                    return d1.compareTo(d2);
+                });
+            }
+
+            int count = 0;
             Point q = new Point(p.getPosition().getX(), p.getPosition().getY());
             for (DataObject candidate : candidateObject){
+                if (count > k) break;
                 long id = candidate.getId();
                 Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
                         WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getEdges().get(2 * id).base().wkb()), null);
                 double fraction = spatial.intercept(geometry, q);
                 Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
-                double d = spatial.distance(e, q);
+//                double d = spatial.distance(e, q);
+                double d = e.calDistance(q);
 
                 if (d < r) {
 //                    candidateRoads.add(new RoadPoint(getRoads().get(id), fraction));
                     nearests.add(new Tuple<>(id, fraction));
+                    ++count;
                 }
             }
 

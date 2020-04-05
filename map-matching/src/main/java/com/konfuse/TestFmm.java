@@ -17,6 +17,9 @@ import java.util.List;
  * @Date 2020/1/8
  */
 public class TestFmm {
+    public static long points_search_time = 0L;
+    public static long points = 0L;
+
     public static void main(String[] args) throws Exception{
         long memory = 0;
         String udobtPath = "udobt.table";
@@ -38,8 +41,9 @@ public class TestFmm {
         memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) - memory;
         System.out.println(Math.max(0, Math.round(memory)) + " bits used for UBODT table (estimate)" );
 
-        long search_time = testMatch("D:\\SchoolWork\\HUST\\DataBaseGroup\\Roma\\experiment", fmmMatcher, map);
-        System.out.println("Search time :" + search_time + "ms");
+        testMatch("D:\\SchoolWork\\HUST\\DataBaseGroup\\Roma\\experiment", fmmMatcher, map);
+        System.out.println("Search time: " + points_search_time / 1000.0 + "s");
+        System.out.println("Search speed: " + points * 1000.0 / points_search_time + "pt/s");
 
 //        GenerateTestGPSPoint test = new GenerateTestGPSPoint();
 //        List<GPSPoint> testRoads = test.generateTestGPSPoint(map);
@@ -111,7 +115,7 @@ public class TestFmm {
         }
     }
 
-    public static long testMatch(String path, FmmMatcher fmmMatcher, RoadMap map) {
+    public static void testMatch(String path, FmmMatcher fmmMatcher, RoadMap map) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         List<GPSPoint> gpsPoints = new ArrayList<>();
         File[] fileList = new File(path).listFiles();
@@ -143,7 +147,7 @@ public class TestFmm {
 
             try {
                 long start = System.currentTimeMillis();
-                fmmMatcher.match(gpsPoints, map, 20, 100);
+                fmmMatcher.match(gpsPoints, map, 20, 0.002);
                 long end = System.currentTimeMillis();
                 search_time += end - start;
                 pointCount += currentTrajectoryPointCount;
@@ -172,9 +176,13 @@ public class TestFmm {
             }
             gpsPoints.clear();
         }
+
+        points = pointCount;
+        points_search_time = search_time;
         System.out.println("trajectories processed: " + trajectoryCount);
         System.out.println("trajectories failed: " + exceptCount);
         System.out.println("trajectory points matched: " + pointCount);
-        return search_time;
+        System.out.println("candidate search time: " + FmmMatcher.candidateSearchTime / 1000.0 + "s");
+        System.out.println("viterbi every step time: " + FmmMatcher.viterbiStepTime / 1000.0 + "s");
     }
 }

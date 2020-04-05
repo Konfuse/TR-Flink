@@ -3,6 +3,7 @@ package com.konfuse.internal;
 import com.konfuse.geometry.DataObject;
 import com.konfuse.geometry.Line;
 import com.konfuse.geometry.Point;
+import com.konfuse.geometry.Rectangle;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -171,6 +172,13 @@ public class MBR implements Serializable {
     }
 
     /**
+     * judge whether part of a rectangle is inside
+     */
+    public boolean contains(Rectangle rectangle) {
+        return MBR.intersects(this, rectangle.getMBR());
+    }
+
+    /**
      * judge whether a data object is inside
      */
     public boolean contains(DataObject dataObject) {
@@ -179,6 +187,8 @@ public class MBR implements Serializable {
             return contains((Point) dataObject);
         else if (dataObject instanceof Line)
             return contains((Line) dataObject);
+        else if (dataObject instanceof Rectangle)
+            return contains((Rectangle) dataObject);
         return false;
     }
 

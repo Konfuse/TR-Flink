@@ -35,6 +35,14 @@ public class Rectangle extends DataObject implements Serializable {
         this.mbr = mbr;
     }
 
+    @Override
+    public String toString() {
+        return "Rectangle{" +
+                "mbr=" + mbr +
+                ", id=" + id +
+                '}';
+    }
+
     /**
      * Inner class RectangleComparator.
      * A comparator of Rectangle, compare mbrs by specified dimensions.
