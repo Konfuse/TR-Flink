@@ -1,10 +1,7 @@
 package com.konfuse;
 
 import com.konfuse.fmm.FmmMatcher;
-import com.konfuse.road.GPSPoint;
-import com.konfuse.road.RoadMap;
-import com.konfuse.road.RoadPoint;
-import com.konfuse.road.RoadReader;
+import com.konfuse.road.*;
 
 import java.io.*;
 import java.text.ParseException;
@@ -22,9 +19,9 @@ public class TestFmm {
 
     public static void main(String[] args) throws Exception{
         long memory = 0;
-        String udobtPath = "udobt.table";
+        String udobtPath = "udobt2.table";
 
-        RoadMap map = RoadMap.Load(new RoadReader());
+        RoadMap map = RoadMap.Load(new ShapeFileRoadReader("C:\\Users\\Konfuse\\Desktop\\shapefile\\output\\network_dual.shp"));
         map.construct();
 
         FmmMatcher fmmMatcher = new FmmMatcher(2);
@@ -42,7 +39,8 @@ public class TestFmm {
         System.out.println(Math.max(0, Math.round(memory)) + " bits used for UBODT table (estimate)" );
 
         testMatch("D:\\SchoolWork\\HUST\\DataBaseGroup\\Roma\\experiment", fmmMatcher, map);
-        System.out.println("Search time: " + points_search_time / 1000.0 + "s");
+        System.out.println("coordinate convert time: " + RoadMap.convertTime + "ms");
+        System.out.println("Total search time: " + points_search_time / 1000.0 + "s");
         System.out.println("Search speed: " + points * 1000.0 / points_search_time + "pt/s");
 
 //        GenerateTestGPSPoint test = new GenerateTestGPSPoint();

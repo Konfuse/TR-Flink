@@ -4,6 +4,7 @@ import com.esri.core.geometry.Envelope2D;
 import com.esri.core.geometry.Polyline;
 import com.konfuse.geometry.Point;
 import com.konfuse.internal.MBR;
+import com.konfuse.util.Tuple;
 import net.sf.geographiclib.Geodesic;
 import net.sf.geographiclib.GeodesicData;
 
@@ -139,6 +140,87 @@ public class Geography {
         }
 
         return s == 0 ? 0 : sf / s;
+    }
+
+    public Tuple<Double, Double> getDistanceAndIntercept(Polyline p, Point c) {
+        double d = Double.MAX_VALUE, distance = Double.MAX_VALUE;
+        Point a = getPointInPolyLine(p, 0);
+        double s = 0, sf = 0, ds = 0;
+
+        for (int i = 1; i < p.getPointCount(); ++i) {
+            Point b = getPointInPolyLine(p, i);
+
+            ds = distance(a, b);
+
+            double f_ = intercept(a, b, c);
+            f_ = (f_ > 1) ? 1 : (f_ < 0) ? 0 : f_;
+            Point x = interpolate(a, b, f_);
+            double d_ = distance(c, x);
+            double distance_ = c.calDistance(x);
+
+            if (d_ < d) {
+                sf = (f_ * ds) + s;
+                d = d_;
+                distance = distance_;
+            }
+
+            s = s + ds;
+            a = b;
+        }
+
+        double fraction = s == 0 ? 0 : sf / s;
+        return new Tuple<>(fraction, distance);
+    }
+
+    public double[] closestPointOnSegment(double x, double y, double x1, double y1, double x2, double y2) {
+        double distance, offset;
+
+        double L2 = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
+        if (L2 == 0.0) {
+            distance = Math.sqrt((x - x1) * (x - x1) + (y - y1) * (y - y1));
+            offset = 0.0;
+            return new double[]{distance, offset, x1, y1};
+        }
+        double x1_x = x - x1;
+        double y1_y = y - y1;
+        double x1_x2 = x2 - x1;
+        double y1_y2 = y2 - y1;
+        double ratio = (x1_x * x1_x2 + y1_y * y1_y2) / L2;
+        ratio = (ratio > 1) ? 1 : ratio;
+        ratio = (ratio < 0) ? 0 : ratio;
+        double prj_x = x1 + ratio * (x1_x2);
+        double prj_y = y1 + ratio * (y1_y2);
+//        offset = Geodesic.WGS84.Inverse(prj_y, prj_x, y1, x1).s12;
+        offset = Math.sqrt((prj_x - x1) * (prj_x - x1) + (prj_y - y1) * (prj_y - y1));
+        distance = Math.sqrt((prj_x - x) * (prj_x - x) + (prj_y - y) * (prj_y - y));
+        return new double[]{distance, offset, prj_x, prj_y};
+    }
+
+    public double[] getDistanceAndInterceptWithLngLon(Polyline p, Point q) {
+        int NPoints = p.getPointCount();
+        double min_dist = Double.MAX_VALUE;
+        double final_offset = Double.MAX_VALUE;
+        double length_parsed = 0;
+        double x = 0, y = 0;
+        int i = 0;
+        while (i < NPoints - 1) {
+            double x1 = p.getPoint(i).getX();
+            double y1 = p.getPoint(i).getY();
+            double x2 = p.getPoint(i + 1).getX();
+            double y2 = p.getPoint(i + 1).getY();
+            double[] temp_message = closestPointOnSegment(q.getX(), q.getY(), x1, y1, x2, y2);
+            double temp_min_dist = temp_message[0];
+            double temp_min_offset = temp_message[1];
+            if (temp_min_dist < min_dist) {
+                min_dist = temp_min_dist;
+                final_offset = length_parsed + temp_min_offset;
+                x = temp_message[2]; y = temp_message[3];
+            }
+//            length_parsed += Geodesic.WGS84.Inverse(y1, x1, y2, x2).s12;
+            length_parsed += Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+            ++i;
+        };
+        return new double[]{min_dist, final_offset, x, y};
     }
 
     /**

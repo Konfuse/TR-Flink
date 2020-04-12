@@ -3,7 +3,7 @@ package com.konfuse;
 import com.konfuse.hmm.OfflineMatcher;
 import com.konfuse.road.GPSPoint;
 import com.konfuse.road.RoadMap;
-import com.konfuse.road.RoadReader;
+import com.konfuse.road.PostgresRoadReader;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -22,7 +22,7 @@ public class TestOfflineMapMatching {
     public static void main(String[] args) throws Exception{
         long memory = 0;
 
-        RoadMap map = RoadMap.Load(new RoadReader());
+        RoadMap map = RoadMap.Load(new PostgresRoadReader());
         map.construct();
 
         OfflineMatcher offlineMatcher = new OfflineMatcher();

@@ -21,7 +21,7 @@ public class TestEmm {
     public static void main(String[] args) throws Exception {
         long memory = 0;
 
-        RoadMap map = RoadMap.Load(new RoadReader());
+        RoadMap map = RoadMap.Load(new PostgresRoadReader());
         map.construct();
 
         /*======================build vertex structure==========================*/

@@ -3,7 +3,7 @@ package com.konfuse;
 import com.konfuse.road.GPSPoint;
 import com.konfuse.road.Road;
 import com.konfuse.road.RoadMap;
-import com.konfuse.road.RoadReader;
+import com.konfuse.road.PostgresRoadReader;
 import com.konfuse.tools.GenerateTestGPSPoint;
 
 import java.util.HashMap;
@@ -15,7 +15,7 @@ import java.util.List;
  */
 public class TestRoadMap {
     public static void main(String[] args) throws Exception{
-        RoadMap map = RoadMap.Load(new RoadReader());
+        RoadMap map = RoadMap.Load(new PostgresRoadReader());
         map.construct();
         HashMap<Long, Road> roads = map.getEdges();
 //        for(Long id : roads.keySet()){

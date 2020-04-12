@@ -3,13 +3,13 @@ package com.konfuse.road;
 import com.esri.core.geometry.*;
 import com.konfuse.IndexBuilder;
 import com.konfuse.RTree;
-import com.konfuse.emm.Vertex;
 import com.konfuse.geometry.DataObject;
 import com.konfuse.geometry.Point;
 import com.konfuse.geometry.Rectangle;
 import com.konfuse.internal.MBR;
 import com.konfuse.spatial.Geography;
 import com.konfuse.topology.Graph;
+import com.konfuse.util.Quadruple;
 import com.konfuse.util.Tuple;
 
 import java.io.Serializable;
@@ -24,6 +24,7 @@ public class RoadMap extends Graph<Road> {
     private transient Index index = null;
     private static HashMap<Long, Long> nodeRef = new HashMap<>();
     private static long vertexId = 0, roadId = 0;
+    public static long convertTime = 0L;
 
     public class Index implements Serializable {
         private RTree tree;
@@ -56,6 +57,7 @@ public class RoadMap extends Graph<Road> {
         }
 
         private Set<RoadPoint> split(Set<Tuple<Long, Double>> points) {
+            long start = System.currentTimeMillis();
             Set<RoadPoint> neighbors = new HashSet<>();
 
             for (Tuple<Long, Double> point : points) {
@@ -65,6 +67,25 @@ public class RoadMap extends Graph<Road> {
                     neighbors.add(new RoadPoint(getEdges().get(point.f0 * 2 + 1), 1.0 - point.f1));
                 }
             }
+            long end = System.currentTimeMillis();
+            convertTime += end - start;
+
+            return neighbors;
+        }
+
+        private Set<RoadPoint> knnSplit(Set<Quadruple<Long, Double, Double, Double>> points) {
+            long start = System.currentTimeMillis();
+            Set<RoadPoint> neighbors = new HashSet<>();
+
+            for (Quadruple<Long, Double, Double, Double> point : points) {
+                neighbors.add(new RoadPoint(getEdges().get(point.f0 * 2), point.f1, point.f2, point.f3));
+
+                if (getEdges().containsKey(point.f0 * 2 + 1)) {
+                    neighbors.add(new RoadPoint(getEdges().get(point.f0 * 2), point.f1, point.f2, point.f3));
+                }
+            }
+            long end = System.currentTimeMillis();
+            convertTime += end - start;
 
             return neighbors;
         }
@@ -75,6 +96,7 @@ public class RoadMap extends Graph<Road> {
 
             do {
                 MBR query = spatial.envelopeToMBR(p.getPosition().getX(), p.getPosition().getY(), r);
+//                MBR query = new MBR(p.getPosition().getX() - r, p.getPosition().getY() - r, p.getPosition().getX() + r, p.getPosition().getY() + r);
                 ArrayList<DataObject> candidateObject = tree.boxRangeQuery(query);
                 Point q = new Point(p.getPosition().getX(), p.getPosition().getY());
                 for (DataObject candidate : candidateObject){
@@ -98,7 +120,8 @@ public class RoadMap extends Graph<Road> {
 
         public Set<RoadPoint> knnMatch(GPSPoint p, int k, double r) {
             Geography spatial = new Geography();
-            Set<Tuple<Long, Double>> nearests = new HashSet<>();
+//            Set<Tuple<Long, Double>> nearests = new HashSet<>();
+            Set<Quadruple<Long, Double, Double, Double>> nearests = new HashSet<>();
 
 //            MBR query = spatial.envelopeToMBR(p.getPosition().getX(), p.getPosition().getY(), r);
             MBR query = new MBR(p.getPosition().getX() - r, p.getPosition().getY() - r, p.getPosition().getX() + r, p.getPosition().getY() + r);
@@ -113,26 +136,34 @@ public class RoadMap extends Graph<Road> {
                 });
             }
 
-            int count = 0;
+            int count = 1;
             Point q = new Point(p.getPosition().getX(), p.getPosition().getY());
+
             for (DataObject candidate : candidateObject){
                 if (count > k) break;
                 long id = candidate.getId();
                 Polyline geometry = (Polyline) OperatorImportFromWkb.local().execute(
                         WkbImportFlags.wkbImportDefaults, Geometry.Type.Polyline, ByteBuffer.wrap(getEdges().get(2 * id).base().wkb()), null);
-                double fraction = spatial.intercept(geometry, q);
-                Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
-//                double d = spatial.distance(e, q);
-                double d = e.calDistance(q);
+//                double fraction = spatial.intercept(geometry, q);
+//                Point e = spatial.interpolate(geometry, spatial.length(geometry), fraction);
+////                double d = spatial.distance(e, q);
+//                double d = e.calDistance(q);
+
+                double[] message = spatial.getDistanceAndInterceptWithLngLon(geometry, q);
+                double fraction = message[0];
+                double d = message[1];
+                double x = message[2];
+                double y = message[3];
 
                 if (d < r) {
 //                    candidateRoads.add(new RoadPoint(getRoads().get(id), fraction));
-                    nearests.add(new Tuple<>(id, fraction));
+//                    nearests.add(new Tuple<>(id, fraction));
+                    nearests.add(new Quadruple<>(id, fraction, x, y));
                     ++count;
                 }
             }
 
-            return split(nearests);
+            return knnSplit(nearests);
         }
 
         public Set<RoadPoint> radiusMatch(GPSPoint p, double r) {

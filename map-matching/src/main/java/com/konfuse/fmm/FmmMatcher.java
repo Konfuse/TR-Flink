@@ -118,8 +118,9 @@ public class FmmMatcher {
 
     public void computeEmissionProbabilities(TimeStep<RoadPoint, GPSPoint, Path<Road>> timeStep) {
         for (RoadPoint candidate : timeStep.candidates) {
-            double distance = spatial.distance(new Point(timeStep.observation.getPosition().getX(), timeStep.observation.getPosition().getY()), candidate.point());
+//            double distance = spatial.distance(new Point(timeStep.observation.getPosition().getX(), timeStep.observation.getPosition().getY()), candidate.point());
 //            timeStep.addEmissionLogProbability(candidate, fmmProbabilities.emissionLogProbability(distance));
+            double distance = new Point(timeStep.observation.getPosition().getX(), timeStep.observation.getPosition().getY()).calDistance(candidate.point());
             timeStep.addEmissionProbability(candidate, fmmProbabilities.emissionProbability(distance));
         }
     }
@@ -128,7 +129,8 @@ public class FmmMatcher {
         Point preObservationPosition = new Point(prevTimeStep.observation.getPosition().getX(), prevTimeStep.observation.getPosition().getY());
         Point thisObservationPosition = new Point(timeStep.observation.getPosition().getX(), timeStep.observation.getPosition().getY());
 
-        final double linearDistance = spatial.distance(preObservationPosition, thisObservationPosition);
+//        final double linearDistance = spatial.distance(preObservationPosition, thisObservationPosition);
+        final double linearDistance = preObservationPosition.calDistance(thisObservationPosition);
         final double timeDiff = (timeStep.observation.getTime() - prevTimeStep.observation.getTime());
 
         for (RoadPoint from : prevTimeStep.candidates) {

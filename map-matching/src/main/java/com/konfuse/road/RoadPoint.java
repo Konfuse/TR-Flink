@@ -12,7 +12,7 @@ import com.konfuse.topology.LocationOnEdge;
 public class RoadPoint extends LocationOnEdge<Road> {
     private static final Geography geography = new Geography();
     private final Point point;
-    private final double azimuth;
+//    private final double azimuth;
 
     /**
      * Creates a {@link RoadPoint}.
@@ -24,7 +24,13 @@ public class RoadPoint extends LocationOnEdge<Road> {
     public RoadPoint(Road road, double fraction) {
         super(road, fraction);
         this.point = geography.interpolate(road.geometry(), fraction);
-        this.azimuth = geography.azimuth(road.geometry(), fraction);
+//        this.azimuth = geography.azimuth(road.geometry(), fraction);
+    }
+
+    public RoadPoint(Road road, double fraction, double x, double y) {
+        super(road, fraction);
+        this.point = new Point(x, y);
+//        this.azimuth = geography.azimuth(road.geometry(), fraction);
     }
 
     /**
@@ -36,7 +42,7 @@ public class RoadPoint extends LocationOnEdge<Road> {
         return point;
     }
 
-    public double azimuth() {
-        return azimuth;
-    }
+//    public double azimuth() {
+//        return azimuth;
+//    }
 }

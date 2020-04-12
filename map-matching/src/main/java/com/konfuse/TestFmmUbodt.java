@@ -2,13 +2,6 @@ package com.konfuse;
 
 import com.konfuse.fmm.FmmMatcher;
 import com.konfuse.road.*;
-import com.konfuse.tools.GenerateTestGPSPoint;
-
-import java.io.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @Auther todd
@@ -18,7 +11,7 @@ public class TestFmmUbodt {
     public static void main(String[] args) throws Exception{
         long memory = 0;
 
-        RoadMap map = RoadMap.Load(new RoadReader());
+        RoadMap map = RoadMap.Load(new ShapeFileRoadReader("C:\\Users\\Konfuse\\Desktop\\shapefile\\output\\network_dual.shp"));
         map.construct();
 
         FmmMatcher fmmMatcher = new FmmMatcher(2);
@@ -44,11 +37,11 @@ public class TestFmmUbodt {
 //        System.out.println("Read Binary file time:" + search_time2);
 //        System.out.println("***************************");
 
-        String udobtPath2 = "udobt.table";
+        String udobtPath2 = "udobt2.table";
         System.gc();
         memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         long start = System.currentTimeMillis();
-        fmmMatcher.writeUBODTFileDirect(udobtPath2, map, 1000);
+        fmmMatcher.writeUBODTFileDirect(udobtPath2, map, 0.05);
         long end = System.currentTimeMillis();
         long build_time = end - start;
         System.out.println("UBODT build time :" + build_time + "ms");
