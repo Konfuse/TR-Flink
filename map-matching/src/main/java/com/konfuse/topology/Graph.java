@@ -1,7 +1,5 @@
 package com.konfuse.topology;
 
-import com.konfuse.road.Road;
-
 import java.util.*;
 
 /**
@@ -14,7 +12,9 @@ import java.util.*;
  */
 public class Graph <E extends AbstractLink<E>>{
     private final HashMap<Long, E> edges = new HashMap<>();
-    private final HashMap<Long, E> nodes = new HashMap<>();
+    private final HashMap<Long, E> nodesOut = new HashMap<>();
+    private final HashMap<Long, E> nodesIn = new HashMap<>();
+    private final HashMap<Long, Integer> nodesDegree = new HashMap<>();
 
     /**
      * Adds an {@link AbstractLink} to the graph. (Requires construction.)
@@ -70,38 +70,78 @@ public class Graph <E extends AbstractLink<E>>{
      * @return Returns a self reference to this graph.
      */
     public Graph<E> construct() {
-        Map<Long, ArrayList<E>> map = new HashMap<>();
+        Map<Long, ArrayList<E>> mapOut = new HashMap<>();
+        Map<Long, ArrayList<E>> mapIn = new HashMap<>();
 
         for (E edge : edges.values()) {
-            if (!map.containsKey(edge.source())) {
-                map.put(edge.source(), new ArrayList<>(Arrays.asList(edge)));
+            if (!mapOut.containsKey(edge.source())) {
+                mapOut.put(edge.source(), new ArrayList<>(Arrays.asList(edge)));
             } else {
-                map.get(edge.source()).add(edge);
+                mapOut.get(edge.source()).add(edge);
+            }
+
+            if (!mapIn.containsKey(edge.target())) {
+                mapIn.put(edge.target(), new ArrayList<>(Arrays.asList(edge)));
+            } else {
+                mapIn.get(edge.target()).add(edge);
             }
         }
 
-        for (ArrayList<E> edges : map.values()) {
+        for (ArrayList<E> edges : mapOut.values()) {
             for (int i = 1; i < edges.size(); ++i) {
                 edges.get(i - 1).neighbor(edges.get(i));
-                ArrayList<E> successors = map.get(edges.get(i - 1).target());
+                ArrayList<E> successors = mapOut.get(edges.get(i - 1).target());
                 edges.get(i - 1).successor(successors != null ? successors.get(0) : null);
             }
 
             edges.get(edges.size() - 1).neighbor(edges.get(0));
-            ArrayList<E> successors = map.get(edges.get(edges.size() - 1).target());
+            ArrayList<E> successors = mapOut.get(edges.get(edges.size() - 1).target());
             edges.get(edges.size() - 1).successor(successors != null ? successors.get(0) : null);
         }
 
-        for (E edge : edges.values()) {
-            if (!nodes.containsKey(edge.source())) {
-                Iterator<E> itr = edge.neighbors();
-                nodes.put(edge.source(), itr.next());
+        for (ArrayList<E> edges : mapIn.values()) {
+            for (int i = 1; i < edges.size(); ++i) {
+                edges.get(i - 1).preneighbor(edges.get(i));
+                ArrayList<E> preneighbors = mapIn.get(edges.get(i - 1).source());
+                edges.get(i - 1).predecessor(preneighbors != null ? preneighbors.get(0) : null);
             }
 
-            if (!nodes.containsKey(edge.target())) {
-                Iterator<E> itr = edge.successors();
-                nodes.put(edge.target(), itr.next());
+            edges.get(edges.size() - 1).preneighbor(edges.get(0));
+            ArrayList<E> preneighbors = mapOut.get(edges.get(edges.size() - 1).source());
+            edges.get(edges.size() - 1).predecessor(preneighbors != null ? preneighbors.get(0) : null);
+        }
+
+        for (E edge : edges.values()) {
+            if (!nodesOut.containsKey(edge.source())) {
+                Iterator<E> itr = edge.neighbors();
+                nodesOut.put(edge.source(), itr.next());
             }
+
+            if (!nodesOut.containsKey(edge.target())) {
+                Iterator<E> itr = edge.successors();
+                nodesOut.put(edge.target(), itr.next());
+            }
+
+
+            if (!nodesIn.containsKey(edge.target())) {
+                Iterator<E> itr = edge.preneighbors();
+                nodesIn.put(edge.target(), itr.next());
+            }
+
+            if (!nodesIn.containsKey(edge.source())) {
+                Iterator<E> itr = edge.predecessors();
+                nodesIn.put(edge.source(), itr.next());
+            }
+        }
+
+        for (Long id : nodesOut.keySet()) {
+            ArrayList<E> out = mapOut.get(id);
+            int degree_out = out != null ? out.size() : 0;
+
+            ArrayList<E> in = mapIn.get(id);
+            int degree_in = in != null ? in.size() : 0;
+
+            nodesDegree.put(id, degree_in + degree_out);
         }
 
         return this;
@@ -121,8 +161,16 @@ public class Graph <E extends AbstractLink<E>>{
         return edges;
     }
 
-    public HashMap<Long, E> getNodes() {
-        return nodes;
+    public HashMap<Long, E> getNodesOut() {
+        return nodesOut;
+    }
+
+    public HashMap<Long, E> getNodesIn() {
+        return nodesIn;
+    }
+
+    public HashMap<Long, Integer> getNodesDegree() {
+        return nodesDegree;
     }
 
     /**

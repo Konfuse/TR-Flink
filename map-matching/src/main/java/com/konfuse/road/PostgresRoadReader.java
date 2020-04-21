@@ -44,7 +44,7 @@ public class PostgresRoadReader implements RoadReader {
     @Override
     public BaseRoad next() throws Exception {
         if (resultSet == null) {
-            String sql = "select gid, osm_id, source, target, one_way, priority, maxspeed_forward, maxspeed_backward, length_m, ST_AsBinary(the_geom) as geom from ways";
+            String sql = "select gid, osm_id, source, target, one_way, priority, maxspeed_forward, maxspeed_backward, length, ST_AsBinary(the_geom) as geom from ways";
             ps = connection.prepareStatement(sql);
             resultSet = ps.executeQuery();
         }
@@ -61,7 +61,7 @@ public class PostgresRoadReader implements RoadReader {
             float priority = resultSet.getFloat("priority");
             float maxSpeedForward = resultSet.getFloat("maxspeed_forward");
             float maxSpeedBackward = resultSet.getFloat("maxspeed_backward");
-            double length = resultSet.getDouble("length_m");
+            double length = resultSet.getDouble("length");
             byte[] geometry = resultSet.getBytes("geom");
             return new BaseRoad(id, source, target, refId, oneway, priority, maxSpeedForward, maxSpeedBackward, length, geometry);
         } catch (SQLException e) {

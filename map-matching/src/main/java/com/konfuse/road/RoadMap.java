@@ -306,7 +306,7 @@ public class RoadMap extends Graph<Road> {
 
         super.construct();
 
-        System.out.println("road map contains " + getNodes().size() + " vertices");
+        System.out.println("road map contains nodes out " + getNodesOut().size() + " vertices; " + "nodes in " + getNodesIn().size() + " vertices.");
         System.gc();
         memory = (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) - memory;
         System.out.println(Math.max(0, Math.round(memory / 1E6)) + " megabytes used for spatial topology object (estimate)" );

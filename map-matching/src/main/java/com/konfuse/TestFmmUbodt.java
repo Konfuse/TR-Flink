@@ -11,7 +11,8 @@ public class TestFmmUbodt {
     public static void main(String[] args) throws Exception{
         long memory = 0;
 
-        RoadMap map = RoadMap.Load(new ShapeFileRoadReader("C:\\Users\\Konfuse\\Desktop\\shapefile\\output\\network_dual.shp"));
+//        new ShapeFileRoadReader("C:\\Users\\Konfuse\\Desktop\\shapefile\\output\\network_dual.shp")
+        RoadMap map = RoadMap.Load(new PostgresRoadReader());
         map.construct();
 
         FmmMatcher fmmMatcher = new FmmMatcher(2);
@@ -37,11 +38,11 @@ public class TestFmmUbodt {
 //        System.out.println("Read Binary file time:" + search_time2);
 //        System.out.println("***************************");
 
-        String udobtPath2 = "udobt2.table";
+        String udobtPath2 = "udobt1.table";
         System.gc();
         memory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
         long start = System.currentTimeMillis();
-        fmmMatcher.writeUBODTFileDirect(udobtPath2, map, 0.05);
+        fmmMatcher.writeUBODTFileDirect(udobtPath2, map, 0.0094057);
         long end = System.currentTimeMillis();
         long build_time = end - start;
         System.out.println("UBODT build time :" + build_time + "ms");

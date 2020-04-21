@@ -9,7 +9,6 @@ import com.konfuse.spatial.Geography;
 import com.konfuse.topology.Dijkstra;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -36,7 +35,7 @@ public class FmmMatcher {
     }
 
     public void constructUBODT(RoadMap map, double max){
-        HashMap<Long, Road> nodes = map.getNodes();
+        HashMap<Long, Road> nodes = map.getNodesOut();
         List<Record> records = calcAllShortestPathWithinThreshold(nodes, max);
         int multiplier = nodes.size();
         ubodt = UBODT.read(records, multiplier);
@@ -44,32 +43,32 @@ public class FmmMatcher {
     }
 
     public void writeUBODTFileBinary(String udobtPath, RoadMap map, double max) {
-        HashMap<Long, Road> nodes = map.getNodes();
+        HashMap<Long, Road> nodes = map.getNodesOut();
         List<Record> records = calcAllShortestPathWithinThreshold(nodes, max);
         UBODT.fileWriterBinary(udobtPath, records);
         records.clear();
     }
 
     public void readUDOBTFileBinary(String udobtPath, RoadMap map) {
-        HashMap<Long, Road> nodes = map.getNodes();
+        HashMap<Long, Road> nodes = map.getNodesOut();
         int multiplier = nodes.size();
         ubodt = UBODT.fileReaderBinary(udobtPath, multiplier);
     }
 
     public void writeUBODTFileDirect(String udobtPath, RoadMap map, double max) {
-        HashMap<Long, Road> nodes = map.getNodes();
+        HashMap<Long, Road> nodes = map.getNodesOut();
         calcAllShortestPathWithinThresholdToFile(nodes, max, udobtPath);
     }
 
     public void writeUBODTFile(String udobtPath, RoadMap map, double max) {
-        HashMap<Long, Road> nodes = map.getNodes();
+        HashMap<Long, Road> nodes = map.getNodesOut();
         List<Record> records = calcAllShortestPathWithinThreshold(nodes, max);
         UBODT.fileWriter(udobtPath, records);
         records.clear();
     }
 
     public void readUDOBTFile(String udobtPath, RoadMap map) {
-        HashMap<Long, Road> nodes = map.getNodes();
+        HashMap<Long, Road> nodes = map.getNodesOut();
         int multiplier = nodes.size();
         ubodt = UBODT.fileReader(udobtPath, multiplier);
     }

@@ -10,6 +10,8 @@ import java.util.Iterator;
 public abstract class AbstractLink<E extends AbstractLink<E>> implements Serializable {
     private transient E successor = null;
     private transient E neighbor = null;
+    private transient E predecessor = null;
+    private transient E preneighbor = null;
 
     /**
      * Gets the link's identifier.
@@ -69,6 +71,42 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
     }
 
     /**
+     * Gets the link's predecessor.
+     *
+     * @return An edge's predecessor edge.
+     */
+    protected E predecessor() {
+        return predecessor;
+    }
+
+    /**
+     * Sets the link's predecessor.
+     *
+     * @param predecessor An edge's predecessor edge.
+     */
+    protected void predecessor(E predecessor) {
+        this.predecessor = predecessor;
+    }
+
+    /**
+     * Gets the link's preneighbor.
+     *
+     * @return The edge's preneighbor edge.
+     */
+    protected E preneighbor() {
+        return preneighbor;
+    }
+
+    /**
+     * Sets the link's preneighbor.
+     *
+     * @param preneighbor The edge's preneighbor edge.
+     */
+    protected void preneighbor(E preneighbor) {
+        this.preneighbor = preneighbor;
+    }
+
+    /**
      * Gets iterator over the link's successor edges.
      *
      * @return Iterator over the edge's successor edges.
@@ -93,6 +131,7 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
 
                 return next;
             }
+
             @Override
             public void remove() {
                 throw new UnsupportedOperationException();
@@ -125,6 +164,73 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
 
                 return next;
             }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    /**
+     * Gets iterator over the link's predecessor edges.
+     *
+     * @return Iterator over the edge's predecessor edges.
+     */
+    public Iterator<E> predecessors() {
+        return new Iterator<E>() {
+            E predecessor = predecessor();
+            E iterator = predecessor;
+
+            @Override
+            public boolean hasNext() {
+                return (iterator != null);
+            }
+
+            @Override
+            public E next() {
+                if (iterator == null){
+                    return null;
+                }
+                E next = iterator;
+                iterator = iterator.preneighbor() == predecessor ? null : iterator.preneighbor();
+
+                return next;
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    /**
+     * Gets iterator over the link's predecessor edges.
+     *
+     * @return Iterator over the edge's predecessor edges.
+     */
+    public Iterator<E> preneighbors() {
+        return new Iterator<E>() {
+            E preneighbor = preneighbor();
+            E iterator = preneighbor;
+
+            @Override
+            public boolean hasNext() {
+                return (iterator != null);
+            }
+
+            @Override
+            public E next() {
+                if (iterator == null){
+                    return null;
+                }
+                E next = iterator;
+                iterator = iterator.preneighbor() == preneighbor ? null : iterator.preneighbor();
+
+                return next;
+            }
+
             @Override
             public void remove() {
                 throw new UnsupportedOperationException();

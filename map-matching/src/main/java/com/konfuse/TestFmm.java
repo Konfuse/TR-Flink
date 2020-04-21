@@ -19,9 +19,10 @@ public class TestFmm {
 
     public static void main(String[] args) throws Exception{
         long memory = 0;
-        String udobtPath = "udobt2.table";
+        String udobtPath = "udobt1.table";
 
-        RoadMap map = RoadMap.Load(new ShapeFileRoadReader("C:\\Users\\Konfuse\\Desktop\\shapefile\\output\\network_dual.shp"));
+//        new ShapeFileRoadReader("C:\\Users\\Konfuse\\Desktop\\shapefile\\output\\network_dual.shp")
+        RoadMap map = RoadMap.Load(new PostgresRoadReader());
         map.construct();
 
         FmmMatcher fmmMatcher = new FmmMatcher(2);
