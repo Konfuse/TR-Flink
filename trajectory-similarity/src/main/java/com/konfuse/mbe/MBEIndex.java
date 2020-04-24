@@ -8,7 +8,7 @@ import com.konfuse.strtree.RTree;
 import com.konfuse.util.TrajectoryUtils;
 import com.konfuse.util.Tuple;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -61,5 +61,27 @@ public class MBEIndex implements Serializable {
             }
         }
         return new ArrayList<>(candidates);
+    }
+
+    /**
+     * Method to serialize this index
+     */
+    public void save(String file) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+        outputStream.writeObject(this);
+        outputStream.close();
+    }
+
+    /**
+     * Method to deserialize the file to index
+     *
+     * @param file r-tree model path
+     * @return r-tree object
+     */
+    public static MBEIndex load(String file) throws IOException, ClassNotFoundException {
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+        MBEIndex index = (MBEIndex) inputStream.readObject();
+        inputStream.close();
+        return index;
     }
 }
