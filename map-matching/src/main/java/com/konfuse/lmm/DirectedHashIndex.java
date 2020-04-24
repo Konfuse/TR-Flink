@@ -3,20 +3,19 @@ package com.konfuse.lmm;
 import com.konfuse.road.Road;
 import com.konfuse.road.RoadMap;
 import com.konfuse.util.Tuple;
-import scala.Int;
 
 import java.io.*;
 import java.util.*;
 
 /**
  * @Author: Konfuse
- * @Date: 2020/4/18 17:44
+ * @Date: 2020/4/23 22:04
  */
-public class LandMarkLabel {
+public class DirectedHashIndex {
     private HashMap<Long, HashMap<Long, Double>> labelIn;
     private HashMap<Long, HashMap<Long, Double>> labelOut;
 
-    public LandMarkLabel() {
+    public DirectedHashIndex() {
     }
 
     public HashMap<Long, HashMap<Long, Double>> getLabelIn() {
@@ -52,12 +51,12 @@ public class LandMarkLabel {
         return distance;
     }
 
-    public static LandMarkLabel constructLabel(RoadMap map) {
+    public static DirectedHashIndex constructLabel(RoadMap map) {
         HashMap<Long, Integer> nodes = map.getNodesDegree();
-        int size = 2 << (Integer.toBinaryString(nodes.size() - 1).length() - 1);
-        System.out.println("nodes size is: " + nodes.size() + "; init size is: " + size);
+        int size = nodes.size();
+        System.out.println("nodes size is: " + size);
 
-        LandMarkLabel label = new LandMarkLabel();
+        DirectedHashIndex label = new DirectedHashIndex();
         label.setLabelIn(new HashMap<>(size));
         label.setLabelOut(new HashMap<>(size));
 
@@ -108,7 +107,7 @@ public class LandMarkLabel {
         }
     }
 
-    public static void prunedDijkstra(RoadMap map, long v, LandMarkLabel label, Map<Long, Double> pathTable, int size) {
+    public static void prunedDijkstra(RoadMap map, long v, DirectedHashIndex label, Map<Long, Double> pathTable, int size) {
         Map<Long, Road> nodesOut = map.getNodesOut();
         Set<Long> visited = new HashSet<>(size);
 
@@ -124,6 +123,7 @@ public class LandMarkLabel {
 
         while (!queue.isEmpty()) {
             long u = queue.poll().nodeId;
+            visited.add(u);
             if (label.query(v, u) <= pathTable.get(u)) {
                 continue;
             }
@@ -143,7 +143,6 @@ public class LandMarkLabel {
                 long w = next.target();
                 double w_cost = pathTable.get(w);
                 if (cost < w_cost) {
-                    visited.add(w);
                     pathTable.replace(w, cost);
                     NodeEntry entry = new NodeEntry(w, cost);
                     if (w_cost != Double.MAX_VALUE) {
@@ -159,7 +158,7 @@ public class LandMarkLabel {
         }
     }
 
-    public static void prunedDijkstraReverse(RoadMap map, long v, LandMarkLabel label, Map<Long, Double> pathTable, int size) {
+    public static void prunedDijkstraReverse(RoadMap map, long v, DirectedHashIndex label, Map<Long, Double> pathTable, int size) {
         HashMap<Long, Road> nodesIn = map.getNodesIn();
         Set<Long> visited = new HashSet<>(size);
 
@@ -175,6 +174,7 @@ public class LandMarkLabel {
 
         while (!queue.isEmpty()) {
             long u = queue.poll().nodeId;
+            visited.add(u);
             if (label.query(v, u) <= pathTable.get(u)) {
                 continue;
             }
@@ -194,7 +194,6 @@ public class LandMarkLabel {
                 long w = next.source();
                 double w_cost = pathTable.get(w);
                 if (cost < w_cost) {
-                    visited.add(w);
                     pathTable.replace(w, cost);
                     NodeEntry entry = new NodeEntry(w, cost);
                     if (w_cost != Double.MAX_VALUE) {
@@ -247,9 +246,9 @@ public class LandMarkLabel {
         }
     }
 
-    public static LandMarkLabel read(String labelInPath, String labelOutPath) {
+    public static DirectedHashIndex read(String labelInPath, String labelOutPath) {
         BufferedReader labelInReader = null, labelOutReader = null;
-        LandMarkLabel label = new LandMarkLabel();
+        DirectedHashIndex label = new DirectedHashIndex();
         HashMap<Long, HashMap<Long, Double>> labelIn = new HashMap<>();
         HashMap<Long, HashMap<Long, Double>> labelOut = new HashMap<>();
 

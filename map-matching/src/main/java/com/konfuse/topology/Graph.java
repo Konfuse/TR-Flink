@@ -102,13 +102,13 @@ public class Graph <E extends AbstractLink<E>>{
         for (ArrayList<E> edges : mapIn.values()) {
             for (int i = 1; i < edges.size(); ++i) {
                 edges.get(i - 1).preneighbor(edges.get(i));
-                ArrayList<E> preneighbors = mapIn.get(edges.get(i - 1).source());
-                edges.get(i - 1).predecessor(preneighbors != null ? preneighbors.get(0) : null);
+                ArrayList<E> predecessors = mapIn.get(edges.get(i - 1).source());
+                edges.get(i - 1).predecessor(predecessors != null ? predecessors.get(0) : null);
             }
 
             edges.get(edges.size() - 1).preneighbor(edges.get(0));
-            ArrayList<E> preneighbors = mapOut.get(edges.get(edges.size() - 1).source());
-            edges.get(edges.size() - 1).predecessor(preneighbors != null ? preneighbors.get(0) : null);
+            ArrayList<E> predecessors = mapIn.get(edges.get(edges.size() - 1).source());
+            edges.get(edges.size() - 1).predecessor(predecessors != null ? predecessors.get(0) : null);
         }
 
         for (E edge : edges.values()) {
