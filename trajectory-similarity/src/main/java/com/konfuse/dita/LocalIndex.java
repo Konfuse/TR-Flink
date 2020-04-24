@@ -5,6 +5,7 @@ import com.konfuse.strtree.MBR;
 import com.konfuse.util.TrajectoryUtils;
 import com.konfuse.util.Tuple;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,7 +16,7 @@ import static com.konfuse.dita.TrieNodeType.*;
  * @Auther todd
  * @Date 2020/4/17
  */
-public class LocalIndex {
+public class LocalIndex implements Serializable{
     private final int localIndexedPivotSize;
     private final int localMinNodeSize;
 
@@ -118,7 +119,7 @@ public class LocalIndex {
             }
         }
         for (Integer filteredSeqNum : filteredResultsSecond) {
-            double dtwDistance = TrajectoryUtils.calcDTWDistanceWithThreshold(trajectories.get(filteredSeqNum), query, threshold);
+            double dtwDistance = TrajectoryUtils.calcDTWDistanceWithThreshold(trajectories.get(filteredSeqNum).getTrajectoryData(), query.getTrajectoryData(), threshold);
             if (dtwDistance < threshold) {
                 verifiedResults.add(new Tuple<>(filteredSeqNum, dtwDistance));
             }
@@ -231,6 +232,28 @@ public class LocalIndex {
             } while (p1 < trajectorySize);
         }
         return StrPartitions;
+    }
+
+    /**
+     * Method to serialize this LocalIndex
+     */
+    public void save(String file) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+        outputStream.writeObject(this);
+        outputStream.close();
+    }
+
+    /**
+     * Method to deserialize the file to LocalIndex
+     *
+     * @param file r-tree model path
+     * @return r-tree object
+     */
+    public static LocalIndex load(String file) throws IOException, ClassNotFoundException {
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+        LocalIndex localIndex = (LocalIndex) inputStream.readObject();
+        inputStream.close();
+        return localIndex;
     }
 
 }

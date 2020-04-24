@@ -2,13 +2,14 @@ package com.konfuse.dita;
 
 import com.konfuse.strtree.MBR;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * @Author todd
  * @Date 2020/4/17
  */
-public class GlobalPartition {
+public class GlobalPartition implements Serializable {
     private int id;
     private MBR firstPointMbr;
     private MBR lastPointMbr;

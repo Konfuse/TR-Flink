@@ -1,12 +1,13 @@
 package com.konfuse.dison;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * @Auther todd
  * @Date 2020/4/20
  */
-public class GlobalPartition {
+public class GlobalPartition implements Serializable {
     private int id;
     private List<Integer> trajectorySeqNums;
 

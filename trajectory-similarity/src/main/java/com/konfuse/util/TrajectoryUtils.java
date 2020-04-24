@@ -3,6 +3,8 @@ package com.konfuse.util;
 import com.konfuse.dison.DISONTrajectory;
 import com.konfuse.dita.DITAConfig;
 import com.konfuse.dita.DITATrajectory;
+import com.konfuse.geometry.Point;
+import com.konfuse.mbe.MBETrajectory;
 import com.konfuse.strtree.MBR;
 
 import java.util.List;
@@ -13,9 +15,9 @@ import java.util.List;
  * @Date 2020/4/17
  */
 public class TrajectoryUtils {
-    public static double calcDTWDistance(DITATrajectory a, DITATrajectory b) {
-        int len1 = a.getNum();
-        int len2 = b.getNum();
+    public static double calcDTWDistance(List<Point> a, List<Point> b) {
+        int len1 = a.size();
+        int len2 = b.size();
         double[][] matrix = new double[len1][len2];
         for (int i = 0; i < len1; i++) {
             for (int j = 0; j < len2; j++) {
@@ -24,7 +26,7 @@ public class TrajectoryUtils {
         }
         for (int i = 0; i < len1; i++) {
             for (int j = 0; j < len2; j++) {
-                matrix[i][j] = a.getTrajectoryData().get(i).calDistance(b.getTrajectoryData().get(j));
+                matrix[i][j] = a.get(i).calDistance(b.get(j));
                 double left, up, diag;
                 if (i > 0) {
                     left = matrix[i - 1][j];
@@ -91,9 +93,9 @@ public class TrajectoryUtils {
         return distance / (a.getLength() + b.getLength() - distance);
     }
 
-    public static double calcDTWDistanceWithThreshold(DITATrajectory a, DITATrajectory b, double threshold) {
-        int len1 = a.getNum();
-        int len2 = b.getNum();
+    public static double calcDTWDistanceWithThreshold(List<Point> a, List<Point> b, double threshold) {
+        int len1 = a.size();
+        int len2 = b.size();
         double[][] matrix = new double[len1][len2];
         for (int i = 0; i < len1; i++) {
             double minDist = DITAConfig.thresholdMax;
@@ -119,10 +121,10 @@ public class TrajectoryUtils {
                     if (last > threshold) {
                         matrix[i][j] = DITAConfig.thresholdMax;
                     } else {
-                        matrix[i][j] = a.getTrajectoryData().get(i).calDistance(b.getTrajectoryData().get(j)) + last;
+                        matrix[i][j] = a.get(i).calDistance(b.get(j)) + last;
                     }
                 } else {
-                    matrix[i][j] = a.getTrajectoryData().get(i).calDistance(b.getTrajectoryData().get(j));
+                    matrix[i][j] = a.get(i).calDistance(b.get(j));
                 }
                 minDist = Math.min(minDist, matrix[i][j]);
             }
@@ -157,6 +159,48 @@ public class TrajectoryUtils {
         return Math.max(calcCellsEstimation(a, b), calcCellsEstimation(b, a));
     }
 
+    public static double calcDTWLowerBound(MBETrajectory query, MBETrajectory candidate, double splitPercentage){
+        List<MBR> queryMbrs = query.greedySplitMBE(splitPercentage);
+        List<MBR> candidateMbrs = query.greedySplitTrajectory(splitPercentage);
+        int len1 = queryMbrs.size();
+        int len2 = candidateMbrs.size();
+
+        double[][] matrix = new double[len1][len2];
+        for (int i = 0; i < len1; i++) {
+            for (int j = 0; j < len2; j++) {
+                matrix[i][j] = Double.MAX_VALUE;
+            }
+        }
+        for (int i = 0; i < len1; i++) {
+            for (int j = 0; j < len2; j++) {
+                matrix[i][j] = minDist(queryMbrs.get(i), candidateMbrs.get(j));
+                double left, up, diag;
+                if (i > 0) {
+                    left = matrix[i - 1][j];
+                } else {
+                    left = Double.MAX_VALUE;
+                }
+                if (j > 0) {
+                    up = matrix[i][j - 1];
+                } else {
+                    up = Double.MAX_VALUE;
+                }
+                if (i > 0 && j > 0) {
+                    diag = matrix[i - 1][j - 1];
+                } else {
+                    diag = Double.MAX_VALUE;
+                }
+                double last = Math.min(Math.min(left, up), diag);
+                if (i > 0 || j > 0) {
+                    matrix[i][j] += last;
+                }
+            }
+        }
+        return matrix[len1 - 1][len2 - 1];
+    }
+
+
+
     private static double calcCellsEstimation(DITATrajectory a, DITATrajectory b) {
         List<Tuple<MBR, Integer>> aCells = a.getCells();
         List<Tuple<MBR, Integer>> bCells = b.getCells();
@@ -186,5 +230,21 @@ public class TrajectoryUtils {
             ans += (a.f0.getY1() - b.f0.getY2()) * (a.f0.getY1() - b.f0.getY2());
         }
         return ans;
+    }
+
+    private static double minDist(MBR a, MBR b) {
+        double sum = 0.0;
+        if(a.getX2() < b.getX1()) {
+            sum += (b.getX1() - a.getX2()) * (b.getX1() - a.getX2());
+        } else if(b.getX2() < a.getX1()) {
+            sum += (a.getX1() - b.getX2()) * (a.getX1() - b.getX2());
+        }
+
+        if(a.getY2() < b.getY1()) {
+            sum += (b.getY1() - a.getY2()) * (b.getY1() - a.getY2());
+        } else if(b.getY2() < a.getY1()) {
+            sum += (a.getY1() - b.getY2()) * (a.getY1() - b.getY2());
+        }
+        return Math.sqrt(sum);
     }
 }

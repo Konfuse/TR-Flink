@@ -219,6 +219,27 @@ public class MBR implements Serializable {
     }
 
     /**
+     * Union a region, calculate the smallest circumscribed rectangle of them.
+     *
+     * @param region variable parameter of regions
+     */
+    public MBR union(MBR region) {
+        if (region.x1 < x1) {
+            x1 = region.x1;
+        }
+        if (region.x2 > x2) {
+            x2 = region.x2;
+        }
+        if (region.y1 < y1) {
+            y1 = region.y1;
+        }
+        if (region.y2 > y2) {
+            y2 = region.y2;
+        }
+        return new MBR(x1, y1, x2, y2);
+    }
+
+    /**
      * Inner class MBRComparatorWithTreeNode.
      * A comparator of TreeNode, compare tree nodes by specified dimensions.
      */

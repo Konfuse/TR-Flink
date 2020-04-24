@@ -55,7 +55,7 @@ public class testDITA {
         ArrayList<Tuple<Integer, Double>> allResults = new ArrayList<>(trajectories.size());
         long start2 = System.currentTimeMillis();
         for (DITATrajectory trajectory : trajectories) {
-            allResults.add(new Tuple<>(trajectory.getId(), TrajectoryUtils.calcDTWDistance(trajectory, query)));
+            allResults.add(new Tuple<>(trajectory.getId(), TrajectoryUtils.calcDTWDistance(trajectory.getTrajectoryData(), query.getTrajectoryData())));
         }
         long end2 = System.currentTimeMillis();
         System.out.println("calc time(ms): " + (end2 - start2));

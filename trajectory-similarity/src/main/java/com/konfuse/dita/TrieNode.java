@@ -2,13 +2,14 @@ package com.konfuse.dita;
 
 import com.konfuse.strtree.MBR;
 
+import java.io.Serializable;
 import java.util.InvalidPropertiesFormatException;
 
 /**
  * @Auther todd
  * @Date 2020/4/17
  */
-public class TrieNode {
+public class TrieNode implements Serializable {
     private int level;
     private int currentCapacity;
     private TrieNodeType type;

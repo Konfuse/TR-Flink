@@ -1,6 +1,5 @@
 package com.konfuse.dita;
 
-import akka.stream.javadsl.Partition;
 import com.konfuse.geometry.DataObject;
 import com.konfuse.geometry.Point;
 import com.konfuse.geometry.Rectangle;
@@ -9,14 +8,17 @@ import com.konfuse.strtree.MBR;
 import com.konfuse.strtree.RTree;
 import com.konfuse.util.Tuple;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * @Auther todd
  * @Date 2020/4/18
  */
-public class GlobalIndex {
+public class GlobalIndex implements Serializable{
 
     private final int globalPartitionNum;
 
@@ -184,5 +186,27 @@ public class GlobalIndex {
             p1 = sliceTo;
         } while (p1 < dataSize);
         return buckets;
+    }
+
+    /**
+     * Method to serialize this GlobalIndex
+     */
+    public void save(String file) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+        outputStream.writeObject(this);
+        outputStream.close();
+    }
+
+    /**
+     * Method to deserialize the file to GlobalIndex
+     *
+     * @param file r-tree model path
+     * @return r-tree object
+     */
+    public static GlobalIndex load(String file) throws IOException, ClassNotFoundException {
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+        GlobalIndex globalIndex = (GlobalIndex) inputStream.readObject();
+        inputStream.close();
+        return globalIndex;
     }
 }

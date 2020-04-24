@@ -4,13 +4,14 @@ import com.konfuse.geometry.Point;
 import com.konfuse.road.Road;
 import com.konfuse.util.Tuple;
 
+import java.io.*;
 import java.util.*;
 
 /**
  * @Auther todd
  * @Date 2020/4/20
  */
-public class GlobalIndex {
+public class GlobalIndex implements Serializable {
     private final int globalPartitionNum;
     private int partitionNum;
     private ArrayList<GlobalPartition> globalPartitions;
@@ -318,6 +319,28 @@ public class GlobalIndex {
         }
 
         return records;
+    }
+
+    /**
+     * Method to serialize this GlobalIndex
+     */
+    public void save(String file) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+        outputStream.writeObject(this);
+        outputStream.close();
+    }
+
+    /**
+     * Method to deserialize the file to GlobalIndex
+     *
+     * @param file r-tree model path
+     * @return r-tree object
+     */
+    public static GlobalIndex load(String file) throws IOException, ClassNotFoundException {
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+        GlobalIndex globalIndex = (GlobalIndex) inputStream.readObject();
+        inputStream.close();
+        return globalIndex;
     }
 
 

@@ -3,13 +3,14 @@ package com.konfuse.dison;
 import com.konfuse.util.TrajectoryUtils;
 import com.konfuse.util.Tuple;
 
+import java.io.*;
 import java.util.*;
 
 /**
  * @Auther todd
  * @Date 2020/4/20
  */
-public class LocalIndex {
+public class LocalIndex implements Serializable{
     private int partitionID;
     private HashMap<Long, List<Tuple<Integer, Double>>> InvertedIndex;
 
@@ -88,5 +89,27 @@ public class LocalIndex {
                 "partitionID=" + partitionID +
                 ", InvertedIndex=" + InvertedIndex +
                 '}';
+    }
+
+    /**
+     * Method to serialize this LocalIndex
+     */
+    public void save(String file) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(file));
+        outputStream.writeObject(this);
+        outputStream.close();
+    }
+
+    /**
+     * Method to deserialize the file to LocalIndex
+     *
+     * @param file r-tree model path
+     * @return r-tree object
+     */
+    public static LocalIndex load(String file) throws IOException, ClassNotFoundException {
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(file));
+        LocalIndex localIndex = (LocalIndex) inputStream.readObject();
+        inputStream.close();
+        return localIndex;
     }
 }

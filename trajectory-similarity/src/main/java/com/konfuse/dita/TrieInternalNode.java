@@ -2,13 +2,14 @@ package com.konfuse.dita;
 
 import com.konfuse.strtree.MBR;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
  * @Author todd
  * @Date 2020/4/17
  */
-public class TrieInternalNode extends TrieNode {
+public class TrieInternalNode extends TrieNode implements Serializable {
     private ArrayList<TrieNode> childes;
 
     public TrieInternalNode(int level, TrieNodeType type, MBR mbr, int currentCapacity) {
