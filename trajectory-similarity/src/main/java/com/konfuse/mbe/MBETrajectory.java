@@ -5,6 +5,7 @@ import com.konfuse.strtree.MBR;
 import com.konfuse.util.Tuple;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -17,11 +18,11 @@ public class MBETrajectory {
     private MBE mbe;
     private List<Point> trajectoryData;
 
-    public MBETrajectory(int id, List<Point> trajectoryData, int delta, double epsilon) {
+    public MBETrajectory(int id, List<Point> trajectoryData, double deltaRate, double epsilon) {
         this.id = id;
         this.trajectoryData = trajectoryData;
         this.num = trajectoryData.size();
-        this.mbe = new MBE(trajectoryData, delta, epsilon);
+        this.mbe = new MBE(trajectoryData, deltaRate, epsilon);
 
     }
 
@@ -68,7 +69,7 @@ public class MBETrajectory {
         while(mbrs.size() > num) {
             double minVolume = Double.MAX_VALUE;
             int index = 0;
-            for(int i = 0; i < mbrs.size(); i++){
+            for(int i = 0; i < mbrs.size() - 1; i++){
                 double temp = volumeIncrease(mbrs.get(i), mbrs.get(i + 1));
                 if (temp < minVolume) {
                     minVolume = temp;
@@ -90,7 +91,7 @@ public class MBETrajectory {
         while(mbrs.size() > num) {
             double minVolume = Double.MAX_VALUE;
             int index = 0;
-            for(int i = 0; i < mbrs.size(); i++){
+            for(int i = 0; i < mbrs.size() - 1; i++){
                 double temp = volumeIncrease(mbrs.get(i), mbrs.get(i + 1));
                 if (temp < minVolume) {
                     minVolume = temp;
@@ -128,7 +129,7 @@ public class MBETrajectory {
         private List<Tuple<Point, Point>> trajectoryEnvelope;
 
         public MBE(List<Point> trajectoryData,  double deltaRate, double epsilon) {
-            trajectoryData = new ArrayList<>(trajectoryData.size());
+            trajectoryEnvelope = new LinkedList<>();
             int delta = (int) deltaRate * trajectoryData.size();
             int id1, id2;
             for(int i = 0; i < trajectoryData.size(); i++) {

@@ -3,12 +3,9 @@ package com.konfuse.dita;
 import com.konfuse.geometry.Point;
 
 import java.io.*;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
-import org.apache.flink.types.Key;
 
 /**
  * @Auther todd
@@ -46,6 +43,7 @@ public class DITAFile {
         System.out.println("trajectory count: " + records.size());
         return records;
     }
+
 
     public static void writeDITATrajectory(String trajectoriesFolderPath, LinkedList<List<Point>> trajectories) {
         int count = 0;

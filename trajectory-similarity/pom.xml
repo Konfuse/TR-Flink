@@ -35,6 +35,7 @@ under the License.
 		<scala.binary.version>2.11</scala.binary.version>
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
+		<geotools.version>19.1</geotools.version>
 	</properties>
 
 	<repositories>
@@ -123,6 +124,17 @@ under the License.
 			<artifactId>GeographicLib-Java</artifactId>
 			<version>1.46</version>
 		</dependency>
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-shapefile</artifactId>
+			<version>${geotools.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-swing</artifactId>
+			<version>${geotools.version}</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

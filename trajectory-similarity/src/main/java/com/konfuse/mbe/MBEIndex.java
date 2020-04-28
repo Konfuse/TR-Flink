@@ -38,7 +38,8 @@ public class MBEIndex implements Serializable {
         List<Integer> filteredCandidates = new LinkedList<>();
         List<Tuple<Integer, Double>> results = new LinkedList<>();
         for (int i = 0; i < candidates.size(); i++) {
-            double lowerBound = TrajectoryUtils.calcDTWLowerBound(query, trajectoryList.get(candidates.get(i)), splitPercentage);
+//            double lowerBound = TrajectoryUtils.calcDTWLowerBound(query, trajectoryList.get(candidates.get(i)), splitPercentage);
+            double lowerBound = TrajectoryUtils.calcDTWDistance(query.getTrajectoryData(), trajectoryList.get(candidates.get(i)).getTrajectoryData());
             if(lowerBound < threshold) {
                 filteredCandidates.add(candidates.get(i));
             }
