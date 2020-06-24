@@ -1,5 +1,7 @@
 package com.konfuse.topology;
 
+import java.io.Serializable;
+
 /**
  * Point in a directed {@link Graph} which is a point on an {@link AbstractLink} with a fraction in
  * the interval <i>[0,1]</i> that defines the exact position as linear interpolation along the
@@ -8,7 +10,7 @@ package com.konfuse.topology;
  * @Author: todd
  * @Date: 2019/12/31 14:15
  */
-public class LocationOnEdge<E extends AbstractLink<E>> {
+public class LocationOnEdge<E extends AbstractLink<E>> implements Serializable {
     private final E edge;
     private final double fraction;
 

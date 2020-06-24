@@ -37,7 +37,7 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
      *
      * @return An edge's successor edge.
      */
-    protected E successor() {
+    public E successor() {
         return successor;
     }
 
@@ -46,7 +46,7 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
      *
      * @param successor An edge's successor edge.
      */
-    protected void successor(E successor) {
+    public void successor(E successor) {
         this.successor = successor;
     }
 
@@ -55,7 +55,7 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
      *
      * @return The edge's neighbor edge.
      */
-    protected E neighbor() {
+    public E neighbor() {
         return neighbor;
     }
 
@@ -64,7 +64,7 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
      *
      * @param neighbor The edge's neighbor edge.
      */
-    protected void neighbor(E neighbor) {
+    public void neighbor(E neighbor) {
         this.neighbor = neighbor;
     }
 
@@ -89,10 +89,11 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
                     return null;
                 }
                 E next = iterator;
-                iterator = iterator.neighbor() == successor ? null : iterator.neighbor();
+                iterator = iterator.successor() == successor ? null : iterator.successor();
 
                 return next;
             }
+
             @Override
             public void remove() {
                 throw new UnsupportedOperationException();
@@ -125,6 +126,7 @@ public abstract class AbstractLink<E extends AbstractLink<E>> implements Seriali
 
                 return next;
             }
+
             @Override
             public void remove() {
                 throw new UnsupportedOperationException();

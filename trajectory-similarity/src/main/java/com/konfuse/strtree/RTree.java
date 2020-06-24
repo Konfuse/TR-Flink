@@ -18,7 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue;
  * @Date: 2019/11/26 11:07
  */
 public class RTree implements Serializable {
-    private TreeNode root;
+    private RTreeNode root;
     private int height;
     private int maxNodeNb;
     private int minNodeNb;
@@ -26,14 +26,14 @@ public class RTree implements Serializable {
     public RTree() {
     }
 
-    public RTree(TreeNode root, int M, int m) {
+    public RTree(RTreeNode root, int M, int m) {
         this.root = root;
         this.height = root.getHeight();
         this.maxNodeNb = M;
         this.minNodeNb = m;
     }
 
-    public TreeNode getRoot() {
+    public RTreeNode getRoot() {
         return root;
     }
 
@@ -45,7 +45,7 @@ public class RTree implements Serializable {
         this.height = height;
     }
 
-    public void setRoot(NonLeafNode root) {
+    public void setRoot(RTreeInternalNode root) {
         this.root = root;
     }
 
@@ -77,26 +77,26 @@ public class RTree implements Serializable {
         }
 
         // fetch data objects by bfs
-        Queue<TreeNode> queue = new LinkedBlockingQueue<>();
-        TreeNode node;
+        Queue<RTreeNode> queue = new LinkedBlockingQueue<>();
+        RTreeNode node;
         queue.add(this.root);
         ArrayList<DataObject> result = new ArrayList<>();
         while (!queue.isEmpty()) {
             node = queue.poll();
             // if leaf node, judge every data objects
             if (node.getHeight() == 1) {
-                ArrayList<DataObject> dataObjects = ((LeafNode<DataObject>) node).getEntries();
-                for (DataObject dataObject : dataObjects) {
+                List<DataObject> entries = ((RTreeLeafNode<DataObject>) node).getEntries();
+                for (DataObject dataObject : entries) {
                     if (area.contains(dataObject)) {
                         result.add(dataObject);
                     }
                 }
             } else {
                 // if non-leaf node, push the intersects nodes into queue
-                ArrayList<TreeNode> treeNodes = ((NonLeafNode) node).getChildNodes();
-                for (TreeNode treeNode : treeNodes) {
-                    if (MBR.intersects(treeNode.getMBR(), area)) {
-                        queue.add(treeNode);
+                List<RTreeNode> RTreeNodes = ((RTreeInternalNode) node).getChildNodes();
+                for (RTreeNode RTreeNode : RTreeNodes) {
+                    if (MBR.intersects(RTreeNode.getMBR(), area)) {
+                        queue.add(RTreeNode);
                     }
                 }
             }
@@ -114,16 +114,16 @@ public class RTree implements Serializable {
      */
     public ArrayList<DataObject> circleRangeQuery(final Point queryPoint, double radius) {
         ArrayList<DataObject> result = new ArrayList<>();
-        Queue<TreeNode> queue = new LinkedList<>();
+        Queue<RTreeNode> queue = new LinkedBlockingQueue<>();
         queue.add(this.root);
 
         // fetch data objects by bfs
         while (!queue.isEmpty()) {
-            TreeNode curNode = queue.poll();
+            RTreeNode curNode = queue.poll();
             if (curNode.getMBR().intersects(queryPoint, radius)) {
                 // if leaf node, judge every data objects
                 if (curNode.getHeight() == 1) {
-                    ArrayList<DataObject> entries = ((LeafNode<DataObject>) curNode).getEntries();
+                    List<DataObject> entries = ((RTreeLeafNode<DataObject>) curNode).getEntries();
                     for (DataObject dataObject : entries) {
                         if (dataObject.calDistance(queryPoint) <= radius) {
                             result.add(dataObject);
@@ -131,7 +131,7 @@ public class RTree implements Serializable {
                     }
                 } else {
                     // if non-leaf node, push nodes into queue
-                    ArrayList<TreeNode> childNodes = ((NonLeafNode) curNode).getChildNodes();
+                    List<RTreeNode> childNodes = ((RTreeInternalNode) curNode).getChildNodes();
                     queue.addAll(childNodes);
                 }
             }
@@ -184,7 +184,7 @@ public class RTree implements Serializable {
         int count = 0;
 
         // priority queue to load tree nodes
-        PriorityQueue<TreeNode> queue = new PriorityQueue<>(1, (o1, o2) -> {
+        PriorityQueue<RTreeNode> queue = new PriorityQueue<>(1, (o1, o2) -> {
             Double distance1 = o1.getMBR().calculateDistance(queryPoint);
             Double distance2 = o2.getMBR().calculateDistance(queryPoint);
             return distance1.compareTo(distance2);
@@ -193,17 +193,17 @@ public class RTree implements Serializable {
         // find the top-k nearest tree nodes using bfs
         queue.add(this.root);
         while (!queue.isEmpty()) {
-            TreeNode curNode = queue.poll();
+            RTreeNode curNode = queue.poll();
             // if leaf node, add all data objects into result
             if (curNode.getHeight() == 1) {
-                ArrayList<DataObject> dataObjects = ((LeafNode<DataObject>) curNode).getEntries();
+                List<DataObject> dataObjects = ((RTreeLeafNode<DataObject>) curNode).getEntries();
                 for (DataObject dataObject : dataObjects) {
                     result.add(dataObject.calDistance(queryPoint));
                 }
                 count += dataObjects.size();
             } else {
                 // if non-leaf node, add all nodes into queue
-                ArrayList<TreeNode> childNodes = ((NonLeafNode) curNode).getChildNodes();
+                List<RTreeNode> childNodes = ((RTreeInternalNode) curNode).getChildNodes();
                 queue.addAll(childNodes);
             }
 
@@ -229,10 +229,10 @@ public class RTree implements Serializable {
      * @return result list of data objects
      */
     public ArrayList<DataObject> getDataObjects() {
-        ArrayList<TreeNode> leafNodes = getLeafNodes();
+        ArrayList<RTreeNode> leafNodes = getLeafNodes();
         ArrayList<DataObject> results = new ArrayList<>(leafNodes.size() * maxNodeNb);
-        for (TreeNode leafNode : leafNodes) {
-            results.addAll(((LeafNode) leafNode).getEntries());
+        for (RTreeNode leafNode : leafNodes) {
+            results.addAll(((RTreeLeafNode) leafNode).getEntries());
         }
         return results;
     }
@@ -242,7 +242,7 @@ public class RTree implements Serializable {
      *
      * @return result list of leaf nodes
      */
-    private ArrayList<TreeNode> getLeafNodes() {
+    private ArrayList<RTreeNode> getLeafNodes() {
         return getTreeNode(1);
     }
 
@@ -252,29 +252,29 @@ public class RTree implements Serializable {
      *
      * @return result list of tree nodes
      */
-    private ArrayList<TreeNode> getTreeNode(int height) {
+    private ArrayList<RTreeNode> getTreeNode(int height) {
         assert height >= 1 && height <= root.getHeight();
-        TreeNode node = this.root;
-        Queue<TreeNode> queue = new LinkedList<>();
-        ArrayList<TreeNode> result = new ArrayList<>();
+        RTreeNode node = this.root;
+        Queue<RTreeNode> queue = new LinkedList<>();
+        ArrayList<RTreeNode> result = new ArrayList<>();
 
         // If root level, then return the MBR of the whole tree.
         if (node.getHeight() == height) {
             result.add(node);
             return result;
         } else if (node.getHeight() - 1 == height) {
-            NonLeafNode nonLeafNode = (NonLeafNode) node;
+            RTreeInternalNode nonLeafNode = (RTreeInternalNode) node;
             result.addAll(nonLeafNode.getChildNodes());
             return result;
         }
 
         queue.add(node);
-        NonLeafNode nonLeafNode;
+        RTreeInternalNode nonLeafNode;
         while (!queue.isEmpty()) {
-            nonLeafNode = (NonLeafNode) queue.poll();
-            for (TreeNode child : nonLeafNode.getChildNodes()) {
+            nonLeafNode = (RTreeInternalNode) queue.poll();
+            for (RTreeNode child : nonLeafNode.getChildNodes()) {
                 if (child.getHeight() == height + 1) {
-                    result.addAll(((NonLeafNode) child).getChildNodes());
+                    result.addAll(((RTreeInternalNode) child).getChildNodes());
                 } else if (height + 1 < child.getHeight()) {
                     queue.add(child);
                 }
@@ -289,10 +289,10 @@ public class RTree implements Serializable {
      * @return result list of mbrs
      */
     public ArrayList<MBR> getMBRsWithHeight(int height) {
-        ArrayList<TreeNode> treeNodes = getTreeNode(height);
-        ArrayList<MBR> results = new ArrayList<>(treeNodes.size());
-        for (TreeNode treeNode : treeNodes) {
-            results.add(treeNode.getMBR());
+        ArrayList<RTreeNode> STRTreeNodes = getTreeNode(height);
+        ArrayList<MBR> results = new ArrayList<>(STRTreeNodes.size());
+        for (RTreeNode STRTreeNode : STRTreeNodes) {
+            results.add(STRTreeNode.getMBR());
         }
         return results;
     }

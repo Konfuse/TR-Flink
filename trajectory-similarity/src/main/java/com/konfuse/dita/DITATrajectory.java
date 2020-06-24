@@ -4,13 +4,20 @@ import com.konfuse.geometry.Point;
 import com.konfuse.strtree.MBR;
 import com.konfuse.util.Tuple;
 
-import java.util.*;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+;
 
 /**
  * @Auther todd
  * @Date 2020/4/16
  */
-public class DITATrajectory {
+public class DITATrajectory implements Serializable {
+
     private int id;
     private int num;
     private MBR mbr;
@@ -29,6 +36,17 @@ public class DITATrajectory {
         this.extendedMBR = calcExtendedMBR(DITAConfig.threshold);
         this.globalIndexedPivot = calcGlobalPivots();
         this.localIndexedPivot = calcLocalPivotsNeighbor(DITAConfig.localIndexedPivotSize);
+    }
+
+    public DITATrajectory(int id, int num, MBR mbr, MBR extendedMBR, List<Tuple<MBR, Integer>> cells, List<Point> trajectoryData, List<Point> localIndexedPivot, List<Point> globalIndexedPivot) {
+        this.id = id;
+        this.num = num;
+        this.mbr = mbr;
+        this.extendedMBR = extendedMBR;
+        this.cells = cells;
+        this.trajectoryData = trajectoryData;
+        this.localIndexedPivot = localIndexedPivot;
+        this.globalIndexedPivot = globalIndexedPivot;
     }
 
     public int getId() {

@@ -199,8 +199,6 @@ public class TrajectoryUtils {
         return matrix[len1 - 1][len2 - 1];
     }
 
-
-
     private static double calcCellsEstimation(DITATrajectory a, DITATrajectory b) {
         List<Tuple<MBR, Integer>> aCells = a.getCells();
         List<Tuple<MBR, Integer>> bCells = b.getCells();

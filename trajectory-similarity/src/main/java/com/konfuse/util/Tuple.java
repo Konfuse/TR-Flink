@@ -60,4 +60,12 @@ public class Tuple<X, Y> implements Serializable {
     public void two(Y value) {
         this.f1 = value;
     }
+
+    @Override
+    public String toString() {
+        return "Tuple{" +
+                "f0=" + f0 +
+                ", f1=" + f1 +
+                '}';
+    }
 }

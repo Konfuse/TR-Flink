@@ -2,15 +2,17 @@ package com.konfuse.dison;
 
 import com.konfuse.geometry.Point;
 
+import java.io.Serializable;
+
 /**
  * @Auther todd
  * @Date 2020/4/20
  */
-public class DISONEdge {
+public class DISONEdge implements Serializable {
     private long edgeId;
+    private double length;
     private Point start;
     private Point end;
-    private double length;
 
     public DISONEdge(long edgeId, Point start, Point end, double length) {
         this.edgeId = edgeId;

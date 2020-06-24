@@ -3,6 +3,7 @@ package com.konfuse.dita;
 import com.konfuse.strtree.MBR;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,27 +11,24 @@ import java.util.List;
  * @Date 2020/4/17
  */
 public class TrieLeafNode extends TrieNode implements Serializable {
-    private int[] data;
+    private List<DITATrajectory> data;
 
-    public TrieLeafNode(int level, TrieNodeType type, MBR mbr, int currentCapacity, List<Integer> data) {
+    public TrieLeafNode(int level, TrieNodeType type, MBR mbr, int currentCapacity, List<DITATrajectory> data) {
         super(level, type, mbr, currentCapacity);
-        this.data = new int[currentCapacity];
-        int count = 0;
-        for (Integer datum : data) {
-            this.data[count] = datum;
-            count++;
-        }
+        this.data = data;
+
     }
 
-    public int[] getData() {
+    public List<DITATrajectory> getData() {
         return data;
     }
 
-    public void setData(int[] data) {
+    public void setData(ArrayList<DITATrajectory> data) {
+        super.setCurrentCapacity(data.size());
         this.data = data;
     }
 
-    public void setData(int index, int trajectorySeqNum) {
-        this.data[index] = trajectorySeqNum;
+    public void setData(int index, DITATrajectory trajectorySeqNum) {
+        this.data.set(index, trajectorySeqNum);
     }
 }

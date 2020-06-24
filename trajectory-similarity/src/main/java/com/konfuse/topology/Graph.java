@@ -1,5 +1,6 @@
 package com.konfuse.topology;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -10,7 +11,7 @@ import java.util.*;
  * @Author: Konfuse
  * @Date: 2019/12/31 16:10
  */
-public class Graph <E extends AbstractLink<E>>{
+public class Graph <E extends AbstractLink<E>> implements Serializable {
     private final HashMap<Long, E> edges = new HashMap<>();
     private final HashMap<Long, E> nodes = new HashMap<>();
 

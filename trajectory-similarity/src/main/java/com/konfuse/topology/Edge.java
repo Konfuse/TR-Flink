@@ -1,10 +1,12 @@
 package com.konfuse.topology;
 
+import java.io.Serializable;
+
 /**
  * @Author: todd
  * @Date: 2019/12/31
  */
-public class Edge extends AbstractLink<Edge> {
+public class Edge extends AbstractLink<Edge> implements Serializable {
     private final long id;
     private final long source;
     private final long target;
@@ -41,5 +43,15 @@ public class Edge extends AbstractLink<Edge> {
 
     public double length() {
         return length;
+    }
+
+    @Override
+    public String toString() {
+        return "Edge{" +
+                "id=" + id +
+                ", source=" + source +
+                ", target=" + target +
+                ", length=" + length +
+                '}';
     }
 }

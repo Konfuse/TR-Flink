@@ -7,6 +7,7 @@ import com.konfuse.geometry.Rectangle;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.Objects;
 
 /**
  * Minimum bounding rectangle.
@@ -58,6 +59,8 @@ public class MBR implements Serializable {
     public double getY2() {
         return y2;
     }
+
+
 
     /**
      * To get the area of mbr.
@@ -239,11 +242,31 @@ public class MBR implements Serializable {
         return new MBR(x1, y1, x2, y2);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        MBR mbr = (MBR) o;
+        return Double.compare(mbr.x1, x1) == 0 &&
+                Double.compare(mbr.y1, y1) == 0 &&
+                Double.compare(mbr.x2, x2) == 0 &&
+                Double.compare(mbr.y2, y2) == 0;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x1, y1, x2, y2);
+    }
+
     /**
      * Inner class MBRComparatorWithTreeNode.
      * A comparator of TreeNode, compare tree nodes by specified dimensions.
      */
-    public static class MBRComparatorWithTreeNode implements Comparator<TreeNode> {
+    public static class MBRComparatorWithTreeNode implements Comparator<RTreeNode> {
         private int dimension;
         private boolean low;
 
@@ -258,7 +281,7 @@ public class MBR implements Serializable {
         }
 
         @Override
-        public int compare(TreeNode e1, TreeNode e2) {
+        public int compare(RTreeNode e1, RTreeNode e2) {
             if (dimension == 1) {
                 if (low) {
                     return Double.compare(e1.mbr.x1, e2.mbr.x1);

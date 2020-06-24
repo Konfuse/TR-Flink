@@ -6,6 +6,6 @@ package com.konfuse.road;
  * Heading of edge movements, for example on {@link BaseRoad}. {@link Heading#forward} indicates a
  * heading from edge's source to target and {@link Heading#backward} vice versa, respectively.
  */
-public enum Heading {
+public enum Heading{
     forward, backward
 }

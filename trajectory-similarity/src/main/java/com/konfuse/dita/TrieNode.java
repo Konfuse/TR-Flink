@@ -63,7 +63,7 @@ public class TrieNode implements Serializable {
     }
 
 
-    short getTypeNum() throws InvalidPropertiesFormatException {
+    public int getTypeNum() throws InvalidPropertiesFormatException {
         switch (getType()) {
             case TRIE_LEAF_NODE: {
                 return (1);

@@ -38,14 +38,16 @@ public class MBEIndex implements Serializable {
         List<Integer> filteredCandidates = new LinkedList<>();
         List<Tuple<Integer, Double>> results = new LinkedList<>();
         for (int i = 0; i < candidates.size(); i++) {
-//            double lowerBound = TrajectoryUtils.calcDTWLowerBound(query, trajectoryList.get(candidates.get(i)), splitPercentage);
-            double lowerBound = TrajectoryUtils.calcDTWDistance(query.getTrajectoryData(), trajectoryList.get(candidates.get(i)).getTrajectoryData());
+            double lowerBound = TrajectoryUtils.calcDTWLowerBound(query, trajectoryList.get(candidates.get(i)), splitPercentage);
+//            double lowerBound = TrajectoryUtils.calcDTWDistance(query.getTrajectoryData(), trajectoryList.get(candidates.get(i)).getTrajectoryData());
             if(lowerBound < threshold) {
                 filteredCandidates.add(candidates.get(i));
             }
         }
+        System.out.println(filteredCandidates.toString());
         for (Integer filteredCandidate : filteredCandidates) {
-            double dist = TrajectoryUtils.calcDTWDistanceWithThreshold(query.getTrajectoryData(), trajectoryList.get(filteredCandidate).getTrajectoryData(), threshold);
+            double dist = TrajectoryUtils.calcDTWDistance(query.getTrajectoryData(), trajectoryList.get(filteredCandidate).getTrajectoryData());
+//            double dist = TrajectoryUtils.calcDTWDistanceWithThreshold(query.getTrajectoryData(), trajectoryList.get(filteredCandidate).getTrajectoryData(), threshold);
             if(dist < threshold) {
                 results.add(new Tuple<>(filteredCandidate, dist));
             }

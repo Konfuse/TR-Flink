@@ -2,11 +2,13 @@ package com.konfuse.road;
 
 import com.konfuse.geometry.Point;
 
+import java.io.Serializable;
+
 /**
  * @Author: todd
  * @Date: 2019/12/31 15:22
  */
-public class GPSPoint {
+public class GPSPoint implements Serializable {
     private final long time;
     private Point position;
 

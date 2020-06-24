@@ -3,6 +3,7 @@ package com.konfuse.road;
 import com.esri.core.geometry.Geometry.Type;
 import com.esri.core.geometry.*;
 
+import java.io.Serializable;
 import java.nio.ByteBuffer;
 
 /**
@@ -16,7 +17,7 @@ import java.nio.ByteBuffer;
  * @Author: todd
  * @Date: 2019/12/31
  */
-public class BaseRoad {
+public class BaseRoad implements Serializable {
     private final long id;
     private final long refId;
     private final long source;

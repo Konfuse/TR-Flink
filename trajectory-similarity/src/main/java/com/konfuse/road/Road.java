@@ -4,6 +4,7 @@ import com.esri.core.geometry.Polyline;
 import com.konfuse.geometry.Point;
 import com.konfuse.topology.AbstractLink;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,7 +20,7 @@ import java.util.List;
  * @Author: todd
  * @Date: 2020/1/1
  */
-public class Road extends AbstractLink<Road> {
+public class Road extends AbstractLink<Road> implements Serializable {
     private final BaseRoad base;
     private final Heading heading;
 
@@ -108,6 +109,14 @@ public class Road extends AbstractLink<Road> {
      */
     public BaseRoad base() {
         return base;
+    }
+
+    @Override
+    public String toString() {
+        return "Road{" +
+                "id=" + id() +
+                ", heading=" + heading +
+                '}';
     }
 
     public List<Point> getPoints() {

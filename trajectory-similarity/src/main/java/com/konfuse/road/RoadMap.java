@@ -1,12 +1,12 @@
 package com.konfuse.road;
 
 import com.esri.core.geometry.*;
-import com.konfuse.strtree.IndexBuilder;
 import com.konfuse.geometry.DataObject;
 import com.konfuse.geometry.Point;
 import com.konfuse.geometry.Rectangle;
-import com.konfuse.strtree.MBR;
 import com.konfuse.spatial.Geography;
+import com.konfuse.strtree.IndexBuilder;
+import com.konfuse.strtree.MBR;
 import com.konfuse.strtree.RTree;
 import com.konfuse.topology.Graph;
 import com.konfuse.util.Quadruple;
@@ -343,4 +343,6 @@ public class RoadMap extends Graph<Road> {
         if (index == null){ throw new RuntimeException("index not constructed");}
         return index;
     }
+
+
 }

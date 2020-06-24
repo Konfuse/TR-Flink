@@ -2,6 +2,7 @@ package com.konfuse.dison;
 
 import com.konfuse.geometry.Point;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +10,7 @@ import java.util.List;
  * @Auther todd
  * @Date 2020/4/20
  */
-public class DISONTrajectory {
+public class DISONTrajectory implements Serializable {
     private int id;
     private double length;
     private List<Point> globalIndexedPivot;
@@ -20,6 +21,13 @@ public class DISONTrajectory {
         this.length = 0;
         this.globalIndexedPivot = new ArrayList<>();
         this.trajectoryData = new ArrayList<>();
+    }
+
+    public DISONTrajectory(int id, double length, List<DISONEdge> trajectoryData, List<Point> globalIndexedPivot) {
+        this.id = id;
+        this.length = length;
+        this.globalIndexedPivot = globalIndexedPivot;
+        this.trajectoryData = trajectoryData;
     }
 
     public int getId() {
